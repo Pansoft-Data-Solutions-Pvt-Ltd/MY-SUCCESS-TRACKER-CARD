@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 
-const useRegisterEvents = (authenticatedEthosFetch, cardId) => {
-  const [loadingStudentDetails, setLoadingStudentDetails] = useState(false);
+const useStudentDetails = (authenticatedEthosFetch, cardId) => {
+  const [loadingStudentDetails, setLoadingStudentDetails] = useState(true);
   const [errorStudentDetails, setErrorStudentDetails] = useState(null);
   const [studentDetailsResult, setStudentDetailsResult] = useState(null);
 
@@ -70,4 +70,4 @@ const useRegisterEvents = (authenticatedEthosFetch, cardId) => {
   };
 };
 
-export default useRegisterEvents;
+export default useStudentDetails;

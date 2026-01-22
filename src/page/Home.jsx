@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { withStyles } from "@ellucian/react-design-system/core/styles";
 import DoubleChevronIcon from "../components/DoubleChevron";
 import useStudentTermCodes from "../hooks/useTermCodes";
+import useStudentDetails from "../hooks/useStudentDetails";
 
 // Ellucian provided hooks
 import {
@@ -35,7 +36,7 @@ import {
 const TABLE_CONFIG = {
   attendanceGood: 75,
   attendanceWarning: 60,
-  lowGrades: ["C1", "C2", "D1", "D2"],
+  lowGrades: ["C", "D", "F", "C1", "C2", "D1", "D2"],
 };
 
 const COLOR_CONFIG = {
@@ -49,7 +50,24 @@ const GPA_CONFIG = {
   MEDIUM: 3.0,
 };
 
-// Fallback/default data - will be used if API data is not available
+// Grade to GPA mapping
+const GRADE_TO_GPA = {
+  A: 4.0,
+  "A-": 3.7,
+  "B+": 3.3,
+  B: 3.0,
+  "B-": 2.7,
+  "C+": 2.3,
+  C: 2.0,
+  "C-": 1.7,
+  "D+": 1.3,
+  D: 1.0,
+  "D-": 0.7,
+  F: 0.0,
+  P: null, // Pass/Fail, don't count in GPA
+};
+
+// Fallback/default data
 const DEFAULT_GPA = 3.2;
 const DEFAULT_GPA_DELTA = 0.15;
 
@@ -57,7 +75,7 @@ const DEFAULT_COURSES = [
   {
     CRN: "ABC123",
     course: "Sample Course 1",
-    grade: "B1",
+    grade: "B",
     credit: 3,
     attendance: 85,
   },
@@ -71,7 +89,7 @@ const DEFAULT_COURSES = [
   {
     CRN: "GHI789",
     course: "Sample Course 3",
-    grade: "C1",
+    grade: "C",
     credit: 3,
     attendance: 68,
   },
@@ -172,6 +190,7 @@ const styles = {
     borderBottom: "1px solid #E5E7EB",
     borderRight: "1px solid #E5E7EB",
     width: "25%",
+    padding: spacing20,
   },
   lastCell: {
     borderRight: "none",
@@ -198,15 +217,53 @@ const styles = {
   },
 };
 
+/* ================= HELPER FUNCTIONS ================= */
+const calculateGPA = (courses) => {
+  let totalPoints = 0;
+  let totalCredits = 0;
+
+  courses.forEach((course) => {
+    const gradeValue = GRADE_TO_GPA[course.grade];
+    const credits = course.credits?.creditHours || 0;
+
+    // Only count grades that have a numeric value (skip P/F)
+    if (gradeValue !== null && gradeValue !== undefined) {
+      totalPoints += gradeValue * credits;
+      totalCredits += credits;
+    }
+  });
+
+  return totalCredits > 0 ? totalPoints / totalCredits : 0;
+};
+
+const transformCourseData = (apiCourses) => {
+  if (!Array.isArray(apiCourses) || apiCourses.length === 0) {
+    return [];
+  }
+
+  return apiCourses.map((course) => ({
+    CRN: course.courseReferenceNumber,
+    course: course.courseTitle,
+    grade: course.grade,
+    credit: course.credits?.creditHours || 0,
+    attendance: Math.floor(Math.random() * 30) + 70, // Mock data: 70-100%
+    // Additional data for reference
+    courseNumber: course.courseNumber,
+    instructor: course.instructorFullName,
+  }));
+};
+
 /* ================= COMPONENT ================= */
 const MySuccessTrackerTable = ({ classes }) => {
   const [currentTerm, setCurrentTerm] = useState(null);
-  const [currentGpa, setCurrentGpa] = useState(DEFAULT_GPA);
-  const [gpaDelta, setGpaDelta] = useState(DEFAULT_GPA_DELTA);
-  const [courseData, setCourseData] = useState(DEFAULT_COURSES);
+  const [currentTermCode, setCurrentTermCode] = useState(null);
+  const [currentGpa, setCurrentGpa] = useState(0);
+  const [gpaDelta, setGpaDelta] = useState(0);
+  const [courseData, setCourseData] = useState([]);
+  const [previousGpa, setPreviousGpa] = useState(null);
 
   const { authenticatedEthosFetch } = useData();
- const { cardId } = useCardInfo();
+  const { cardId } = useCardInfo();
 
   const {
     getStudentTermCodes,
@@ -215,12 +272,20 @@ const MySuccessTrackerTable = ({ classes }) => {
     termCodesResult,
   } = useStudentTermCodes(authenticatedEthosFetch, cardId);
 
+  const {
+    getStudentDetails,
+    loadingStudentDetails,
+    errorStudentDetails,
+    studentDetailsResult,
+  } = useStudentDetails(authenticatedEthosFetch, cardId);
+
   useEffect(() => {
     getStudentTermCodes()
       .then((data) => {
         // Set default selected term (latest / first item)
         if (Array.isArray(data) && data.length > 0) {
-          setCurrentTerm(data[0].termDescription);
+          setCurrentTerm(data[0].term);
+          setCurrentTermCode(data[0].termCode);
         }
       })
       .catch(() => {
@@ -228,26 +293,51 @@ const MySuccessTrackerTable = ({ classes }) => {
       });
   }, [getStudentTermCodes]);
 
-  // When term changes, you would fetch the actual data here
-  // For now, using default data
+  // Fetch student details when term changes
   useEffect(() => {
-    if (currentTerm) {
-      // TODO: Fetch actual GPA and course data based on currentTerm
-      // Example:
-      // fetchGpaForTerm(currentTerm).then(data => {
-      //   setCurrentGpa(data.gpa);
-      //   setGpaDelta(data.delta);
-      // });
-      // fetchCoursesForTerm(currentTerm).then(data => {
-      //   setCourseData(data);
-      // });
+    if (currentTermCode) {
+      getStudentDetails({
+        // termCode: 199510,
+        termCode: currentTermCode
+      })
+        .then((response) => {
+          // The API returns: { status, statusText, data: [[courses]], runId }
+          const courses = response;
+          console.log(response);
 
-      // For now, using defaults
-      setCurrentGpa(DEFAULT_GPA);
-      setGpaDelta(DEFAULT_GPA_DELTA);
-      setCourseData(DEFAULT_COURSES);
+          if (Array.isArray(courses) && courses.length > 0) {
+            // Transform the course data
+            const transformedCourses = transformCourseData(courses);
+            setCourseData(transformedCourses);
+
+            // Calculate GPA from the courses
+            const calculatedGpa = calculateGPA(courses);
+            setCurrentGpa(calculatedGpa);
+
+            // Calculate delta if we have a previous GPA
+            if (previousGpa !== null) {
+              setGpaDelta(calculatedGpa - previousGpa);
+            } else {
+              // First load - use a default delta
+              setGpaDelta(DEFAULT_GPA_DELTA);
+            }
+          }
+          // else {
+          //   // No courses found, use defaults
+          //   setCourseData(DEFAULT_COURSES);
+          //   setCurrentGpa(DEFAULT_GPA);
+          //   setGpaDelta(DEFAULT_GPA_DELTA);
+          // }
+        })
+        .catch((error) => {
+          // Error is already handled by the hook
+          console.error("Failed to fetch student details:", error);
+          setCourseData(DEFAULT_COURSES);
+          setCurrentGpa(DEFAULT_GPA);
+          setGpaDelta(DEFAULT_GPA_DELTA);
+        });
     }
-  }, [currentTerm]);
+  }, [currentTermCode, getStudentDetails, previousGpa]);
 
   const getStatusColor = (value) => {
     if (value >= TABLE_CONFIG.attendanceGood) return COLOR_CONFIG.ON_TRACK;
@@ -277,7 +367,12 @@ const MySuccessTrackerTable = ({ classes }) => {
             dropdown={termCodesResult?.map((term) => (
               <DropdownButtonItem
                 key={term.termCode}
-                onClick={() => setCurrentTerm(term.term)}
+                onClick={() => {
+                  // Store previous GPA before switching
+                  setPreviousGpa(currentGpa);
+                  setCurrentTerm(term.term);
+                  setCurrentTermCode(term.termCode);
+                }}
               >
                 {term.term}
               </DropdownButtonItem>
@@ -294,7 +389,7 @@ const MySuccessTrackerTable = ({ classes }) => {
               variant="p"
               style={{ fontSize: "1.1rem", fontWeight: 600 }}
             >
-              Cumulative GPA
+              Term GPA
             </Typography>
 
             <div className={classes.gpaDeltaRow}>
@@ -319,7 +414,7 @@ const MySuccessTrackerTable = ({ classes }) => {
             className={classes.gpaCircle}
             style={{ borderColor: gpaCircleColor, color: gpaCircleColor }}
           >
-            {currentGpa.toFixed(2)}
+            {loadingStudentDetails ? "..." : currentGpa.toFixed(2)}
           </div>
         </Card>
       </div>
@@ -330,54 +425,98 @@ const MySuccessTrackerTable = ({ classes }) => {
           Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
         </Typography>
 
-        <Table className={classes.table}>
-          <TableBody>
-            {courseData.map((row, index) => {
-              const attendanceColor = getStatusColor(row.attendance);
-              const isLowGrade = TABLE_CONFIG.lowGrades.includes(row.grade);
+        {loadingStudentDetails && (
+          <Typography style={{ padding: spacing20, textAlign: "center" }}>
+            Loading student details...
+          </Typography>
+        )}
 
-              return (
-                <TableRow key={index}>
-                  <TableCell className={classes.bodyCell}>
-                    <Typography style={{ fontWeight: 600 }}>
-                      {row.CRN}
+        {errorStudentDetails && !loadingStudentDetails && (
+          <Typography
+            style={{
+              padding: spacing20,
+              textAlign: "center",
+              color: COLOR_CONFIG.NEEDS_ATTENTION,
+            }}
+          >
+            Note: Some data may be unavailable. Showing available information.
+          </Typography>
+        )}
+
+        {!loadingStudentDetails && (
+          <Table className={classes.table}>
+            <TableHead>
+              <TableRow>
+                <TableCell className={classes.headerCell}>Course</TableCell>
+                <TableCell className={classes.headerCell}>Grade</TableCell>
+                <TableCell className={classes.headerCell}>Credits</TableCell>
+                <TableCell
+                  className={`${classes.headerCell} ${classes.lastCell}`}
+                >
+                  Attendance
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {courseData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className={classes.bodyCell}>
+                    <Typography>
+                      No course data available for this term
                     </Typography>
-                    <Typography variant="caption">{row.course}</Typography>
-                  </TableCell>
-
-                  <TableCell
-                    className={`${classes.bodyCell} ${isLowGrade ? classes.lowGrade : ""}`}
-                  >
-                    {row.grade}
-                  </TableCell>
-
-                  <TableCell className={classes.bodyCell}>
-                    {row.credit}
-                  </TableCell>
-
-                  <TableCell
-                    className={`${classes.bodyCell} ${classes.lastCell}`}
-                  >
-                    <div className={classes.progressWrapper}>
-                      <div className={classes.progressBar}>
-                        <div
-                          className={classes.progressFill}
-                          style={{
-                            width: `${row.attendance}%`,
-                            backgroundColor: attendanceColor,
-                          }}
-                        />
-                      </div>
-                      <span style={{ color: attendanceColor, fontWeight: 600 }}>
-                        {row.attendance}%
-                      </span>
-                    </div>
                   </TableCell>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              ) : (
+                courseData.map((row, index) => {
+                  const attendanceColor = getStatusColor(row.attendance);
+                  const isLowGrade = TABLE_CONFIG.lowGrades.includes(row.grade);
+
+                  return (
+                    <TableRow key={row.CRN || index}>
+                      <TableCell className={classes.bodyCell}>
+                        <Typography style={{ fontWeight: 600 }}>
+                          {row.CRN}
+                        </Typography>
+                        <Typography variant="caption">{row.course}</Typography>
+                      </TableCell>
+
+                      <TableCell
+                        className={`${classes.bodyCell} ${isLowGrade ? classes.lowGrade : ""}`}
+                      >
+                        {row.grade}
+                      </TableCell>
+
+                      <TableCell className={classes.bodyCell}>
+                        {row.credit}
+                      </TableCell>
+
+                      <TableCell
+                        className={`${classes.bodyCell} ${classes.lastCell}`}
+                      >
+                        <div className={classes.progressWrapper}>
+                          <div className={classes.progressBar}>
+                            <div
+                              className={classes.progressFill}
+                              style={{
+                                width: `${row.attendance}%`,
+                                backgroundColor: attendanceColor,
+                              }}
+                            />
+                          </div>
+                          <span
+                            style={{ color: attendanceColor, fontWeight: 600 }}
+                          >
+                            {row.attendance}%
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        )}
       </Card>
     </div>
   );

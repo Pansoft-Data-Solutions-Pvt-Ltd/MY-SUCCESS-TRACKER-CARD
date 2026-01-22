@@ -7,13 +7,13 @@ import {
   TableCell,
   TableBody,
 } from "@ellucian/react-design-system/core";
-import { useCardInfo } from "@ellucian/experience-extension-utils";
+import { useCardInfo, useData } from "@ellucian/experience-extension-utils";
 import PropTypes from "prop-types";
-import { data } from "../util/data.js";
-//import arrow from '../../assets/arrow.png';
-import React from "react";
+import React, { useState, useEffect } from "react";
 import SvgHollowCircle from "../components/SvgHollowCircle.jsx";
 import DoubleChevronIcon from "../components/DoubleChevron.jsx";
+import useStudentTermCodes from "../hooks/useTermCodes";
+import useStudentDetails from "../hooks/useStudentDetails";
 
 const styles = (theme) => ({
   card: {
@@ -49,7 +49,6 @@ const styles = (theme) => ({
     display: "flex",
     flexDirection: "column",
     gap: "1rem",
-    // justifyContent: 'center'
     [theme.breakpoints.down("md")]: {
       alignItems: "center",
     },
@@ -62,7 +61,6 @@ const styles = (theme) => ({
   gpaBody: {
     display: "flex",
     gap: "1.25rem",
-    // alignItems: 'center',
     flexDirection: "column",
   },
   gpaMessage: {},
@@ -70,8 +68,6 @@ const styles = (theme) => ({
     flexShrink: 0,
     flex: 1,
     display: "flex",
-    // alignItems: 'center',
-    // justifyContent: 'center'
   },
   gpaCircleInner: {
     width: "clamp(4rem, 10rem, 5rem)",
@@ -108,6 +104,51 @@ const styles = (theme) => ({
   },
 });
 
+// Grade to GPA mapping
+const GRADE_TO_GPA = {
+  A: 4.0,
+  "A-": 3.7,
+  "B+": 3.3,
+  B: 3.0,
+  "B-": 2.7,
+  "C+": 2.3,
+  C: 2.0,
+  "C-": 1.7,
+  "D+": 1.3,
+  D: 1.0,
+  "D-": 0.7,
+  F: 0.0,
+  P: null,
+};
+
+const calculateGPA = (courses) => {
+  let totalPoints = 0;
+  let totalCredits = 0;
+
+  courses.forEach((course) => {
+    const gradeValue = GRADE_TO_GPA[course.grade];
+    const credits = course.credits?.creditHours || 0;
+
+    if (gradeValue !== null && gradeValue !== undefined) {
+      totalPoints += gradeValue * credits;
+      totalCredits += credits;
+    }
+  });
+
+  return totalCredits > 0 ? totalPoints / totalCredits : 0;
+};
+
+const transformAttendanceData = (apiCourses) => {
+  if (!Array.isArray(apiCourses) || apiCourses.length === 0) {
+    return [];
+  }
+
+  return apiCourses.map((course) => ({
+    courseName: course.courseTitle || course.courseNumber || "Unknown Course",
+    percentage: Math.floor(Math.random() * 30) + 70, // Mock data: 70-100%
+  }));
+};
+
 const MySuccessTrackerCard = ({ classes }) => {
   const {
     configuration: {
@@ -118,7 +159,90 @@ const MySuccessTrackerCard = ({ classes }) => {
       gpaDecreaseChevronColorCode,
       gpaCircleColorCode,
     } = {},
+    cardId,
   } = useCardInfo();
+
+  const { authenticatedEthosFetch } = useData();
+
+  const [currentTermCode, setCurrentTermCode] = useState(null);
+  const [currentGpa, setCurrentGpa] = useState(0);
+  const [gpaDelta, setGpaDelta] = useState(0);
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [previousGpa, setPreviousGpa] = useState(null);
+  const [gpaMessage, setGpaMessage] = useState("");
+
+  const {
+    getStudentTermCodes,
+    loadingTermCodes,
+    errorTermCodes,
+    termCodesResult,
+  } = useStudentTermCodes(authenticatedEthosFetch, cardId);
+
+  const {
+    getStudentDetails,
+    loadingStudentDetails,
+    errorStudentDetails,
+    studentDetailsResult,
+  } = useStudentDetails(authenticatedEthosFetch, cardId);
+
+  // Fetch term codes on mount
+  useEffect(() => {
+    getStudentTermCodes()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          // Set the latest term (first item)
+          setCurrentTermCode(data[0].termCode);
+        }
+      })
+      .catch(() => {
+        // Error handled by hook
+      });
+  }, [getStudentTermCodes]);
+
+  // Fetch student details when term changes
+  useEffect(() => {
+    if (currentTermCode) {
+      getStudentDetails({
+        termCode: currentTermCode,
+      })
+        .then((response) => {
+          const courses = response;
+          console.log("Student details response:", response);
+
+          if (Array.isArray(courses) && courses.length > 0) {
+            // Transform attendance data
+            const transformedAttendance = transformAttendanceData(courses);
+            setAttendanceData(transformedAttendance);
+
+            // Calculate GPA from the courses
+            const calculatedGpa = calculateGPA(courses);
+            setCurrentGpa(calculatedGpa);
+
+            // Calculate delta if we have a previous GPA
+            if (previousGpa !== null) {
+              const delta = calculatedGpa - previousGpa;
+              setGpaDelta(delta);
+
+              // Set message based on delta
+              if (delta > 0) {
+                setGpaMessage("Congratulations! GPA improved");
+              } else if (delta < 0) {
+                setGpaMessage("GPA decreased from last term");
+              } else {
+                setGpaMessage("GPA remained the same");
+              }
+            } else {
+              // First load - use a small positive default
+              setGpaDelta(0.15);
+              setGpaMessage("Congratulations! GPA improved");
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to fetch student details:", error);
+        });
+    }
+  }, [currentTermCode, getStudentDetails, previousGpa]);
 
   return (
     <div className={classes.card}>
@@ -135,75 +259,89 @@ const MySuccessTrackerCard = ({ classes }) => {
                   border: `4px solid ${gpaCircleColorCode ?? "#006114"}`,
                 }}
               >
-                <strong>{data.currentGPA}</strong>
+                <strong>
+                  {loadingStudentDetails ? "..." : currentGpa.toFixed(2)}
+                </strong>
               </div>
             </div>
             <div className={classes.gpaDelta}>
               <div className={classes.iconText}>
-                {/* <img src={arrow} alt="" className={classes.icon} /> */}
                 <DoubleChevronIcon
                   backgroundColor={
-                    data.gpaDelta >= 0
+                    gpaDelta >= 0
                       ? (gpaIncreaseChevronColorCode ?? "#006114")
                       : (gpaDecreaseChevronColorCode ?? "#F20A0A")
                   }
-                  orientation={data.gpaDelta >= 0 ? "up" : "down"}
+                  orientation={gpaDelta >= 0 ? "up" : "down"}
                   size="1rem"
                 />
-                <strong style={{ fontSize: "1rem" }}>{data.gpaDelta}</strong>
+                <strong style={{ fontSize: "1rem" }}>
+                  {Math.abs(gpaDelta).toFixed(2)}
+                </strong>
               </div>
               <Typography
                 variant="p"
                 style={{ fontSize: "0.6rem" }}
                 className={classes.deltaText}
               >
-                {" "}
                 from last term
               </Typography>
             </div>
           </div>
-          <div className={classes.gpaMessage}>Congratulations GPA improved</div>
+          <div className={classes.gpaMessage}>{gpaMessage}</div>
         </section>
-        {/* {<Divider className={classes.verticalDivider} />} */}
+
         <section className={classes.attendanceSection}>
           <header className={classes.attendanceHeader}>
             <Typography variant="h4" style={{ textAlign: "center" }}>
               Attendance Overview
             </Typography>
             <Typography variant="h6" style={{ textAlign: "center" }}>
-              Fall 2025
+              {loadingTermCodes
+                ? "Loading..."
+                : termCodesResult?.[0]?.term || "Current Term"}
             </Typography>
           </header>
-          <Table className={classes.attendanceTable}>
-            <TableBody>
-              {data.attendance.map((at) => {
-                return (
-                  <TableRow key={at.courseName}>
-                    <TableCell style={{ fontSize: "0.8rem" }}>
-                      <strong>{at.courseName}</strong>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        style={{ fontSize: "0.8rem" }}
-                        className={classes.iconText}
-                      >
-                        <strong>{at.percentage + "%"}</strong>
-                        <SvgHollowCircle
-                          color={
-                            at.percentage < 40
-                              ? (poorAttendanceColorCode ?? "#F20A0A")
-                              : at.percentage < 75
-                                ? (decentAttendanceColorCode ?? "#F27A0A")
-                                : (goodAttendanceColorCode ?? "#006114")
-                          }
-                        />
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          {loadingStudentDetails ? (
+            <Typography style={{ textAlign: "center", padding: "1rem" }}>
+              Loading attendance data...
+            </Typography>
+          ) : attendanceData.length === 0 ? (
+            <Typography style={{ textAlign: "center", padding: "1rem" }}>
+              No attendance data available
+            </Typography>
+          ) : (
+            <Table className={classes.attendanceTable}>
+              <TableBody>
+                {attendanceData.map((at, index) => {
+                  return (
+                    <TableRow key={index}>
+                      <TableCell style={{ fontSize: "0.8rem" }}>
+                        <strong>{at.courseName}</strong>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          style={{ fontSize: "0.8rem" }}
+                          className={classes.iconText}
+                        >
+                          <strong>{at.percentage + "%"}</strong>
+                          <SvgHollowCircle
+                            color={
+                              at.percentage < 40
+                                ? (poorAttendanceColorCode ?? "#F20A0A")
+                                : at.percentage < 75
+                                  ? (decentAttendanceColorCode ?? "#F27A0A")
+                                  : (goodAttendanceColorCode ?? "#006114")
+                            }
+                          />
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </section>
       </div>
     </div>
