@@ -4,6 +4,7 @@ import { withStyles } from "@ellucian/react-design-system/core/styles";
 import DoubleChevronIcon from "../components/DoubleChevron";
 import useStudentTermCodes from "../hooks/useTermCodes";
 import useStudentDetails from "../hooks/useStudentDetails";
+import useStudentGpa from "../hooks/useStudentGpa";
 
 // Ellucian provided hooks
 import {
@@ -68,32 +69,10 @@ const GRADE_TO_GPA = {
 };
 
 // Fallback/default data
-const DEFAULT_GPA = 3.2;
-const DEFAULT_GPA_DELTA = 0.15;
+const DEFAULT_GPA = 0;
+const DEFAULT_GPA_DELTA = 0;
 
-const DEFAULT_COURSES = [
-  {
-    CRN: "ABC123",
-    course: "Sample Course 1",
-    grade: "B",
-    credit: 3,
-    attendance: 85,
-  },
-  {
-    CRN: "DEF456",
-    course: "Sample Course 2",
-    grade: "A",
-    credit: 4,
-    attendance: 92,
-  },
-  {
-    CRN: "GHI789",
-    course: "Sample Course 3",
-    grade: "C",
-    credit: 3,
-    attendance: 68,
-  },
-];
+const DEFAULT_COURSES = [];
 
 /* ================= STYLES ================= */
 const styles = {
@@ -256,11 +235,12 @@ const transformCourseData = (apiCourses) => {
 /* ================= COMPONENT ================= */
 const MySuccessTrackerTable = ({ classes }) => {
   const [currentTerm, setCurrentTerm] = useState(null);
+  const [currentBannerId, setCurrentBannerId] = useState(null);
   const [currentTermCode, setCurrentTermCode] = useState(null);
-  const [currentGpa, setCurrentGpa] = useState(0);
-  const [gpaDelta, setGpaDelta] = useState(0);
-  const [courseData, setCourseData] = useState([]);
-  const [previousGpa, setPreviousGpa] = useState(null);
+  const [previousTermCode, setPreviousTermCode] = useState(null);
+  const [currentGpa, setCurrentGpa] = useState(DEFAULT_GPA);
+  const [gpaDelta, setGpaDelta] = useState(DEFAULT_GPA_DELTA);
+  const [courseData, setCourseData] = useState(DEFAULT_COURSES);
 
   const { authenticatedEthosFetch } = useData();
   const { cardId } = useCardInfo();
@@ -272,6 +252,23 @@ const MySuccessTrackerTable = ({ classes }) => {
     termCodesResult,
   } = useStudentTermCodes(authenticatedEthosFetch, cardId);
 
+  // Hook for current term GPA
+  // console.log(currentBannerId, "- current term banner")
+  const {
+    getStudentGpa: getCurrentGpa,
+    loadingGpa: loadingCurrentGpa,
+    errorGpa: errorCurrentGpa,
+    gpaResult: currentGpaResult,
+  } = useStudentGpa(authenticatedEthosFetch, cardId, currentBannerId, currentTermCode);
+
+  // Hook for previous term GPA
+  const {
+    getStudentGpa: getPreviousGpa,
+    loadingGpa: loadingPreviousGpa,
+    errorGpa: errorPreviousGpa,
+    gpaResult: previousGpaResult,
+  } = useStudentGpa(authenticatedEthosFetch, cardId, previousTermCode);
+
   const {
     getStudentDetails,
     loadingStudentDetails,
@@ -279,6 +276,7 @@ const MySuccessTrackerTable = ({ classes }) => {
     studentDetailsResult,
   } = useStudentDetails(authenticatedEthosFetch, cardId);
 
+  // Fetch term codes on mount
   useEffect(() => {
     getStudentTermCodes()
       .then((data) => {
@@ -286,6 +284,11 @@ const MySuccessTrackerTable = ({ classes }) => {
         if (Array.isArray(data) && data.length > 0) {
           setCurrentTerm(data[0].term);
           setCurrentTermCode(data[0].termCode);
+          setCurrentBannerId(data[0].bannerId)
+          // Store previous term code for GPA delta calculation
+          if (data.length > 1) {
+            setPreviousTermCode(data[1].termCode);
+          }
         }
       })
       .catch(() => {
@@ -293,51 +296,79 @@ const MySuccessTrackerTable = ({ classes }) => {
       });
   }, [getStudentTermCodes]);
 
-  // Fetch student details when term changes
+  // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
-    if (currentTermCode) {
-      getStudentDetails({
-        // termCode: 199510,
-        termCode: currentTermCode
+    if (!currentTermCode) return;
+
+    getCurrentGpa()
+      .then((data) => {
+        console.log("Current GPA data:", data);
+        // Expected payload: { termGpa, cumulativeGpa }
+        const gpaValue = data?.cumulativeGpa;
+        setCurrentGpa(gpaValue);
       })
-        .then((response) => {
-          // The API returns: { status, statusText, data: [[courses]], runId }
-          const courses = response;
-          console.log(response);
+      .catch((error) => {
+        console.error("Failed to fetch current GPA:", error);
+        setCurrentGpa(DEFAULT_GPA);
+      });
+  }, [currentTermCode, getCurrentGpa]);
 
-          if (Array.isArray(courses) && courses.length > 0) {
-            // Transform the course data
-            const transformedCourses = transformCourseData(courses);
-            setCourseData(transformedCourses);
+  // Fetch previous term GPA when previousTermCode changes
+  useEffect(() => {
+    if (!previousTermCode) {
+      setGpaDelta(0);
+      return;
+    }
 
-            // Calculate GPA from the courses
+    getPreviousGpa()
+      .then((data) => {
+        console.log("Previous GPA data:", data);
+        // Expected payload: { termGpa, cumulativeGpa }
+        const prevGpaValue = data?.termGpa || data?.cumulativeGpa || 0;
+
+        // Calculate delta
+        setGpaDelta(currentGpa - prevGpaValue);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch previous GPA:", error);
+        setGpaDelta(0);
+      });
+  }, [previousTermCode, getPreviousGpa, currentGpa]);
+
+  // Fetch student course details when term changes
+  useEffect(() => {
+    if (!currentTermCode) return;
+
+    getStudentDetails({ termCode: currentTermCode })
+      .then((response) => {
+        const courses = response;
+        console.log("Course details response:", response);
+
+        if (Array.isArray(courses) && courses.length > 0) {
+          // Transform the course data
+          const transformedCourses = transformCourseData(courses);
+          setCourseData(transformedCourses);
+
+          // Fallback: Calculate GPA from courses if API GPA is not available
+          if (!loadingCurrentGpa && currentGpa === 0 && !currentGpaResult) {
             const calculatedGpa = calculateGPA(courses);
             setCurrentGpa(calculatedGpa);
-
-            // Calculate delta if we have a previous GPA
-            if (previousGpa !== null) {
-              setGpaDelta(calculatedGpa - previousGpa);
-            } else {
-              // First load - use a default delta
-              setGpaDelta(DEFAULT_GPA_DELTA);
-            }
           }
-          // else {
-          //   // No courses found, use defaults
-          //   setCourseData(DEFAULT_COURSES);
-          //   setCurrentGpa(DEFAULT_GPA);
-          //   setGpaDelta(DEFAULT_GPA_DELTA);
-          // }
-        })
-        .catch((error) => {
-          // Error is already handled by the hook
-          console.error("Failed to fetch student details:", error);
-          setCourseData(DEFAULT_COURSES);
-          setCurrentGpa(DEFAULT_GPA);
-          setGpaDelta(DEFAULT_GPA_DELTA);
-        });
-    }
-  }, [currentTermCode, getStudentDetails, previousGpa]);
+        } else {
+          setCourseData([]);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch student details:", error);
+        setCourseData([]);
+      });
+  }, [
+    currentTermCode,
+    getStudentDetails,
+    loadingCurrentGpa,
+    currentGpa,
+    currentGpaResult,
+  ]);
 
   const getStatusColor = (value) => {
     if (value >= TABLE_CONFIG.attendanceGood) return COLOR_CONFIG.ON_TRACK;
@@ -352,9 +383,29 @@ const MySuccessTrackerTable = ({ classes }) => {
     return COLOR_CONFIG.CRITICAL;
   };
 
+  const handleTermChange = (term) => {
+    // Find the selected term's index
+    const selectedIndex = termCodesResult.findIndex(
+      (t) => t.termCode === term.termCode,
+    );
+
+    // Set current term
+    setCurrentTerm(term.term);
+    setCurrentTermCode(term.termCode);
+    setCurrentBannerId(term.bannerId)
+
+    // Set previous term (next item in the array, since newest is first)
+    if (selectedIndex >= 0 && selectedIndex < termCodesResult.length - 1) {
+      setPreviousTermCode(termCodesResult[selectedIndex + 1].termCode);
+    } else {
+      setPreviousTermCode(null);
+    }
+  };
+
   const isPositive = gpaDelta >= 0;
   const gpaCircleColor = getGpaCircleColor(currentGpa);
   const deltaColor = isPositive ? COLOR_CONFIG.ON_TRACK : COLOR_CONFIG.CRITICAL;
+  const isLoading = loadingCurrentGpa || loadingStudentDetails;
 
   return (
     <div className={classes.root}>
@@ -367,12 +418,7 @@ const MySuccessTrackerTable = ({ classes }) => {
             dropdown={termCodesResult?.map((term) => (
               <DropdownButtonItem
                 key={term.termCode}
-                onClick={() => {
-                  // Store previous GPA before switching
-                  setPreviousGpa(currentGpa);
-                  setCurrentTerm(term.term);
-                  setCurrentTermCode(term.termCode);
-                }}
+                onClick={() => handleTermChange(term)}
               >
                 {term.term}
               </DropdownButtonItem>
@@ -414,7 +460,7 @@ const MySuccessTrackerTable = ({ classes }) => {
             className={classes.gpaCircle}
             style={{ borderColor: gpaCircleColor, color: gpaCircleColor }}
           >
-            {loadingStudentDetails ? "..." : currentGpa.toFixed(2)}
+            {loadingCurrentGpa ? "..." : currentGpa}
           </div>
         </Card>
       </div>
@@ -425,13 +471,13 @@ const MySuccessTrackerTable = ({ classes }) => {
           Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
         </Typography>
 
-        {loadingStudentDetails && (
+        {isLoading && (
           <Typography style={{ padding: spacing20, textAlign: "center" }}>
             Loading student details...
           </Typography>
         )}
 
-        {errorStudentDetails && !loadingStudentDetails && (
+        {(errorStudentDetails || errorCurrentGpa) && !isLoading && (
           <Typography
             style={{
               padding: spacing20,
@@ -443,7 +489,7 @@ const MySuccessTrackerTable = ({ classes }) => {
           </Typography>
         )}
 
-        {!loadingStudentDetails && (
+        {!isLoading && (
           <Table className={classes.table}>
             <TableHead>
               <TableRow>

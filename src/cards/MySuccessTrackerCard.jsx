@@ -14,6 +14,7 @@ import SvgHollowCircle from "../components/SvgHollowCircle.jsx";
 import DoubleChevronIcon from "../components/DoubleChevron.jsx";
 import useStudentTermCodes from "../hooks/useTermCodes";
 import useStudentDetails from "../hooks/useStudentDetails";
+import useStudentGpa from "../hooks/useStudentGpa";
 
 const styles = (theme) => ({
   card: {
@@ -165,10 +166,11 @@ const MySuccessTrackerCard = ({ classes }) => {
   const { authenticatedEthosFetch } = useData();
 
   const [currentTermCode, setCurrentTermCode] = useState(null);
+  const [currentBannerId, setCurrentBannerId] = useState(null);
+  const [previousTermCode, setPreviousTermCode] = useState(null);
   const [currentGpa, setCurrentGpa] = useState(0);
   const [gpaDelta, setGpaDelta] = useState(0);
   const [attendanceData, setAttendanceData] = useState([]);
-  const [previousGpa, setPreviousGpa] = useState(null);
   const [gpaMessage, setGpaMessage] = useState("");
 
   const {
@@ -177,6 +179,27 @@ const MySuccessTrackerCard = ({ classes }) => {
     errorTermCodes,
     termCodesResult,
   } = useStudentTermCodes(authenticatedEthosFetch, cardId);
+
+  // Hook for current term GPA
+  const {
+    getStudentGpa: getCurrentGpa,
+    loadingGpa: loadingCurrentGpa,
+    errorGpa: errorCurrentGpa,
+    gpaResult: currentGpaResult,
+  } = useStudentGpa(
+    authenticatedEthosFetch,
+    cardId,
+    currentBannerId,
+    currentTermCode,
+  );
+
+  // Hook for previous term GPA
+  const {
+    getStudentGpa: getPreviousGpa,
+    loadingGpa: loadingPreviousGpa,
+    errorGpa: errorPreviousGpa,
+    gpaResult: previousGpaResult,
+  } = useStudentGpa(authenticatedEthosFetch, cardId, previousTermCode);
 
   const {
     getStudentDetails,
@@ -191,7 +214,13 @@ const MySuccessTrackerCard = ({ classes }) => {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           // Set the latest term (first item)
-          setCurrentTermCode(data[0].termCode);
+          setCurrentTermCode(data[1].termCode);
+          setCurrentBannerId(data[1].bannerId);
+
+          // Store previous term code for GPA delta calculation
+          if (data.length > 1) {
+            setPreviousTermCode(data[1].termCode);
+          }
         }
       })
       .catch(() => {
@@ -199,50 +228,90 @@ const MySuccessTrackerCard = ({ classes }) => {
       });
   }, [getStudentTermCodes]);
 
+  // Fetch current term GPA when currentTermCode changes
+  useEffect(() => {
+    if (!currentTermCode) return;
+
+    getCurrentGpa()
+      .then((data) => {
+        console.log("Current GPA data:", data);
+        // Expected payload: { termGpa, cumulativeGpa }
+        const gpaValue = data?.cumulativeGpa;
+        setCurrentGpa(gpaValue);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch current GPA:", error);
+        setCurrentGpa(0);
+      });
+  }, [currentTermCode, getCurrentGpa]);
+
+  // Fetch previous term GPA when previousTermCode changes
+  useEffect(() => {
+    if (!previousTermCode) {
+      setGpaDelta(0);
+      setGpaMessage("No previous term data available");
+      return;
+    }
+
+    getPreviousGpa()
+      .then((data) => {
+        console.log("Previous GPA data:", data);
+        // Expected payload: { termGpa, cumulativeGpa }
+        const prevGpaValue = data?.termGpa || data?.cumulativeGpa || 0;
+
+        // Calculate delta
+        const delta = currentGpa - prevGpaValue;
+        setGpaDelta(delta);
+
+        // Set message based on delta
+        if (delta > 0) {
+          setGpaMessage("Congratulations! GPA improved");
+        } else if (delta < 0) {
+          setGpaMessage("GPA decreased from last term");
+        } else {
+          setGpaMessage("GPA remained the same");
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch previous GPA:", error);
+        setGpaDelta(0);
+        setGpaMessage("Previous term GPA unavailable");
+      });
+  }, [previousTermCode, getPreviousGpa, currentGpa]);
+
   // Fetch student details when term changes
   useEffect(() => {
-    if (currentTermCode) {
-      getStudentDetails({
-        termCode: currentTermCode,
-      })
-        .then((response) => {
-          const courses = response;
-          console.log("Student details response:", response);
+    if (!currentTermCode) return;
 
-          if (Array.isArray(courses) && courses.length > 0) {
-            // Transform attendance data
-            const transformedAttendance = transformAttendanceData(courses);
-            setAttendanceData(transformedAttendance);
+    getStudentDetails({
+      termCode: currentTermCode,
+    })
+      .then((response) => {
+        const courses = response;
+        console.log("Student details response:", response);
 
-            // Calculate GPA from the courses
+        if (Array.isArray(courses) && courses.length > 0) {
+          // Transform attendance data
+          const transformedAttendance = transformAttendanceData(courses);
+          setAttendanceData(transformedAttendance);
+
+          // Fallback: Calculate GPA from courses if API GPA is not available
+          if (!loadingCurrentGpa && currentGpa === 0 && !currentGpaResult) {
             const calculatedGpa = calculateGPA(courses);
             setCurrentGpa(calculatedGpa);
-
-            // Calculate delta if we have a previous GPA
-            if (previousGpa !== null) {
-              const delta = calculatedGpa - previousGpa;
-              setGpaDelta(delta);
-
-              // Set message based on delta
-              if (delta > 0) {
-                setGpaMessage("Congratulations! GPA improved");
-              } else if (delta < 0) {
-                setGpaMessage("GPA decreased from last term");
-              } else {
-                setGpaMessage("GPA remained the same");
-              }
-            } else {
-              // First load - use a small positive default
-              setGpaDelta(0.15);
-              setGpaMessage("Congratulations! GPA improved");
-            }
           }
-        })
-        .catch((error) => {
-          console.error("Failed to fetch student details:", error);
-        });
-    }
-  }, [currentTermCode, getStudentDetails, previousGpa]);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to fetch student details:", error);
+      });
+  }, [
+    currentTermCode,
+    getStudentDetails,
+    loadingCurrentGpa,
+    currentGpa,
+    currentGpaResult,
+  ]);
 
   return (
     <div className={classes.card}>
@@ -260,7 +329,7 @@ const MySuccessTrackerCard = ({ classes }) => {
                 }}
               >
                 <strong>
-                  {loadingStudentDetails ? "..." : currentGpa.toFixed(2)}
+                  {loadingCurrentGpa ? "..." : currentGpa}
                 </strong>
               </div>
             </div>
@@ -353,4 +422,3 @@ MySuccessTrackerCard.propTypes = {
 };
 
 export default withStyles(styles)(MySuccessTrackerCard);
-
