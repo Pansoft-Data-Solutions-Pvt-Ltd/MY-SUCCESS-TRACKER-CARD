@@ -368,7 +368,7 @@ const MySuccessTrackerCard = ({ classes }) => {
             <Typography variant="h6" style={{ textAlign: "center" }}>
               {loadingTermCodes
                 ? "Loading..."
-                : termCodesResult?.[0]?.term || "Current Term"}
+                : termCodesResult?.[1]?.term || "Current Term"}
             </Typography>
           </header>
           {loadingStudentDetails ? (
