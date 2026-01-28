@@ -110,24 +110,6 @@ const styles = {
   card: {
     padding: spacing20,
   },
-  legendBar: {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing30,
-    marginTop: spacing20,
-    marginBottom: spacing20,
-  },
-  legendItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing10,
-    fontSize: "0.85rem",
-  },
-  legendDot: {
-    width: "12px",
-    height: "12px",
-    borderRadius: "50%",
-  },
   table: {
     width: "100%",
     tableLayout: "fixed",
@@ -276,9 +258,9 @@ const MySuccessTrackerTable = ({ classes }) => {
       .then((data) => {
         // Set default selected term (latest / first item)
         if (Array.isArray(data) && data.length > 0) {
-          setCurrentTerm(data[0].term);
-          setCurrentTermCode(data[0].termCode);
-          setCurrentBannerId(data[0].bannerId);
+          setCurrentTerm(data[1].term);
+          setCurrentTermCode(data[1].termCode);
+          setCurrentBannerId(data[1].bannerId);
           // Store previous term code for GPA delta calculation
           if (data.length > 1) {
             setPreviousTermCode(data[1].termCode);
@@ -391,7 +373,7 @@ const MySuccessTrackerTable = ({ classes }) => {
 
     fetchAllAttendance();
   }, [
-    courseData,
+    courseData.length,
     currentTermCode,
     currentBannerId,
     getStudentAttendance,
