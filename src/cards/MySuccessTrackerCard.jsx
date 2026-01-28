@@ -39,7 +39,7 @@ const styles = (theme) => ({
   cardBody: {
     display: "flex",
     flexDirection: "row",
-    gap: "1rem",
+    gap: "0rem",
 
     [theme.breakpoints.down("md")]: {
       flexDirection: "column",
@@ -66,8 +66,12 @@ const styles = (theme) => ({
     display: "flex",
     gap: "1.25rem",
     flexDirection: "column",
+    alignItems: "center",
   },
-  gpaMessage: {},
+  gpaMessage: {
+    textAlign: "center",
+    fontSize: "0.75rem",
+  },
   gpaCircleContainer: {
     flexShrink: 0,
     flex: 1,
@@ -87,6 +91,7 @@ const styles = (theme) => ({
     display: "flex",
     flexDirection: "column",
     gap: "0.5rem",
+    alignItems: "center",
   },
   verticalDivider: {
     display: "none",
@@ -106,6 +111,55 @@ const styles = (theme) => ({
     width: "1rem",
     height: "1rem",
   },
+  attendanceList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+    padding: "1rem",
+    [theme.breakpoints.down("sm")]: {
+      padding: "0.5rem",
+      gap: "0.25rem",
+    },
+  },
+  attendanceRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "0.75rem",
+    borderBottom: "1px solid #e0e0e0",
+    gap: "0.75rem",
+    minHeight: "44px", // Ensure good touch target on mobile
+    "&:last-child": {
+      borderBottom: "none",
+    },
+    [theme.breakpoints.down("sm")]: {
+      padding: "0.5rem",
+      gap: "0.5rem",
+      minHeight: "40px",
+    },
+  },
+  courseName: {
+    flex: 1,
+    fontSize: "0.8rem",
+    minWidth: 0, // Critical for text truncation
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    [theme.breakpoints.down("sm")]: {
+      fontSize: "0.75rem",
+    },
+  },
+  attendancePercentage: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    fontSize: "0.8rem",
+    flexShrink: 0, // Prevent shrinking on small screens
+    [theme.breakpoints.down("sm")]: {
+      fontSize: "0.75rem",
+      gap: "0.375rem",
+    },
+  },
 });
 
 // Grade to GPA mapping
@@ -123,23 +177,6 @@ const GRADE_TO_GPA = {
   "D-": 0.7,
   F: 0.0,
   P: null,
-};
-
-const calculateGPA = (courses) => {
-  let totalPoints = 0;
-  let totalCredits = 0;
-
-  courses.forEach((course) => {
-    const gradeValue = GRADE_TO_GPA[course.grade];
-    const credits = course.credits?.creditHours || 0;
-
-    if (gradeValue !== null && gradeValue !== undefined) {
-      totalPoints += gradeValue * credits;
-      totalCredits += credits;
-    }
-  });
-
-  return totalCredits > 0 ? totalPoints / totalCredits : 0;
 };
 
 const transformAttendanceData = (apiCourses) => {
@@ -241,7 +278,7 @@ const MySuccessTrackerCard = ({ classes }) => {
 
   // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
-    if (!currentTermCode) return;
+    if (!currentTermCode && !currentBannerId) return;
 
     getCurrentGpa()
       .then((data) => {
@@ -305,12 +342,6 @@ const MySuccessTrackerCard = ({ classes }) => {
           // Transform attendance data
           const transformedAttendance = transformAttendanceData(courses);
           setAttendanceData(transformedAttendance);
-
-          // Fallback: Calculate GPA from courses if API GPA is not available
-          if (!loadingCurrentGpa && currentGpa === 0 && !currentGpaResult) {
-            const calculatedGpa = calculateGPA(courses);
-            setCurrentGpa(calculatedGpa);
-          }
         }
       })
       .catch((error) => {
@@ -391,7 +422,7 @@ const MySuccessTrackerCard = ({ classes }) => {
       <div className={classes.cardBody}>
         <section className={classes.gpaSection}>
           <header className={classes.gpaHeader}>
-            <Typography variant="h4">Cumulative GPA</Typography>
+            <Typography variant="h5">Cumulative GPA</Typography>
           </header>
           <div className={classes.gpaBody}>
             <div className={classes.gpaCircleContainer}>
@@ -435,69 +466,56 @@ const MySuccessTrackerCard = ({ classes }) => {
 
         <section className={classes.attendanceSection}>
           <header className={classes.attendanceHeader}>
-            <Typography variant="h4" style={{ textAlign: "center" }}>
+            <Typography variant="h5" style={{ textAlign: "center" }}>
               Attendance Overview
             </Typography>
-            <Typography variant="h6" style={{ textAlign: "center" }}>
+            <Typography variant="body2" style={{ textAlign: "center" }}>
               {loadingTermCodes
                 ? "Loading..."
                 : termCodesResult?.[1]?.term || "Current Term"}
             </Typography>
           </header>
+
           {loadingStudentDetails || loadingAttendance ? (
             <Typography style={{ textAlign: "center", padding: "1rem" }}>
-              {loadingStudentDetails
-                ? "Loading attendance data..."
-                : "Fetching attendance percentages..."}
+              Loading attendance data...
             </Typography>
           ) : attendanceData.length === 0 ? (
             <Typography style={{ textAlign: "center", padding: "1rem" }}>
               No attendance data available
             </Typography>
           ) : (
-            <Table className={classes.attendanceTable}>
-              <TableBody>
-                {attendanceData.map((at, index) => {
-                  const displayPercentage =
-                    at.percentage !== null
-                      ? `${at.percentage.toFixed(2)}%`
-                      : "N/A";
-                  const circleColor =
-                    at.percentage === null
-                      ? "#999"
-                      : at.percentage < 40
-                        ? (poorAttendanceColorCode ?? "#F20A0A")
-                        : at.percentage < 75
-                          ? (decentAttendanceColorCode ?? "#F27A0A")
-                          : (goodAttendanceColorCode ?? "#006114");
+            <div className={classes.attendanceList}>
+              {attendanceData.map((at, index) => {
+                const percentage = at.percentage ?? 0;
+                const displayPercentage =
+                  at.percentage !== null ? `${percentage.toFixed(2)}%` : "N/A";
 
-                  return (
-                    <TableRow key={index}>
-                      <TableCell style={{ fontSize: "0.8rem" }}>
-                        {at.courseName}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          style={{ fontSize: "0.8rem" }}
-                          className={classes.iconText}
-                        >
-                          {at.percentage + "%"}
-                          <SvgHollowCircle
-                            color={
-                              at.percentage < 40
-                                ? (poorAttendanceColorCode ?? "#F20A0A")
-                                : at.percentage < 75
-                                  ? (decentAttendanceColorCode ?? "#F27A0A")
-                                  : (goodAttendanceColorCode ?? "#006114")
-                            }
-                          />
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                const circleColor =
+                  at.percentage === null
+                    ? "#999"
+                    : percentage < 40
+                      ? (poorAttendanceColorCode ?? "#F20A0A")
+                      : percentage < 75
+                        ? (decentAttendanceColorCode ?? "#F27A0A")
+                        : (goodAttendanceColorCode ?? "#006114");
+
+                return (
+                  <div key={index} className={classes.attendanceRow}>
+                    <div
+                      className={classes.courseName}
+                      title={at.courseName} // Show full name on hover
+                    >
+                      {at.courseName}
+                    </div>
+                    <div className={classes.attendancePercentage}>
+                      <strong>{displayPercentage}</strong>
+                      <SvgHollowCircle color={circleColor} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </section>
       </div>
