@@ -15,10 +15,11 @@ import DoubleChevronIcon from "../components/DoubleChevron.jsx";
 import useStudentTermCodes from "../hooks/useTermCodes";
 import useStudentDetails from "../hooks/useStudentDetails";
 import useStudentGpa from "../hooks/useStudentGpa";
+import useStudentAttendance from "../hooks/useStudentAttendance";
 
 const styles = (theme) => ({
   card: {
-    padding: "0 1.5rem",
+    padding: "0 1rem",
     display: "flex",
     flexDirection: "column",
     gap: spacing24,
@@ -147,8 +148,9 @@ const transformAttendanceData = (apiCourses) => {
   }
 
   return apiCourses.map((course) => ({
+    CRN: course.courseReferenceNumber,
     courseName: course.courseTitle || course.courseNumber || "Unknown Course",
-    percentage: Math.floor(Math.random() * 30) + 70, // Mock data: 70-100%
+    percentage: null, // Will be populated by API call
   }));
 };
 
@@ -174,6 +176,7 @@ const MySuccessTrackerCard = ({ classes }) => {
   const [gpaDelta, setGpaDelta] = useState(0);
   const [attendanceData, setAttendanceData] = useState([]);
   const [gpaMessage, setGpaMessage] = useState("");
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   const {
     getStudentTermCodes,
@@ -209,6 +212,12 @@ const MySuccessTrackerCard = ({ classes }) => {
     errorStudentDetails,
     studentDetailsResult,
   } = useStudentDetails(authenticatedEthosFetch, cardId);
+
+  // Hook for student attendance
+  const { getStudentAttendance } = useStudentAttendance(
+    authenticatedEthosFetch,
+    cardId,
+  );
 
   // Fetch term codes on mount
   useEffect(() => {
@@ -307,12 +316,74 @@ const MySuccessTrackerCard = ({ classes }) => {
       .catch((error) => {
         console.error("Failed to fetch student details:", error);
       });
+  }, [currentTermCode, getStudentDetails]);
+
+  // Fetch attendance for each course
+  useEffect(() => {
+    if (!attendanceData.length || !currentTermCode || !currentBannerId) return;
+
+    const fetchAllAttendance = async () => {
+      setLoadingAttendance(true);
+
+      try {
+        // Fetch attendance for all courses in parallel
+        const attendancePromises = attendanceData.map(async (course) => {
+          try {
+            const attendanceDataResponse = await getStudentAttendance({
+              termCode: currentTermCode,
+              bannerId: currentBannerId,
+              courseReferenceNumber: course.CRN,
+            });
+
+            // Extract attendance percentage from response
+            const attendancePercentage =
+              attendanceDataResponse?.attendancePercentage;
+
+            return {
+              CRN: course.CRN,
+              percentage: attendancePercentage
+                ? parseFloat(attendancePercentage)
+                : null,
+            };
+          } catch (error) {
+            console.error(
+              `Failed to fetch attendance for CRN ${course.CRN}:`,
+              error,
+            );
+            return {
+              CRN: course.CRN,
+              percentage: null,
+            };
+          }
+        });
+
+        const attendanceResults = await Promise.all(attendancePromises);
+
+        // Update attendance data with fetched percentages
+        setAttendanceData((prevAttendance) =>
+          prevAttendance.map((course) => {
+            const attendanceResult = attendanceResults.find(
+              (result) => result.CRN === course.CRN,
+            );
+            return {
+              ...course,
+              percentage: attendanceResult?.percentage ?? null,
+            };
+          }),
+        );
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      } finally {
+        setLoadingAttendance(false);
+      }
+    };
+
+    fetchAllAttendance();
   }, [
+    attendanceData.length,
     currentTermCode,
-    getStudentDetails,
-    loadingCurrentGpa,
-    currentGpa,
-    currentGpaResult,
+    currentBannerId,
+    getStudentAttendance,
   ]);
 
   return (
@@ -373,9 +444,11 @@ const MySuccessTrackerCard = ({ classes }) => {
                 : termCodesResult?.[1]?.term || "Current Term"}
             </Typography>
           </header>
-          {loadingStudentDetails ? (
+          {loadingStudentDetails || loadingAttendance ? (
             <Typography style={{ textAlign: "center", padding: "1rem" }}>
-              Loading attendance data...
+              {loadingStudentDetails
+                ? "Loading attendance data..."
+                : "Fetching attendance percentages..."}
             </Typography>
           ) : attendanceData.length === 0 ? (
             <Typography style={{ textAlign: "center", padding: "1rem" }}>
@@ -385,6 +458,19 @@ const MySuccessTrackerCard = ({ classes }) => {
             <Table className={classes.attendanceTable}>
               <TableBody>
                 {attendanceData.map((at, index) => {
+                  const displayPercentage =
+                    at.percentage !== null
+                      ? `${at.percentage.toFixed(2)}%`
+                      : "N/A";
+                  const circleColor =
+                    at.percentage === null
+                      ? "#999"
+                      : at.percentage < 40
+                        ? (poorAttendanceColorCode ?? "#F20A0A")
+                        : at.percentage < 75
+                          ? (decentAttendanceColorCode ?? "#F27A0A")
+                          : (goodAttendanceColorCode ?? "#006114");
+
                   return (
                     <TableRow key={index}>
                       <TableCell style={{ fontSize: "0.8rem" }}>
