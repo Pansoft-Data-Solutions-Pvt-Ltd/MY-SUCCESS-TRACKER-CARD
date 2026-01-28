@@ -123,23 +123,6 @@ const GRADE_TO_GPA = {
   P: null,
 };
 
-const calculateGPA = (courses) => {
-  let totalPoints = 0;
-  let totalCredits = 0;
-
-  courses.forEach((course) => {
-    const gradeValue = GRADE_TO_GPA[course.grade];
-    const credits = course.credits?.creditHours || 0;
-
-    if (gradeValue !== null && gradeValue !== undefined) {
-      totalPoints += gradeValue * credits;
-      totalCredits += credits;
-    }
-  });
-
-  return totalCredits > 0 ? totalPoints / totalCredits : 0;
-};
-
 const transformAttendanceData = (apiCourses) => {
   if (!Array.isArray(apiCourses) || apiCourses.length === 0) {
     return [];
@@ -239,7 +222,7 @@ const MySuccessTrackerCard = ({ classes }) => {
 
   // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
-    if (!currentTermCode) return;
+    if (!currentTermCode && !currentBannerId) return;
 
     getCurrentGpa()
       .then((data) => {
@@ -303,12 +286,6 @@ const MySuccessTrackerCard = ({ classes }) => {
           // Transform attendance data
           const transformedAttendance = transformAttendanceData(courses);
           setAttendanceData(transformedAttendance);
-
-          // Fallback: Calculate GPA from courses if API GPA is not available
-          if (!loadingCurrentGpa && currentGpa === 0 && !currentGpaResult) {
-            const calculatedGpa = calculateGPA(courses);
-            setCurrentGpa(calculatedGpa);
-          }
         }
       })
       .catch((error) => {

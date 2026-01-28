@@ -8,45 +8,31 @@ const useStudentGpa = (authenticatedEthosFetch, cardId, bannerId, termCode) => {
   const getStudentGpa = useCallback(async () => {
     setLoadingGpa(true);
     setErrorGpa(null);
-
     if (!cardId || !termCode) {
       const msg = "Missing cardId or termCode";
       setErrorGpa(msg);
       setLoadingGpa(false);
       return Promise.reject(new Error(msg));
     }
-
     try {
       const url = `Get-StudentGPA?cardId=${encodeURIComponent(
         cardId,
       )}&term=${encodeURIComponent(termCode)}&id=${encodeURIComponent(bannerId)}`;
-
       const response = await authenticatedEthosFetch(url, {
         method: "GET",
         headers: {
           Accept: "application/json",
         },
       });
-
       if (!response) {
         throw new Error("No response from server");
       }
-
       const data = await response.json().catch(() => null);
-
       if (!response.ok) {
         throw new Error(
           data?.message || response.statusText || "Fetch student GPA failed",
         );
       }
-
-      /*
-        Expected payload from your Transform:
-        {
-          termGpa: number,
-          cumulativeGpa: number
-        }
-      */
       setGpaResult(data);
       return data;
     } catch (error) {
@@ -55,7 +41,7 @@ const useStudentGpa = (authenticatedEthosFetch, cardId, bannerId, termCode) => {
     } finally {
       setLoadingGpa(false);
     }
-  }, [authenticatedEthosFetch, cardId, termCode]);
+  }, [authenticatedEthosFetch, cardId, termCode, bannerId]);
 
   return {
     getStudentGpa,
