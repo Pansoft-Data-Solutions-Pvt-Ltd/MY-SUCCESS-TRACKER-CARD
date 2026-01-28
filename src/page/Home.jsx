@@ -226,19 +226,6 @@ const MySuccessTrackerTable = ({ classes }) => {
     termCodesResult,
   } = useStudentTermCodes(authenticatedEthosFetch, cardId);
 
-  // Hook for current term GPA
-  const {
-    getStudentGpa: getCurrentGpa,
-    loadingGpa: loadingCurrentGpa,
-    errorGpa: errorCurrentGpa,
-    gpaResult: currentGpaResult,
-  } = useStudentGpa(
-    authenticatedEthosFetch,
-    cardId,
-    currentBannerId,
-    currentTermCode,
-  );
-
   const {
     getStudentDetails,
     loadingStudentDetails,
@@ -258,9 +245,9 @@ const MySuccessTrackerTable = ({ classes }) => {
       .then((data) => {
         // Set default selected term (latest / first item)
         if (Array.isArray(data) && data.length > 0) {
-          setCurrentTerm(data[1].term);
-          setCurrentTermCode(data[1].termCode);
-          setCurrentBannerId(data[1].bannerId);
+          setCurrentTerm(data[1]?.term);
+          setCurrentTermCode(data[1]?.termCode);
+          setCurrentBannerId(data[1]?.bannerId);
           // Store previous term code for GPA delta calculation
           if (data.length > 1) {
             setPreviousTermCode(data[1].termCode);
@@ -272,9 +259,22 @@ const MySuccessTrackerTable = ({ classes }) => {
       });
   }, [getStudentTermCodes]);
 
+  // Hook for current term GPA
+  const {
+    getStudentGpa: getCurrentGpa,
+    loadingGpa: loadingCurrentGpa,
+    errorGpa: errorCurrentGpa,
+    gpaResult: currentGpaResult,
+  } = useStudentGpa(
+    authenticatedEthosFetch,
+    cardId,
+    currentBannerId,
+    currentTermCode,
+  );
+
   // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
-    if (!currentTermCode) return;
+    if (!currentTermCode && !currentBannerId) return;
 
     getCurrentGpa()
       .then((data) => {
@@ -287,7 +287,7 @@ const MySuccessTrackerTable = ({ classes }) => {
         console.error("Failed to fetch current GPA:", error);
         setCurrentGpa(0);
       });
-  }, [currentTermCode, getCurrentGpa]);
+  }, [currentTermCode, getCurrentGpa, currentBannerId]);
 
   // Fetch student course details when term changes
   useEffect(() => {
