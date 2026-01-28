@@ -5,6 +5,7 @@ import DoubleChevronIcon from "../components/DoubleChevron";
 import useStudentTermCodes from "../hooks/useTermCodes";
 import useStudentDetails from "../hooks/useStudentDetails";
 import useStudentGpa from "../hooks/useStudentGpa";
+import useStudentAttendance from "../hooks/useStudentAttendance";
 
 // Ellucian provided hooks
 import {
@@ -50,29 +51,6 @@ const GPA_CONFIG = {
   GOOD: 3.5,
   MEDIUM: 3.0,
 };
-
-// Grade to GPA mapping
-const GRADE_TO_GPA = {
-  A: 4.0,
-  "A-": 3.7,
-  "B+": 3.3,
-  B: 3.0,
-  "B-": 2.7,
-  "C+": 2.3,
-  C: 2.0,
-  "C-": 1.7,
-  "D+": 1.3,
-  D: 1.0,
-  "D-": 0.7,
-  F: 0.0,
-  P: null, // Pass/Fail, don't count in GPA
-};
-
-// Fallback/default data
-const DEFAULT_GPA = 0;
-const DEFAULT_GPA_DELTA = 0;
-
-const DEFAULT_COURSES = [];
 
 /* ================= STYLES ================= */
 const styles = {
@@ -197,24 +175,6 @@ const styles = {
 };
 
 /* ================= HELPER FUNCTIONS ================= */
-const calculateGPA = (courses) => {
-  let totalPoints = 0;
-  let totalCredits = 0;
-
-  courses.forEach((course) => {
-    const gradeValue = GRADE_TO_GPA[course.grade];
-    const credits = course.credits?.creditHours || 0;
-
-    // Only count grades that have a numeric value (skip P/F)
-    if (gradeValue !== null && gradeValue !== undefined) {
-      totalPoints += gradeValue * credits;
-      totalCredits += credits;
-    }
-  });
-
-  return totalCredits > 0 ? totalPoints / totalCredits : 0;
-};
-
 const transformCourseData = (apiCourses) => {
   if (!Array.isArray(apiCourses) || apiCourses.length === 0) {
     return [];
@@ -225,7 +185,7 @@ const transformCourseData = (apiCourses) => {
     course: course.courseTitle,
     grade: course.grade,
     credit: course.credits?.creditHours || 0,
-    attendance: Math.floor(Math.random() * 30) + 70, // Mock data: 70-100%
+    attendance: null, // Will be populated by API call
     // Additional data for reference
     courseNumber: course.courseNumber,
     instructor: course.instructorFullName,
@@ -238,9 +198,10 @@ const MySuccessTrackerTable = ({ classes }) => {
   const [currentBannerId, setCurrentBannerId] = useState(null);
   const [currentTermCode, setCurrentTermCode] = useState(null);
   const [previousTermCode, setPreviousTermCode] = useState(null);
-  const [currentGpa, setCurrentGpa] = useState(DEFAULT_GPA);
-  const [gpaDelta, setGpaDelta] = useState(DEFAULT_GPA_DELTA);
-  const [courseData, setCourseData] = useState(DEFAULT_COURSES);
+  const [currentGpa, setCurrentGpa] = useState(0);
+  const [gpaDelta, setGpaDelta] = useState(0);
+  const [courseData, setCourseData] = useState([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   const { authenticatedEthosFetch } = useData();
   const { cardId } = useCardInfo();
@@ -253,21 +214,17 @@ const MySuccessTrackerTable = ({ classes }) => {
   } = useStudentTermCodes(authenticatedEthosFetch, cardId);
 
   // Hook for current term GPA
-  // console.log(currentBannerId, "- current term banner")
   const {
     getStudentGpa: getCurrentGpa,
     loadingGpa: loadingCurrentGpa,
     errorGpa: errorCurrentGpa,
     gpaResult: currentGpaResult,
-  } = useStudentGpa(authenticatedEthosFetch, cardId, currentBannerId, currentTermCode);
-
-  // Hook for previous term GPA
-  const {
-    getStudentGpa: getPreviousGpa,
-    loadingGpa: loadingPreviousGpa,
-    errorGpa: errorPreviousGpa,
-    gpaResult: previousGpaResult,
-  } = useStudentGpa(authenticatedEthosFetch, cardId, previousTermCode);
+  } = useStudentGpa(
+    authenticatedEthosFetch,
+    cardId,
+    currentBannerId,
+    currentTermCode,
+  );
 
   const {
     getStudentDetails,
@@ -275,6 +232,12 @@ const MySuccessTrackerTable = ({ classes }) => {
     errorStudentDetails,
     studentDetailsResult,
   } = useStudentDetails(authenticatedEthosFetch, cardId);
+
+  // Hook for student attendance
+  const { getStudentAttendance } = useStudentAttendance(
+    authenticatedEthosFetch,
+    cardId,
+  );
 
   // Fetch term codes on mount
   useEffect(() => {
@@ -284,7 +247,7 @@ const MySuccessTrackerTable = ({ classes }) => {
         if (Array.isArray(data) && data.length > 0) {
           setCurrentTerm(data[0].term);
           setCurrentTermCode(data[0].termCode);
-          setCurrentBannerId(data[0].bannerId)
+          setCurrentBannerId(data[0].bannerId);
           // Store previous term code for GPA delta calculation
           if (data.length > 1) {
             setPreviousTermCode(data[1].termCode);
@@ -309,31 +272,9 @@ const MySuccessTrackerTable = ({ classes }) => {
       })
       .catch((error) => {
         console.error("Failed to fetch current GPA:", error);
-        setCurrentGpa(DEFAULT_GPA);
+        setCurrentGpa(0);
       });
   }, [currentTermCode, getCurrentGpa]);
-
-  // Fetch previous term GPA when previousTermCode changes
-  useEffect(() => {
-    if (!previousTermCode) {
-      setGpaDelta(0);
-      return;
-    }
-
-    getPreviousGpa()
-      .then((data) => {
-        console.log("Previous GPA data:", data);
-        // Expected payload: { termGpa, cumulativeGpa }
-        const prevGpaValue = data?.termGpa || data?.cumulativeGpa || 0;
-
-        // Calculate delta
-        setGpaDelta(currentGpa - prevGpaValue);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch previous GPA:", error);
-        setGpaDelta(0);
-      });
-  }, [previousTermCode, getPreviousGpa, currentGpa]);
 
   // Fetch student course details when term changes
   useEffect(() => {
@@ -348,12 +289,6 @@ const MySuccessTrackerTable = ({ classes }) => {
           // Transform the course data
           const transformedCourses = transformCourseData(courses);
           setCourseData(transformedCourses);
-
-          // Fallback: Calculate GPA from courses if API GPA is not available
-          if (!loadingCurrentGpa && currentGpa === 0 && !currentGpaResult) {
-            const calculatedGpa = calculateGPA(courses);
-            setCurrentGpa(calculatedGpa);
-          }
         } else {
           setCourseData([]);
         }
@@ -362,15 +297,77 @@ const MySuccessTrackerTable = ({ classes }) => {
         console.error("Failed to fetch student details:", error);
         setCourseData([]);
       });
+  }, [currentTermCode, getStudentDetails]);
+
+  // Fetch attendance for each course
+  useEffect(() => {
+    if (!courseData.length || !currentTermCode || !currentBannerId) return;
+
+    const fetchAllAttendance = async () => {
+      setLoadingAttendance(true);
+
+      try {
+        // Fetch attendance for all courses in parallel
+        const attendancePromises = courseData.map(async (course) => {
+          try {
+            const attendanceData = await getStudentAttendance({
+              termCode: currentTermCode,
+              bannerId: currentBannerId,
+              courseReferenceNumber: course.CRN,
+            });
+
+            // Extract attendance percentage from response
+            const attendancePercentage = attendanceData?.attendancePercentage;
+
+            return {
+              CRN: course.CRN,
+              attendance: attendancePercentage
+                ? parseFloat(attendancePercentage)
+                : null,
+            };
+          } catch (error) {
+            console.error(
+              `Failed to fetch attendance for CRN ${course.CRN}:`,
+              error,
+            );
+            return {
+              CRN: course.CRN,
+              attendance: null,
+            };
+          }
+        });
+
+        const attendanceResults = await Promise.all(attendancePromises);
+
+        // Update course data with attendance
+        setCourseData((prevCourses) =>
+          prevCourses.map((course) => {
+            const attendanceData = attendanceResults.find(
+              (result) => result.CRN === course.CRN,
+            );
+            return {
+              ...course,
+              attendance: attendanceData?.attendance ?? null,
+            };
+          }),
+        );
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
+      } finally {
+        setLoadingAttendance(false);
+      }
+    };
+
+    fetchAllAttendance();
   }, [
+    courseData,
     currentTermCode,
-    getStudentDetails,
-    loadingCurrentGpa,
-    currentGpa,
-    currentGpaResult,
+    currentBannerId,
+    getStudentAttendance,
   ]);
 
   const getStatusColor = (value) => {
+    if (value === null) return "#999"; // Gray for missing data
     if (value >= TABLE_CONFIG.attendanceGood) return COLOR_CONFIG.ON_TRACK;
     if (value >= TABLE_CONFIG.attendanceWarning)
       return COLOR_CONFIG.NEEDS_ATTENTION;
@@ -392,7 +389,7 @@ const MySuccessTrackerTable = ({ classes }) => {
     // Set current term
     setCurrentTerm(term.term);
     setCurrentTermCode(term.termCode);
-    setCurrentBannerId(term.bannerId)
+    setCurrentBannerId(term.bannerId);
 
     // Set previous term (next item in the array, since newest is first)
     if (selectedIndex >= 0 && selectedIndex < termCodesResult.length - 1) {
@@ -516,6 +513,12 @@ const MySuccessTrackerTable = ({ classes }) => {
                 courseData.map((row, index) => {
                   const attendanceColor = getStatusColor(row.attendance);
                   const isLowGrade = TABLE_CONFIG.lowGrades.includes(row.grade);
+                  const attendanceDisplay =
+                    row.attendance !== null
+                      ? `${row.attendance.toFixed(2)}%`
+                      : loadingAttendance
+                        ? "..."
+                        : "N/A";
 
                   return (
                     <TableRow key={row.CRN || index}>
@@ -540,20 +543,31 @@ const MySuccessTrackerTable = ({ classes }) => {
                         className={`${classes.bodyCell} ${classes.lastCell}`}
                       >
                         <div className={classes.progressWrapper}>
-                          <div className={classes.progressBar}>
-                            <div
-                              className={classes.progressFill}
-                              style={{
-                                width: `${row.attendance}%`,
-                                backgroundColor: attendanceColor,
-                              }}
-                            />
-                          </div>
-                          <span
-                            style={{ color: attendanceColor, fontWeight: 600 }}
-                          >
-                            {row.attendance}%
-                          </span>
+                          {row.attendance !== null ? (
+                            <>
+                              <div className={classes.progressBar}>
+                                <div
+                                  className={classes.progressFill}
+                                  style={{
+                                    width: `${row.attendance}%`,
+                                    backgroundColor: attendanceColor,
+                                  }}
+                                />
+                              </div>
+                              <span
+                                style={{
+                                  color: attendanceColor,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {attendanceDisplay}
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{ color: "#999" }}>
+                              {attendanceDisplay}
+                            </span>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
