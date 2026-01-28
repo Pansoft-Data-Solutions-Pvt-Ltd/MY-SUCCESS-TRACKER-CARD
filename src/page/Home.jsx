@@ -373,7 +373,7 @@ const MySuccessTrackerTable = ({ classes }) => {
 
   // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
-    if (!currentTermCode && !currentBannerId) return;
+    if (!currentTermCode || !currentBannerId) return;
 
     getCurrentGpa()
       .then((data) => {
