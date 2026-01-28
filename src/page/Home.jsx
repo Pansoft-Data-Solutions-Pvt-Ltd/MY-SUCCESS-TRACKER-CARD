@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
 import { withStyles } from "@ellucian/react-design-system/core/styles";
 import DoubleChevronIcon from "../components/DoubleChevron";
@@ -34,11 +34,12 @@ import {
   widthFluid,
 } from "@ellucian/react-design-system/core/styles/tokens";
 
+
 /* ================= CONFIG ================= */
 const TABLE_CONFIG = {
   attendanceGood: 75,
   attendanceWarning: 60,
-  lowGrades: ["C", "D", "F", "C1", "C2", "D1", "D2"],
+  lowGrades: [ "F"],
 };
 
 const COLOR_CONFIG = {
@@ -172,6 +173,28 @@ const styles = {
   progressFill: {
     height: "100%",
   },
+  legendBar: {
+  display: "flex",
+  alignItems: "center",
+  gap: spacing30,
+  marginTop: spacing10,
+  marginBottom: spacing20,
+  transform: "translateY(-4px)",
+},
+
+legendItem: {
+  display: "flex",
+  alignItems: "center",
+  gap: spacing10,
+},
+
+legendDot: {
+  width: "10px",
+  height: "10px",
+  borderRadius: "50%",
+},
+
+
 };
 
 /* ================= HELPER FUNCTIONS ================= */
@@ -205,6 +228,14 @@ const MySuccessTrackerTable = ({ classes }) => {
 
   const { authenticatedEthosFetch } = useData();
   const { cardId } = useCardInfo();
+
+    const backHref = useMemo(() => {
+    const segments = window.location.pathname.split("/").filter(Boolean);
+    if (segments.length > 0) {
+      return `${window.location.origin}/${segments[0]}/`;
+    }
+    return window.location.origin;
+  }, []);
 
   const {
     getStudentTermCodes,
@@ -403,9 +434,15 @@ const MySuccessTrackerTable = ({ classes }) => {
   const gpaCircleColor = getGpaCircleColor(currentGpa);
   const deltaColor = isPositive ? COLOR_CONFIG.ON_TRACK : COLOR_CONFIG.CRITICAL;
   const isLoading = loadingCurrentGpa || loadingStudentDetails;
+  const handleBack = () => {
+    window.location.assign(backHref);
+  };
 
   return (
     <div className={classes.root}>
+
+ <Button onClick={handleBack}>Back</Button>
+    
       {/* TOP BAR */}
       <div className={classes.topBar}>
         <div className={classes.termSection}>
@@ -472,7 +509,41 @@ const MySuccessTrackerTable = ({ classes }) => {
           <Typography style={{ padding: spacing20, textAlign: "center" }}>
             Loading student details...
           </Typography>
+          
         )}
+
+        {/* LEGEND – show only when data is loaded */}
+{!loadingStudentDetails && (
+  <div className={classes.legendBar}>
+    {/* F = Fail */}
+    <div className={classes.legendItem}>
+      <div
+        className={classes.legendDot}
+        style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
+      />
+      <Typography style={{ fontSize: "0.95rem", fontWeight: 500 }}>
+        <span style={{ color: COLOR_CONFIG.CRITICAL, fontWeight: 600 }}>
+            F
+        </span>{" "}
+        = Fail ,
+      </Typography>
+    </div>
+
+    {/* P = Pass */}
+    <div className={classes.legendItem}>
+      <Typography style={{ fontSize: "0.95rem", fontWeight: 500 }}>
+        <span style={{ fontWeight: 600 }}>P</span> = Pass ,
+      </Typography>
+    </div>
+
+    {/* A, B, C, D = Standard Letter Grades */}
+    <div className={classes.legendItem}>
+      <Typography style={{ fontSize: "0.95rem", fontWeight: 500 }}>
+        <span style={{ fontWeight: 600 }}> A,B,C,D</span> = Standard Letter Grades
+      </Typography>
+    </div>
+  </div>
+)}
 
         {(errorStudentDetails || errorCurrentGpa) && !isLoading && (
           <Typography
