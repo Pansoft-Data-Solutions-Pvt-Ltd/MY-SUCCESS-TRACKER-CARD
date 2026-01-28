@@ -57,6 +57,8 @@ const styles = (theme) => ({
   attendanceSection: {
     flex: 2,
     minWidth: 0,
+     paddingLeft: "0.1rem",   // ⬅️ pushes content to the RIGHT
+  paddingRight: "1rem",
   },
   gpaHeader: {},
   gpaBody: {
@@ -328,9 +330,9 @@ const MySuccessTrackerCard = ({ classes }) => {
                   border: `4px solid ${gpaCircleColorCode ?? "#006114"}`,
                 }}
               >
-                <strong>
-                  {loadingCurrentGpa ? "..." : currentGpa}
-                </strong>
+                <strong style={{ fontSize: "1.6rem", fontWeight: 600 }}>
+  {loadingCurrentGpa ? "..." : currentGpa}
+</strong>
               </div>
             </div>
             <div className={classes.gpaDelta}>
@@ -386,14 +388,14 @@ const MySuccessTrackerCard = ({ classes }) => {
                   return (
                     <TableRow key={index}>
                       <TableCell style={{ fontSize: "0.8rem" }}>
-                        <strong>{at.courseName}</strong>
+                        {at.courseName}
                       </TableCell>
                       <TableCell>
                         <span
                           style={{ fontSize: "0.8rem" }}
                           className={classes.iconText}
                         >
-                          <strong>{at.percentage + "%"}</strong>
+                          {at.percentage + "%"}
                           <SvgHollowCircle
                             color={
                               at.percentage < 40
