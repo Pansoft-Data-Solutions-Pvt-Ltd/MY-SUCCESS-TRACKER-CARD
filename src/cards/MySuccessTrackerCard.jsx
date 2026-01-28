@@ -278,7 +278,8 @@ const MySuccessTrackerCard = ({ classes }) => {
 
   // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
-    if (!currentTermCode && !currentBannerId) return;
+    if (!currentTermCode || !currentBannerId) return;
+    console.log(currentBannerId)
 
     getCurrentGpa()
       .then((data) => {
@@ -291,7 +292,7 @@ const MySuccessTrackerCard = ({ classes }) => {
         console.error("Failed to fetch current GPA:", error);
         setCurrentGpa(0);
       });
-  }, [currentTermCode, getCurrentGpa]);
+  }, [currentBannerId, currentTermCode, getCurrentGpa]);
 
   // Fetch previous term GPA when previousTermCode changes
   useEffect(() => {
