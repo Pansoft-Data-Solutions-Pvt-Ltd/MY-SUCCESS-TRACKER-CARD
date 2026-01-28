@@ -58,6 +58,8 @@ const styles = (theme) => ({
   attendanceSection: {
     flex: 2,
     minWidth: 0,
+     paddingLeft: "0.1rem",   // ⬅️ pushes content to the RIGHT
+  paddingRight: "1rem",
   },
   gpaHeader: {},
   gpaBody: {
@@ -430,7 +432,9 @@ const MySuccessTrackerCard = ({ classes }) => {
                   border: `4px solid ${gpaCircleColorCode ?? "#006114"}`,
                 }}
               >
-                <strong>{loadingCurrentGpa ? "..." : currentGpa}</strong>
+                <strong style={{ fontSize: "1.6rem", fontWeight: 600 }}>
+  {loadingCurrentGpa ? "..." : currentGpa}
+</strong>
               </div>
             </div>
             <div className={classes.gpaDelta}>
