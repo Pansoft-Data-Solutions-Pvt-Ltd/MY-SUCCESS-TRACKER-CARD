@@ -17,6 +17,23 @@ import useStudentDetails from "../hooks/useStudentDetails";
 import useStudentGpa from "../hooks/useStudentGpa";
 import useStudentAttendance from "../hooks/useStudentAttendance";
 
+/* ================= CONFIG ================= */
+const TABLE_CONFIG = {
+  attendanceGood: 75,
+  attendanceWarning: 60,
+};
+
+const COLOR_CONFIG = {
+  ON_TRACK: "#34930E",
+  NEEDS_ATTENTION: "#F3C60F",
+  CRITICAL: "#ED1012",
+};
+
+const GPA_CONFIG = {
+  GOOD: 3.5,
+  MEDIUM: 3.0,
+};
+
 const styles = (theme) => ({
   card: {
     padding: "0 1rem",
@@ -56,12 +73,12 @@ const styles = (theme) => ({
     },
   },
   attendanceSection: {
-  flex: 2,
-  minWidth: 0,
-  paddingLeft: "0.25rem",
-  paddingRight: "0.5rem",
-  overflow: "visible",   // ⬅️ important
-},
+    flex: 2,
+    minWidth: 0,
+    paddingLeft: "0.25rem",
+    paddingRight: "0.5rem",
+    overflow: "visible", // ⬅️ important
+  },
 
   gpaHeader: {},
   gpaBody: {
@@ -116,24 +133,22 @@ const styles = (theme) => ({
     height: "1rem",
   },
   attendanceList: {
-  display: "flex",
-  flexDirection: "column",
-  gap: "0.5rem",   // ⬅️ smaller gap
-  padding: "0.25rem 0.5rem",  // ⬅️ reduce padding
-
-
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem", // ⬅️ smaller gap
+    padding: "0.25rem 0.5rem", // ⬅️ reduce padding
   },
   attendanceRow: {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "0.35rem 0.5rem",   // ⬅️ reduced vertical padding
-  borderBottom: "1px solid #e0e0e0",
-  gap: "0.5rem",
-  minHeight: "32px",           // ⬅️ smaller row height
-  "&:last-child": {
-    borderBottom: "none",
-  },
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "0.35rem 0.5rem", // ⬅️ reduced vertical padding
+    borderBottom: "1px solid #e0e0e0",
+    gap: "0.5rem",
+    minHeight: "32px", // ⬅️ smaller row height
+    "&:last-child": {
+      borderBottom: "none",
+    },
     [theme.breakpoints.down("sm")]: {
       padding: "0.5rem",
       gap: "0.5rem",
@@ -147,7 +162,7 @@ const styles = (theme) => ({
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-     lineHeight: "1.2", 
+    lineHeight: "1.2",
     [theme.breakpoints.down("sm")]: {
       fontSize: "0.75rem",
     },
@@ -195,6 +210,21 @@ const transformAttendanceData = (apiCourses) => {
   }));
 };
 
+/* ================= HELPER FUNCTIONS ================= */
+const getStatusColor = (value) => {
+  if (value === null) return "#999"; // Gray for missing data
+  if (value >= TABLE_CONFIG.attendanceGood) return COLOR_CONFIG.ON_TRACK;
+  if (value >= TABLE_CONFIG.attendanceWarning)
+    return COLOR_CONFIG.NEEDS_ATTENTION;
+  return COLOR_CONFIG.CRITICAL;
+};
+
+const getGpaCircleColor = (gpa) => {
+  if (gpa >= GPA_CONFIG.GOOD) return COLOR_CONFIG.ON_TRACK;
+  if (gpa >= GPA_CONFIG.MEDIUM) return COLOR_CONFIG.NEEDS_ATTENTION;
+  return COLOR_CONFIG.CRITICAL;
+};
+
 const MySuccessTrackerCard = ({ classes }) => {
   const {
     configuration: {
@@ -212,7 +242,6 @@ const MySuccessTrackerCard = ({ classes }) => {
   const [isFirstTerm, setIsFirstTerm] = useState(false);
   const [currentTermCode, setCurrentTermCode] = useState(null);
   const [currentBannerId, setCurrentBannerId] = useState(null);
-  const [previousTermCode, setPreviousTermCode] = useState(null);
   const [currentGpa, setCurrentGpa] = useState(0);
   const [gpaDelta, setGpaDelta] = useState(0);
   const [attendanceData, setAttendanceData] = useState([]);
@@ -239,14 +268,6 @@ const MySuccessTrackerCard = ({ classes }) => {
     currentTermCode,
   );
 
-  // Hook for previous term GPA
-  const {
-    getStudentGpa: getPreviousGpa,
-    loadingGpa: loadingPreviousGpa,
-    errorGpa: errorPreviousGpa,
-    gpaResult: previousGpaResult,
-  } = useStudentGpa(authenticatedEthosFetch, cardId, previousTermCode);
-
   const {
     getStudentDetails,
     loadingStudentDetails,
@@ -268,11 +289,6 @@ const MySuccessTrackerCard = ({ classes }) => {
           // Set the latest term (first item)
           setCurrentTermCode(data[1].termCode);
           setCurrentBannerId(data[1].bannerId);
-
-          // Store previous term code for GPA delta calculation
-          if (data.length > 1) {
-            setPreviousTermCode(data[1].termCode);
-          }
         }
       })
       .catch(() => {
@@ -283,7 +299,7 @@ const MySuccessTrackerCard = ({ classes }) => {
   // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
     if (!currentTermCode || !currentBannerId) return;
-    console.log(currentBannerId)
+    console.log(currentBannerId);
 
     getCurrentGpa()
       .then((data) => {
@@ -291,48 +307,13 @@ const MySuccessTrackerCard = ({ classes }) => {
         // Expected payload: { termGpa, cumulativeGpa }
         const gpaValue = data?.cumulativeGpa;
         setCurrentGpa(gpaValue);
+        setGpaDelta(data?.gpaIncrease);
       })
       .catch((error) => {
         console.error("Failed to fetch current GPA:", error);
         setCurrentGpa(0);
       });
   }, [currentBannerId, currentTermCode, getCurrentGpa]);
-
-  // Fetch previous term GPA when previousTermCode changes
-  useEffect(() => {
-   if (!previousTermCode) {
-  setIsFirstTerm(true);
-  setGpaDelta(null); // ⬅️ key change
-  setGpaMessage("This is your first recorded term. GPA tracking will begin next term.");
-  return;
-}
-
-
-    getPreviousGpa()
-      .then((data) => {
-        console.log("Previous GPA data:", data);
-        // Expected payload: { termGpa, cumulativeGpa }
-        const prevGpaValue = data?.termGpa || data?.cumulativeGpa || 0;
-
-        // Calculate delta
-        const delta = currentGpa - prevGpaValue;
-        setGpaDelta(delta);
-
-        // Set message based on delta
-        if (delta > 0) {
-          setGpaMessage("Congratulations! GPA improved");
-        } else if (delta < 0) {
-          setGpaMessage("GPA decreased from last term");
-        } else {
-          setGpaMessage("GPA remained the same");
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch previous GPA:", error);
-        setGpaDelta(0);
-        setGpaMessage("This is your first recorded term. GPA tracking will begin next term.");
-      });
-  }, [previousTermCode, getPreviousGpa, currentGpa]);
 
   // Fetch student details when term changes
   useEffect(() => {
@@ -424,6 +405,11 @@ const MySuccessTrackerCard = ({ classes }) => {
     getStudentAttendance,
   ]);
 
+  // Calculate GPA circle color based on current GPA
+  const gpaCircleColor = getGpaCircleColor(currentGpa);
+  const isPositive = gpaDelta >= 0;
+  const deltaColor = isPositive ? COLOR_CONFIG.ON_TRACK : COLOR_CONFIG.CRITICAL;
+
   return (
     <div className={classes.card}>
       <div className={classes.cardBody}>
@@ -436,38 +422,34 @@ const MySuccessTrackerCard = ({ classes }) => {
               <div
                 className={classes.gpaCircleInner}
                 style={{
-                  border: `4px solid ${gpaCircleColorCode ?? "#006114"}`,
+                  border: `4px solid ${gpaCircleColor}`,
                 }}
               >
                 <strong style={{ fontSize: "1.6rem", fontWeight: 600 }}>
-  {loadingCurrentGpa ? "..." : currentGpa}
-</strong>
+                  {loadingCurrentGpa ? "..." : currentGpa}
+                </strong>
               </div>
             </div>
             {!isFirstTerm && gpaDelta !== null && (
               <div className={classes.gpaDelta}>
-              <div className={classes.iconText}>
-                <DoubleChevronIcon
-                  backgroundColor={
-                    gpaDelta >= 0
-                      ? (gpaIncreaseChevronColorCode ?? "#006114")
-                      : (gpaDecreaseChevronColorCode ?? "#F20A0A")
-                  }
-                  orientation={gpaDelta >= 0 ? "up" : "down"}
-                  size="1rem"
-                />
-                <strong style={{ fontSize: "1rem" }}>
-                  {Math.abs(gpaDelta).toFixed(2)}
-                </strong>
+                <div className={classes.iconText}>
+                  <DoubleChevronIcon
+                    backgroundColor={deltaColor}
+                    orientation={gpaDelta >= 0 ? "up" : "down"}
+                    size="1rem"
+                  />
+                  <strong style={{ fontSize: "1rem" }}>
+                    {gpaDelta}
+                  </strong>
+                </div>
+                <Typography
+                  variant="p"
+                  style={{ fontSize: "0.6rem" }}
+                  className={classes.deltaText}
+                >
+                  from last term
+                </Typography>
               </div>
-              <Typography
-                variant="p"
-                style={{ fontSize: "0.6rem" }}
-                className={classes.deltaText}
-              >
-                from last term
-              </Typography>
-            </div>
             )}
           </div>
           <div className={classes.gpaMessage}>{gpaMessage}</div>
@@ -500,14 +482,7 @@ const MySuccessTrackerCard = ({ classes }) => {
                 const displayPercentage =
                   at.percentage !== null ? `${percentage.toFixed(2)}%` : "N/A";
 
-                const circleColor =
-                  at.percentage === null
-                    ? "#999"
-                    : percentage < 40
-                      ? (poorAttendanceColorCode ?? "#F20A0A")
-                      : percentage < 75
-                        ? (decentAttendanceColorCode ?? "#F27A0A")
-                        : (goodAttendanceColorCode ?? "#006114");
+                const circleColor = getStatusColor(at.percentage);
 
                 return (
                   <div key={index} className={classes.attendanceRow}>

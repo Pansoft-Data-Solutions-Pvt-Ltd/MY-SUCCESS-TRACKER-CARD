@@ -621,8 +621,8 @@ const MySuccessTrackerTable = ({ classes }) => {
                 className={classes.legendDot}
                 style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
               />
-              <Typography style={{ fontSize: "0.95rem", fontWeight: 500 }}>
-                <span style={{ color: COLOR_CONFIG.CRITICAL, fontWeight: 700 }}>
+              <Typography variant="body2">
+                <span>
                   F
                 </span>{" "}
                 = Fail
@@ -630,14 +630,14 @@ const MySuccessTrackerTable = ({ classes }) => {
             </div>
 
             <div className={classes.legendItem}>
-              <Typography style={{ fontSize: "0.95rem", fontWeight: 500 }}>
-                <span style={{ fontWeight: 700 }}>P</span> = Pass
+              <Typography variant="body2">
+                <span>P</span> = Pass
               </Typography>
             </div>
 
             <div className={classes.legendItem}>
-              <Typography style={{ fontSize: "0.95rem", fontWeight: 500 }}>
-                <span style={{ fontWeight: 700 }}>A, B, C, D</span> = Standard
+              <Typography variant="body2">
+                <span >A, B, C, D</span> = Standard
                 Letter Grades
               </Typography>
             </div>
@@ -794,11 +794,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                     >
                       <TableCell className={classes.bodyCell}>
                         <Typography
-                          style={{
-                            fontWeight: 700,
-                            fontSize: "0.95rem",
-                            color: "#1F2937",
-                          }}
+                            variant="body2"
                         >
                           {row.CRN}
                         </Typography>
@@ -818,7 +814,7 @@ const MySuccessTrackerTable = ({ classes }) => {
 
                       <TableCell className={classes.bodyCell}>
                         <Typography
-                          style={{ fontWeight: 600, color: "#1F2937" }}
+                          variant="body2"
                         >
                           {row.credit}
                         </Typography>
@@ -842,7 +838,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                               <span
                                 style={{
                                   color: attendanceColor,
-                                  fontWeight: 700,
+                                  fontWeight: 400,
                                   fontSize: "0.95rem",
                                   minWidth: "60px",
                                 }}
