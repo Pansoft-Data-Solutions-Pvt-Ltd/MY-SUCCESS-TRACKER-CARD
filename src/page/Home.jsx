@@ -301,7 +301,6 @@ const MySuccessTrackerTable = ({ classes }) => {
   const [currentTerm, setCurrentTerm] = useState(null);
   const [currentBannerId, setCurrentBannerId] = useState(null);
   const [currentTermCode, setCurrentTermCode] = useState(null);
-  const [previousTermCode, setPreviousTermCode] = useState(null);
   const [currentGpa, setCurrentGpa] = useState(0);
   const [gpaDelta, setGpaDelta] = useState(0);
   const [courseData, setCourseData] = useState([]);
@@ -347,10 +346,6 @@ const MySuccessTrackerTable = ({ classes }) => {
           setCurrentTerm(data[1]?.term);
           setCurrentTermCode(data[1]?.termCode);
           setCurrentBannerId(data[1]?.bannerId);
-          // Store previous term code for GPA delta calculation
-          if (data.length > 1) {
-            setPreviousTermCode(data[1].termCode);
-          }
         }
       })
       .catch(() => {
@@ -381,6 +376,7 @@ const MySuccessTrackerTable = ({ classes }) => {
         // Expected payload: { termGpa, cumulativeGpa }
         const gpaValue = data?.cumulativeGpa;
         setCurrentGpa(gpaValue);
+        setGpaDelta(data?.gpaIncrease);
       })
       .catch((error) => {
         console.error("Failed to fetch current GPA:", error);
@@ -503,12 +499,6 @@ const MySuccessTrackerTable = ({ classes }) => {
     setCurrentTermCode(term.termCode);
     setCurrentBannerId(term.bannerId);
 
-    // Set previous term (next item in the array, since newest is first)
-    if (selectedIndex >= 0 && selectedIndex < termCodesResult.length - 1) {
-      setPreviousTermCode(termCodesResult[selectedIndex + 1].termCode);
-    } else {
-      setPreviousTermCode(null);
-    }
   };
 
   const isPositive = gpaDelta >= 0;
@@ -567,7 +557,7 @@ const MySuccessTrackerTable = ({ classes }) => {
               variant="p"
               style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1F2937" }}
             >
-              Term GPA
+              Term CGPA
             </Typography>
 
             <div className={classes.gpaDeltaRow}>
@@ -581,7 +571,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 style={{ fontWeight: 500, top: "2px", position: "relative" }}
               >
                 <span style={{ color: deltaColor, fontWeight: 700 }}>
-                  {Math.abs(gpaDelta).toFixed(2)}
+                  {gpaDelta}
                 </span>
                 <span style={{ marginLeft: 3, color: "#6B7280" }}>
                   {" "}

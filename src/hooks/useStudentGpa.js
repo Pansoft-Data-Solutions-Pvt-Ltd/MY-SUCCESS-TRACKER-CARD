@@ -17,7 +17,7 @@ const useStudentGpa = (authenticatedEthosFetch, cardId, bannerId, termCode) => {
     try {
       const url = `Get-StudentGPA?cardId=${encodeURIComponent(
         cardId,
-      )}&term=${encodeURIComponent(termCode)}&id=${encodeURIComponent(bannerId)}`;
+      )}&term=${encodeURIComponent(termCode)}&bannerId=${encodeURIComponent(bannerId)}`;
       const response = await authenticatedEthosFetch(url, {
         method: "GET",
         headers: {
