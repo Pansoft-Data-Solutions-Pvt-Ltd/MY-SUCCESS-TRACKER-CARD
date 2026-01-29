@@ -56,11 +56,13 @@ const styles = (theme) => ({
     },
   },
   attendanceSection: {
-    flex: 2,
-    minWidth: 0,
-     paddingLeft: "0.1rem",   // ⬅️ pushes content to the RIGHT
-  paddingRight: "1rem",
-  },
+  flex: 2,
+  minWidth: 0,
+  paddingLeft: "0.25rem",
+  paddingRight: "0.5rem",
+  overflow: "visible",   // ⬅️ important
+},
+
   gpaHeader: {},
   gpaBody: {
     display: "flex",
@@ -100,7 +102,9 @@ const styles = (theme) => ({
       padding: "1rem",
     },
   },
-  attendanceHeader: {},
+  attendanceHeader: {
+    marginBottom: "0.25rem",
+  },
   attendanceTable: {},
   iconText: {
     display: "flex",
@@ -112,26 +116,24 @@ const styles = (theme) => ({
     height: "1rem",
   },
   attendanceList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "0.5rem",
-    padding: "1rem",
-    [theme.breakpoints.down("sm")]: {
-      padding: "0.5rem",
-      gap: "0.25rem",
-    },
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",   // ⬅️ smaller gap
+  padding: "0.25rem 0.5rem",  // ⬅️ reduce padding
+
+
   },
   attendanceRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "0.75rem",
-    borderBottom: "1px solid #e0e0e0",
-    gap: "0.75rem",
-    minHeight: "44px", // Ensure good touch target on mobile
-    "&:last-child": {
-      borderBottom: "none",
-    },
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "0.35rem 0.5rem",   // ⬅️ reduced vertical padding
+  borderBottom: "1px solid #e0e0e0",
+  gap: "0.5rem",
+  minHeight: "32px",           // ⬅️ smaller row height
+  "&:last-child": {
+    borderBottom: "none",
+  },
     [theme.breakpoints.down("sm")]: {
       padding: "0.5rem",
       gap: "0.5rem",
@@ -140,11 +142,12 @@ const styles = (theme) => ({
   },
   courseName: {
     flex: 1,
-    fontSize: "0.8rem",
+    fontSize: "0.7rem",
     minWidth: 0, // Critical for text truncation
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
+     lineHeight: "1.2", 
     [theme.breakpoints.down("sm")]: {
       fontSize: "0.75rem",
     },
@@ -153,10 +156,11 @@ const styles = (theme) => ({
     display: "flex",
     alignItems: "center",
     gap: "0.5rem",
-    fontSize: "0.8rem",
+    fontSize: "0.7rem",
+    fontWeight: 400,
     flexShrink: 0, // Prevent shrinking on small screens
     [theme.breakpoints.down("sm")]: {
-      fontSize: "0.75rem",
+      fontSize: "0.7rem",
       gap: "0.375rem",
     },
   },
@@ -205,7 +209,7 @@ const MySuccessTrackerCard = ({ classes }) => {
   } = useCardInfo();
 
   const { authenticatedEthosFetch } = useData();
-
+  const [isFirstTerm, setIsFirstTerm] = useState(false);
   const [currentTermCode, setCurrentTermCode] = useState(null);
   const [currentBannerId, setCurrentBannerId] = useState(null);
   const [previousTermCode, setPreviousTermCode] = useState(null);
@@ -296,11 +300,13 @@ const MySuccessTrackerCard = ({ classes }) => {
 
   // Fetch previous term GPA when previousTermCode changes
   useEffect(() => {
-    if (!previousTermCode) {
-      setGpaDelta(0);
-      setGpaMessage("No previous term data available");
-      return;
-    }
+   if (!previousTermCode) {
+  setIsFirstTerm(true);
+  setGpaDelta(null); // ⬅️ key change
+  setGpaMessage("This is your first recorded term. GPA tracking will begin next term.");
+  return;
+}
+
 
     getPreviousGpa()
       .then((data) => {
@@ -324,7 +330,7 @@ const MySuccessTrackerCard = ({ classes }) => {
       .catch((error) => {
         console.error("Failed to fetch previous GPA:", error);
         setGpaDelta(0);
-        setGpaMessage("Previous term GPA unavailable");
+        setGpaMessage("This is your first recorded term. GPA tracking will begin next term.");
       });
   }, [previousTermCode, getPreviousGpa, currentGpa]);
 
@@ -438,7 +444,8 @@ const MySuccessTrackerCard = ({ classes }) => {
 </strong>
               </div>
             </div>
-            <div className={classes.gpaDelta}>
+            {!isFirstTerm && gpaDelta !== null && (
+              <div className={classes.gpaDelta}>
               <div className={classes.iconText}>
                 <DoubleChevronIcon
                   backgroundColor={
@@ -461,6 +468,7 @@ const MySuccessTrackerCard = ({ classes }) => {
                 from last term
               </Typography>
             </div>
+            )}
           </div>
           <div className={classes.gpaMessage}>{gpaMessage}</div>
         </section>
@@ -510,7 +518,7 @@ const MySuccessTrackerCard = ({ classes }) => {
                       {at.courseName}
                     </div>
                     <div className={classes.attendancePercentage}>
-                      <strong>{displayPercentage}</strong>
+                      <span>{displayPercentage}</span>
                       <SvgHollowCircle color={circleColor} />
                     </div>
                   </div>
