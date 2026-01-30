@@ -56,11 +56,18 @@ const GPA_CONFIG = {
 const styles = {
   root: {
     width: widthFluid,
-    margin: spacing30,
-    paddingBottom: spacing40,
+    margin: "0 auto",
+    padding: `${spacing20} ${spacing20} ${spacing40}`,
+    maxWidth: "1400px",
+    "@media (min-width: 768px)": {
+      padding: `${spacing30} ${spacing30} ${spacing40}`,
+    },
   },
   backButtonWrapper: {
-    marginBottom: spacing30,
+    marginBottom: spacing20,
+    "@media (min-width: 768px)": {
+      marginBottom: spacing30,
+    },
   },
   backButton: {
     display: "inline-flex",
@@ -72,10 +79,13 @@ const styles = {
     borderRadius: "8px",
     color: "#026BC8",
     fontWeight: 600,
-    fontSize: "0.95rem",
+    fontSize: "0.875rem",
     cursor: "pointer",
     transition: "all 0.2s ease",
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+    "@media (min-width: 768px)": {
+      fontSize: "0.95rem",
+    },
     "&:hover": {
       backgroundColor: "#026BC8",
       color: "#FFFFFF",
@@ -85,75 +95,130 @@ const styles = {
   },
   topBar: {
     display: "flex",
-    alignItems: "center",
-    gap: spacing40,
-    marginBottom: spacing40,
-    flexWrap: "wrap",
+    flexDirection: "column",
+    gap: spacing20,
+    marginBottom: spacing30,
+    "@media (min-width: 768px)": {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: spacing40,
+      marginBottom: spacing40,
+    },
   },
   termSection: {
     display: "flex",
     flexDirection: "column",
     gap: spacing10,
+    width: "100%",
+    "@media (min-width: 768px)": {
+      width: "auto",
+    },
   },
   termLabel: {
-    fontSize: "1.1rem",
+    fontSize: "1rem",
     fontWeight: 600,
     color: "#1F2937",
+    "@media (min-width: 768px)": {
+      fontSize: "1.1rem",
+    },
   },
   gpaTopCard: {
-    padding: spacing30,
-    minWidth: "280px",
-    height: "110px",
+    padding: spacing20,
+    width: "100%",
+    minHeight: "100px",
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between",
     position: "relative",
-    marginLeft: "auto",
     background: "linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)",
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
     borderRadius: "12px",
     border: "1px solid #E5E7EB",
+    "@media (min-width: 768px)": {
+      padding: spacing30,
+      minWidth: "280px",
+      width: "auto",
+      height: "110px",
+      marginLeft: "auto",
+    },
   },
   gpaLeft: {
     display: "flex",
     flexDirection: "column",
-    paddingRight: "100px",
-    transform: "translateY(-5px)",
+    flex: 1,
+    paddingRight: spacing20,
+    "@media (min-width: 768px)": {
+      paddingRight: "100px",
+      transform: "translateY(-5px)",
+    },
   },
   gpaCircle: {
-    width: "80px",
-    height: "80px",
+    width: "70px",
+    height: "70px",
     borderRadius: "50%",
     border: "4px solid",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontWeight: 700,
-    fontSize: "1.3rem",
-    position: "absolute",
-    right: spacing30,
-    top: "50%",
-    transform: "translateY(-50%)",
+    fontSize: "1.2rem",
     backgroundColor: "#FFFFFF",
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+    flexShrink: 0,
+    "@media (min-width: 768px)": {
+      width: "80px",
+      height: "80px",
+      fontSize: "1.3rem",
+      position: "absolute",
+      right: spacing30,
+      top: "50%",
+      transform: "translateY(-50%)",
+    },
   },
   gpaDeltaRow: {
     display: "flex",
     alignItems: "center",
     gap: spacing10,
     marginTop: spacing10,
-    position: "relative",
-    top: "-3px",
+    flexWrap: "wrap",
+    "@media (min-width: 768px)": {
+      position: "relative",
+      top: "-3px",
+    },
+  },
+  gpaDeltaText: {
+    fontSize: "0.875rem",
+    "@media (min-width: 768px)": {
+      fontSize: "1rem",
+    },
   },
   card: {
-    padding: spacing30,
+    padding: spacing20,
     borderRadius: "12px",
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
     border: "1px solid #E5E7EB",
+    "@media (min-width: 768px)": {
+      padding: spacing30,
+    },
   },
   cardHeader: {
     marginBottom: spacing20,
     paddingBottom: spacing20,
     borderBottom: "2px solid #E5E7EB",
+  },
+  cardTitle: {
+    fontSize: "1.25rem",
+    "@media (min-width: 768px)": {
+      fontSize: "1.5rem",
+    },
+  },
+  // Desktop table styles
+  tableContainer: {
+    display: "none",
+    "@media (min-width: 768px)": {
+      display: "block",
+      overflowX: "auto",
+    },
   },
   table: {
     width: "100%",
@@ -212,29 +277,115 @@ const styles = {
     height: "100%",
     transition: "width 0.3s ease",
   },
+  // Mobile card list styles
+  mobileCardList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: spacing20,
+    "@media (min-width: 768px)": {
+      display: "none",
+    },
+  },
+  mobileCard: {
+    padding: spacing20,
+    backgroundColor: "#FFFFFF",
+    border: "1px solid #E5E7EB",
+    borderRadius: "8px",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+    transition: "box-shadow 0.2s ease",
+    "&:active": {
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    },
+  },
+  mobileCardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: spacing20,
+    paddingBottom: spacing20,
+    borderBottom: "2px solid #E5E7EB",
+  },
+  mobileCardTitle: {
+    flex: 1,
+    paddingRight: spacing10,
+  },
+  mobileCardGrade: {
+    fontSize: "1.5rem",
+    fontWeight: 700,
+    minWidth: "50px",
+    textAlign: "right",
+  },
+  mobileCardRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: `${spacing10} 0`,
+    borderBottom: "1px solid #F3F4F6",
+    "&:last-child": {
+      borderBottom: "none",
+    },
+  },
+  mobileCardLabel: {
+    fontSize: "0.875rem",
+    fontWeight: 600,
+    color: "#6B7280",
+  },
+  mobileCardValue: {
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: "#1F2937",
+  },
+  mobileProgressWrapper: {
+    display: "flex",
+    alignItems: "center",
+    gap: spacing10,
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  mobileProgressBar: {
+    flexGrow: 1,
+    maxWidth: "120px",
+    height: "8px",
+    borderRadius: "6px",
+    backgroundColor: "#E5E7EB",
+    overflow: "hidden",
+  },
   legendSection: {
     marginTop: spacing20,
     marginBottom: spacing30,
   },
   legendTitle: {
-    fontSize: "1rem",
+    fontSize: "0.95rem",
     fontWeight: 600,
     color: "#1F2937",
     marginBottom: spacing20,
+    "@media (min-width: 768px)": {
+      fontSize: "1rem",
+    },
   },
   legendGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gridTemplateColumns: "1fr",
     gap: spacing20,
+    "@media (min-width: 640px)": {
+      gridTemplateColumns: "repeat(2, 1fr)",
+    },
+    "@media (min-width: 1024px)": {
+      gridTemplateColumns: "repeat(3, 1fr)",
+    },
   },
   gradeLegendBar: {
-   display: "inline-flex",
-  alignItems: "center",
-  gap: spacing30,
-  marginTop: spacing10,
-  marginBottom: spacing20,
-  padding: `${spacing10} ${spacing20}`,
-  borderRadius: "8px",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: spacing20,
+    marginTop: spacing10,
+    marginBottom: spacing20,
+    padding: `${spacing10} ${spacing20}`,
+    borderRadius: "8px",
+    flexWrap: "wrap",
+    "@media (min-width: 768px)": {
+      gap: spacing30,
+    },
   },
   legendItem: {
     display: "flex",
@@ -246,6 +397,8 @@ const styles = {
     height: "12px",
     borderRadius: "50%",
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
+    flexShrink: 0,
+    marginLeft: "6px",
   },
   attendanceLegendCard: {
     display: "flex",
@@ -262,20 +415,38 @@ const styles = {
     },
   },
   attendanceLegendIcon: {
-    width: "40px",
-    height: "40px",
+    width: "36px",
+    height: "36px",
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     fontWeight: 700,
-    fontSize: "1rem",
+    fontSize: "0.95rem",
     color: "#FFFFFF",
     boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
+    flexShrink: 0,
+    "@media (min-width: 768px)": {
+      width: "40px",
+      height: "40px",
+      fontSize: "1rem",
+    },
   },
   attendanceLegendText: {
     display: "flex",
     flexDirection: "column",
+  },
+  attendanceLegendTitle: {
+    fontSize: "0.95rem",
+    "@media (min-width: 768px)": {
+      fontSize: "1rem",
+    },
+  },
+  attendanceLegendSubtitle: {
+    fontSize: "0.85rem",
+    "@media (min-width: 768px)": {
+      fontSize: "0.9rem",
+    },
   },
 };
 
@@ -499,7 +670,6 @@ const MySuccessTrackerTable = ({ classes }) => {
     setCurrentTerm(term.term);
     setCurrentTermCode(term.termCode);
     setCurrentBannerId(term.bannerId);
-
   };
 
   const isPositive = gpaDelta >= 0;
@@ -556,7 +726,7 @@ const MySuccessTrackerTable = ({ classes }) => {
           <div className={classes.gpaLeft}>
             <Typography
               variant="p"
-              style={{ fontSize: "1.15rem", fontWeight: 700, color: "#1F2937" }}
+              style={{ fontSize: "1.05rem", fontWeight: 700, color: "#1F2937" }}
             >
               Term CGPA
             </Typography>
@@ -564,11 +734,12 @@ const MySuccessTrackerTable = ({ classes }) => {
             <div className={classes.gpaDeltaRow}>
               <DoubleChevronIcon
                 orientation={isPositive ? "up" : "down"}
-                size={21}
+                size={20}
                 backgroundColor={deltaColor}
                 style={{ transform: "translateY(4px)" }}
               />
               <Typography
+                className={classes.gpaDeltaText}
                 style={{ fontWeight: 500, top: "2px", position: "relative" }}
               >
                 <span style={{ color: deltaColor, fontWeight: 700 }}>
@@ -596,6 +767,7 @@ const MySuccessTrackerTable = ({ classes }) => {
         <div className={classes.cardHeader}>
           <Typography
             variant="h4"
+            className={classes.cardTitle}
             style={{ fontWeight: 700, color: "#1F2937" }}
           >
             Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
@@ -615,60 +787,50 @@ const MySuccessTrackerTable = ({ classes }) => {
         )}
 
         {!loadingStudentDetails && (
-  <>
-    <div className={classes.gradeLegendBar}>
-      <div className={classes.legendItem}>
-        <div
-          className={classes.legendDot}
-          style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
-        />
-        <Typography variant="body2">
-           On Track
-        </Typography>
-      </div>
+          <>
+            <div className={classes.gradeLegendBar}>
+              <div className={classes.legendItem}>
+                <div
+                  className={classes.legendDot}
+                  style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
+                />
+                <Typography variant="body2">On Track</Typography>
+              </div>
 
-      <div className={classes.legendItem}>
-        <div
-          className={classes.legendDot}
-          style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
-        />
-        <Typography variant="body2">
-          Needs Attention
-        </Typography>
-      </div>
+              <div className={classes.legendItem}>
+                <div
+                  className={classes.legendDot}
+                  style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
+                />
+                <Typography variant="body2">Needs Attention</Typography>
+              </div>
 
-      <div className={classes.legendItem}>
-        <div
-          className={classes.legendDot}
-          style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-        />
-        <Typography variant="body2">
-          Critical
-        </Typography>
-      </div>
-    </div>
+              <div className={classes.legendItem}>
+                <div
+                  className={classes.legendDot}
+                  style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
+                />
+                <Typography variant="body2">Critical</Typography>
+              </div>
+            </div>
 
-    <div className={classes.gradeLegendBar}>
-      <div className={classes.legendItem}>
-        <Typography variant="body2">
-          F = Fail
-        </Typography>
-      </div>
+            <div className={classes.gradeLegendBar}>
+              <div className={classes.legendItem}>
+                <Typography variant="body2">F = Fail</Typography>
+              </div>
 
-      <div className={classes.legendItem}>
-        <Typography variant="body2">
-          P = Pass
-        </Typography>
-      </div>
+              <div className={classes.legendItem}>
+                <Typography variant="body2">P = Pass</Typography>
+              </div>
 
-      <div className={classes.legendItem}>
-        <Typography variant="body2">
-          A, B, C, D = Standard Letter Grades
-        </Typography>
-      </div>
-    </div>
-  </>
-)}
+              <div className={classes.legendItem}>
+                <Typography variant="body2">
+                  A, B, C, D = Standard Letter Grades
+                </Typography>
+              </div>
+            </div>
+          </>
+        )}
 
         {(errorStudentDetails || errorCurrentGpa) && !isLoading && (
           <Typography
@@ -686,116 +848,223 @@ const MySuccessTrackerTable = ({ classes }) => {
           </Typography>
         )}
 
+        {/* DESKTOP TABLE VIEW */}
         {!isLoading && (
-          <Table className={classes.table}>
-            <TableHead>
-              <TableRow>
-                <TableCell className={classes.headerCell}>Course</TableCell>
-                <TableCell className={classes.headerCell}>Grade</TableCell>
-                <TableCell className={classes.headerCell}>Credits</TableCell>
-                <TableCell
-                  className={`${classes.headerCell} ${classes.lastCell}`}
-                >
-                  Attendance
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {courseData.length === 0 ? (
+          <div className={classes.tableContainer}>
+            <Table className={classes.table}>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={4} className={classes.bodyCell}>
-                    <Typography
-                      style={{ color: "#6B7280", fontStyle: "italic" }}
-                    >
-                      No course data available for this term
-                    </Typography>
+                  <TableCell className={classes.headerCell}>Course</TableCell>
+                  <TableCell className={classes.headerCell}>Grade</TableCell>
+                  <TableCell className={classes.headerCell}>Credits</TableCell>
+                  <TableCell
+                    className={`${classes.headerCell} ${classes.lastCell}`}
+                  >
+                    Attendance
                   </TableCell>
                 </TableRow>
-              ) : (
-                courseData.map((row, index) => {
-                  const attendanceColor = getStatusColor(row.attendance);
-                  const isLowGrade = TABLE_CONFIG.lowGrades.includes(row.grade);
-                  const attendanceDisplay =
-                    row.attendance !== null
-                      ? `${row.attendance.toFixed(2)}%`
-                      : loadingAttendance
-                        ? "..."
-                        : "N/A";
+              </TableHead>
+              <TableBody>
+                {courseData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className={classes.bodyCell}>
+                      <Typography
+                        style={{ color: "#6B7280", fontStyle: "italic" }}
+                      >
+                        No course data available for this term
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  courseData.map((row, index) => {
+                    const attendanceColor = getStatusColor(row.attendance);
+                    const isLowGrade = TABLE_CONFIG.lowGrades.includes(
+                      row.grade,
+                    );
+                    const attendanceDisplay =
+                      row.attendance !== null
+                        ? `${row.attendance.toFixed(2)}%`
+                        : loadingAttendance
+                          ? "..."
+                          : "N/A";
 
-                  return (
-                    <TableRow
-                      key={row.CRN || index}
-                      className={classes.tableRow}
-                    >
-                      <TableCell className={classes.bodyCell}>
+                    return (
+                      <TableRow
+                        key={row.CRN || index}
+                        className={classes.tableRow}
+                      >
+                        <TableCell className={classes.bodyCell}>
+                          <Typography variant="body2">{row.CRN}</Typography>
+                          <Typography
+                            variant="caption"
+                            style={{ color: "#6B7280" }}
+                          >
+                            {row.course}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell
+                          className={`${classes.bodyCell} ${isLowGrade ? classes.lowGrade : ""}`}
+                        >
+                          {row.grade}
+                        </TableCell>
+
+                        <TableCell className={classes.bodyCell}>
+                          <Typography variant="body2">{row.credit}</Typography>
+                        </TableCell>
+
+                        <TableCell
+                          className={`${classes.bodyCell} ${classes.lastCell}`}
+                        >
+                          <div className={classes.progressWrapper}>
+                            {row.attendance !== null ? (
+                              <>
+                                <div className={classes.progressBar}>
+                                  <div
+                                    className={classes.progressFill}
+                                    style={{
+                                      width: `${row.attendance}%`,
+                                      backgroundColor: attendanceColor,
+                                    }}
+                                  />
+                                </div>
+                                <span
+                                  style={{
+                                    color: attendanceColor,
+                                    fontWeight: 400,
+                                    fontSize: "0.95rem",
+                                    minWidth: "60px",
+                                  }}
+                                >
+                                  {attendanceDisplay}
+                                </span>
+                              </>
+                            ) : (
+                              <span
+                                style={{ color: "#999", fontStyle: "italic" }}
+                              >
+                                {attendanceDisplay}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {/* MOBILE CARD VIEW */}
+        {!isLoading && (
+          <div className={classes.mobileCardList}>
+            {courseData.length === 0 ? (
+              <Typography
+                style={{
+                  textAlign: "center",
+                  color: "#6B7280",
+                  fontStyle: "italic",
+                  padding: spacing30,
+                }}
+              >
+                No course data available for this term
+              </Typography>
+            ) : (
+              courseData.map((row, index) => {
+                const attendanceColor = getStatusColor(row.attendance);
+                const isLowGrade = TABLE_CONFIG.lowGrades.includes(row.grade);
+                const attendanceDisplay =
+                  row.attendance !== null
+                    ? `${row.attendance.toFixed(2)}%`
+                    : loadingAttendance
+                      ? "..."
+                      : "N/A";
+
+                return (
+                  <div key={row.CRN || index} className={classes.mobileCard}>
+                    {/* Header with course and grade */}
+                    <div className={classes.mobileCardHeader}>
+                      <div className={classes.mobileCardTitle}>
                         <Typography
-                            variant="body2"
+                          variant="body1"
+                          style={{ fontWeight: 700, marginBottom: "4px" }}
                         >
                           {row.CRN}
                         </Typography>
                         <Typography
-                          variant="caption"
+                          variant="body2"
                           style={{ color: "#6B7280" }}
                         >
                           {row.course}
                         </Typography>
-                      </TableCell>
-
-                      <TableCell
-                        className={`${classes.bodyCell} ${isLowGrade ? classes.lowGrade : ""}`}
+                      </div>
+                      <div
+                        className={classes.mobileCardGrade}
+                        style={{
+                          color: isLowGrade ? COLOR_CONFIG.CRITICAL : "#1F2937",
+                        }}
                       >
                         {row.grade}
-                      </TableCell>
+                      </div>
+                    </div>
 
-                      <TableCell className={classes.bodyCell}>
-                        <Typography
-                          variant="body2"
-                        >
-                          {row.credit}
-                        </Typography>
-                      </TableCell>
+                    {/* Credits row */}
+                    <div className={classes.mobileCardRow}>
+                      <span className={classes.mobileCardLabel}>Credits</span>
+                      <span className={classes.mobileCardValue}>
+                        {row.credit}
+                      </span>
+                    </div>
 
-                      <TableCell
-                        className={`${classes.bodyCell} ${classes.lastCell}`}
-                      >
-                        <div className={classes.progressWrapper}>
-                          {row.attendance !== null ? (
-                            <>
-                              <div className={classes.progressBar}>
-                                <div
-                                  className={classes.progressFill}
-                                  style={{
-                                    width: `${row.attendance}%`,
-                                    backgroundColor: attendanceColor,
-                                  }}
-                                />
-                              </div>
-                              <span
+                    {/* Attendance row */}
+                    <div className={classes.mobileCardRow}>
+                      <span className={classes.mobileCardLabel}>
+                        Attendance
+                      </span>
+                      <div className={classes.mobileProgressWrapper}>
+                        {row.attendance !== null ? (
+                          <>
+                            <div className={classes.mobileProgressBar}>
+                              <div
+                                className={classes.progressFill}
                                 style={{
-                                  color: attendanceColor,
-                                  fontWeight: 400,
-                                  fontSize: "0.95rem",
-                                  minWidth: "60px",
+                                  width: `${row.attendance}%`,
+                                  backgroundColor: attendanceColor,
                                 }}
-                              >
-                                {attendanceDisplay}
-                              </span>
-                            </>
-                          ) : (
+                              />
+                            </div>
                             <span
-                              style={{ color: "#999", fontStyle: "italic" }}
+                              style={{
+                                color: attendanceColor,
+                                fontWeight: 600,
+                                fontSize: "0.875rem",
+                                minWidth: "55px",
+                                textAlign: "right",
+                              }}
                             >
                               {attendanceDisplay}
                             </span>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                          </>
+                        ) : (
+                          <span
+                            style={{
+                              color: "#999",
+                              fontStyle: "italic",
+                              fontSize: "0.875rem",
+                            }}
+                          >
+                            {attendanceDisplay}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         )}
       </Card>
     </div>
