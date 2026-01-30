@@ -228,12 +228,13 @@ const styles = {
     gap: spacing20,
   },
   gradeLegendBar: {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing30,
-    marginTop: spacing10,
-    marginBottom: spacing20,
-    flexWrap: "wrap",
+   display: "inline-flex",
+  alignItems: "center",
+  gap: spacing30,
+  marginTop: spacing10,
+  marginBottom: spacing20,
+  padding: `${spacing10} ${spacing20}`,
+  borderRadius: "8px",
   },
   legendItem: {
     display: "flex",
@@ -613,127 +614,61 @@ const MySuccessTrackerTable = ({ classes }) => {
           </Typography>
         )}
 
-        {/* GRADE LEGEND */}
         {!loadingStudentDetails && (
-          <div className={classes.gradeLegendBar}>
-            <div className={classes.legendItem}>
-              <div
-                className={classes.legendDot}
-                style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-              />
-              <Typography variant="body2">
-                <span>
-                  F
-                </span>{" "}
-                = Fail
-              </Typography>
-            </div>
+  <>
+    <div className={classes.gradeLegendBar}>
+      <div className={classes.legendItem}>
+        <div
+          className={classes.legendDot}
+          style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
+        />
+        <Typography variant="body2">
+           On Track
+        </Typography>
+      </div>
 
-            <div className={classes.legendItem}>
-              <Typography variant="body2">
-                <span>P</span> = Pass
-              </Typography>
-            </div>
+      <div className={classes.legendItem}>
+        <div
+          className={classes.legendDot}
+          style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
+        />
+        <Typography variant="body2">
+          Needs Attention
+        </Typography>
+      </div>
 
-            <div className={classes.legendItem}>
-              <Typography variant="body2">
-                <span >A, B, C, D</span> = Standard
-                Letter Grades
-              </Typography>
-            </div>
-          </div>
-        )}
+      <div className={classes.legendItem}>
+        <div
+          className={classes.legendDot}
+          style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
+        />
+        <Typography variant="body2">
+          Critical
+        </Typography>
+      </div>
+    </div>
 
-        {/* ATTENDANCE PERCENTAGE LEGENDS */}
-        {!loadingStudentDetails && (
-          <div className={classes.legendSection}>
-            <Typography className={classes.legendTitle}>
-              Attendance Status Guide
-            </Typography>
-            <div className={classes.legendGrid}>
-              {/* On Track */}
-              <div
-                className={classes.attendanceLegendCard}
-                style={{ borderColor: COLOR_CONFIG.ON_TRACK }}
-              >
-                <div
-                  className={classes.attendanceLegendIcon}
-                  style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
-                >
-                  ✓
-                </div>
-                <div className={classes.attendanceLegendText}>
-                  <Typography
-                    style={{
-                      fontWeight: 700,
-                      fontSize: "1rem",
-                      color: COLOR_CONFIG.ON_TRACK,
-                    }}
-                  >
-                    On Track
-                  </Typography>
-                  <Typography style={{ fontSize: "0.9rem", color: "#6B7280" }}>
-                    ≥ 75% Attendance
-                  </Typography>
-                </div>
-              </div>
+    <div className={classes.gradeLegendBar}>
+      <div className={classes.legendItem}>
+        <Typography variant="body2">
+          F = Fail
+        </Typography>
+      </div>
 
-              {/* Needs Attention */}
-              <div
-                className={classes.attendanceLegendCard}
-                style={{ borderColor: COLOR_CONFIG.NEEDS_ATTENTION }}
-              >
-                <div
-                  className={classes.attendanceLegendIcon}
-                  style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
-                >
-                  !
-                </div>
-                <div className={classes.attendanceLegendText}>
-                  <Typography
-                    style={{
-                      fontWeight: 700,
-                      fontSize: "1rem",
-                      color: COLOR_CONFIG.NEEDS_ATTENTION,
-                    }}
-                  >
-                    Needs Attention
-                  </Typography>
-                  <Typography style={{ fontSize: "0.9rem", color: "#6B7280" }}>
-                    60% - 74% Attendance
-                  </Typography>
-                </div>
-              </div>
+      <div className={classes.legendItem}>
+        <Typography variant="body2">
+          P = Pass
+        </Typography>
+      </div>
 
-              {/* Critical */}
-              <div
-                className={classes.attendanceLegendCard}
-                style={{ borderColor: COLOR_CONFIG.CRITICAL }}
-              >
-                <div
-                  className={classes.attendanceLegendIcon}
-                  style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-                >
-                  ✕
-                </div>
-                <div className={classes.attendanceLegendText}>
-                  <Typography
-                    style={{
-                      fontWeight: 700,
-                      fontSize: "1rem",
-                      color: COLOR_CONFIG.CRITICAL,
-                    }}
-                  >
-                    Critical
-                  </Typography>
-                  <Typography style={{ fontSize: "0.9rem", color: "#6B7280" }}>
-                    &lt; 60% Attendance
-                  </Typography>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+      <div className={classes.legendItem}>
+        <Typography variant="body2">
+          A, B, C, D = Standard Letter Grades
+        </Typography>
+      </div>
+    </div>
+  </>
+)}
 
         {(errorStudentDetails || errorCurrentGpa) && !isLoading && (
           <Typography
