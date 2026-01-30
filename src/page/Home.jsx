@@ -6,6 +6,7 @@ import useStudentTermCodes from "../hooks/useTermCodes";
 import useStudentDetails from "../hooks/useStudentDetails";
 import useStudentGpa from "../hooks/useStudentGpa";
 import useStudentAttendance from "../hooks/useStudentAttendance";
+import TermGpaBar from "../components/TermGpaBar";
 
 // Ellucian provided hooks
 import {
@@ -683,6 +684,7 @@ const MySuccessTrackerTable = ({ classes }) => {
 
   return (
     <div className={classes.root}>
+      <TermGpaBar />
       {/* ENHANCED BACK BUTTON */}
       <div className={classes.backButtonWrapper}>
         <Button onClick={handleBack} className={classes.backButton}>
@@ -722,6 +724,7 @@ const MySuccessTrackerTable = ({ classes }) => {
         </div>
 
         {/* ENHANCED GPA CARD */}
+
         <Card className={classes.gpaTopCard}>
           <div className={classes.gpaLeft}>
             <Typography
