@@ -1,0 +1,84 @@
+{
+  "name": "Get-StudentAttendance",
+  "parameters": [
+    {
+      "name": "ethosApiKey",
+      "type": "string",
+      "sensitive": true
+    },
+    {
+      "name": "term",
+      "type": "string"
+    },
+    {
+      "name": "id",
+      "type": "string"
+    },
+    {
+      "name": "crn",
+      "type": "string"
+    }
+  ],
+  "apiDefinition": {
+    "authType": "userToken",
+    "httpVerb": "GET"
+  },
+  "pipeline": [
+    "Set-Configuration",
+    "Get-x-attendance-days",
+    "Get-class-attendance-roster",
+    "Calculate-attendance-percentage"
+  ],
+  "segments": {
+    "Set-Configuration": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform (message, context) {\n  // Put your code here.\n  const termCode = context.get('term');\n  const crn = context.get('crn');\n  const bannerId = context.get('id');\n  \n  message.payload.bannerId = bannerId;\n  message.payload.crn = crn;\n  message.payload.termCode = termCode;\n  \n  return message;\n}\n"
+      }
+    },
+    "Get-x-attendance-days": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "x-attendance-days",
+        "filter": "?criteria={\"termCode\": \"{{message.payload.termCode}}\", \"crn\": \"{{message.payload.crn}}\"}",
+        "payloadTargetPath": "resAttendanceDays",
+        "acceptVersions": [
+          "2"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errAttendanceDays",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Get-class-attendance-roster": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "class-attendance-roster",
+        "filter": "?ssbsectTermCodet={{message.payload.termCode}}&ssbsectCrnt={{message.payload.crn}}",
+        "payloadTargetPath": "resClassAttendance",
+        "acceptVersions": [
+          "2"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errClassAttendance",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Calculate-attendance-percentage": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform (message, context) {\n  // Put your code here.\n  const totalDays = message.payload?.resAttendanceDays?.[0]?.meetingDays ?? 1;\n  const attendedDays = message.payload?.resClassAttendance?.find(r => r.spridenId === message.payload.bannerId)?.attendHr ?? 0;\n  \n  const attendancePercentage = attendedDays >= totalDays ? \"100.00\" : Number(attendedDays * 100 / totalDays ).toFixed(2);\n  return {\n    attendancePercentage: attendancePercentage\n  };\n}\n"
+      }
+    }
+  }
+}
