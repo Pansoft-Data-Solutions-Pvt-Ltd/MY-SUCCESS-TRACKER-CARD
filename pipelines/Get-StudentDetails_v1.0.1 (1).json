@@ -1,0 +1,208 @@
+{
+  "name": "Get-StudentDetails",
+  "description": "API to Get Student Details",
+  "parameters": [
+    {
+      "name": "ethosApiKey",
+      "type": "string",
+      "sensitive": true
+    },
+    {
+      "name": "termCode",
+      "type": "string",
+      "default": "202810"
+    }
+  ],
+  "apiDefinition": {
+    "authType": "userToken",
+    "httpVerb": "GET"
+  },
+  "pipeline": [
+    "Get Person Id",
+    "Get Person Details",
+    "Get Person Banner Id",
+    "Student Academic History Course Details",
+    "Get Course Details",
+    "For-Each-Course",
+    "Section-Assigned-Instructors",
+    "Process-Section-Assigned-Instructors",
+    "For-Each-Section-Instructor-Details",
+    "Instructor-Details",
+    "Process-Instructor-Details",
+    "Reducer",
+    "Processing-Learner-Curriculla",
+    "Learner-Concurrent-Curricula",
+    "Get-Study-Path",
+    "Get-Static-Data"
+  ],
+  "segments": {
+    "Get Person Id": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const contextUser = context.get(\"__user\");\r\n\r\n  const personId = contextUser?.id;\r\n\r\n  context.set(\"personId\", personId);\r\n\r\n  return {\r\n    payload: {\r\n      personId,\r\n      // personId: \"b5ce5aa3-9221-453b-b92c-c31fc24d6d5d\",\r\n    },\r\n  };\r\n}\r\n"
+      }
+    },
+    "Get Person Details": {
+      "class": "ethosProxyGet",
+      "config": {
+        "resource": "persons",
+        "acceptVersions": [
+          "12"
+        ],
+        "idFromPayload": "$.personId",
+        "target": "persons",
+        "cache": false,
+        "ignoreErrors": false,
+        "errorPath": "errPersons",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Get Person Banner Id": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const persons = message.payload?.persons || {};\r\n\r\n  const matchedId = persons?.credentials?.find((cred) => cred.type === \"bannerId\");\r\n  \r\n  // const bannerId = matchedId?.value;\r\n  const bannerId = \"210009506\";\r\n  message.payload.bannerId = bannerId || null;\r\n\r\n  if (message.payload?.persons) {\r\n    delete message.payload.persons;\r\n  }\r\n\r\n  message.payload.termCode = context.get(\"termCode\");\r\n\r\n  return message;\r\n}\r\n"
+      }
+    },
+    "Student Academic History Course Details": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "student-academic-history-course-details",
+        "filter": "?criteria={\"bannerId\": \"{{message.payload.bannerId}}\",\"term\": \"{{context.termCode}}\"}",
+        "payloadTargetPath": "academicHistoryCourseDetails",
+        "acceptVersions": [
+          "1.1.0"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Get Course Details": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const bannerId = message.payload?.bannerId;\r\n  const termCode = message.payload?.termCode;\r\n  const academicHistoryCourseDetails = message.payload?.academicHistoryCourseDetails || [];\r\n\r\n  const seen = new Set();\r\n\r\n  const courseDetails = academicHistoryCourseDetails\r\n    .map((course) => {\r\n      const grades =\r\n        Array.isArray(course?.grades) && course.grades.length > 0 ? course.grades[0] : null;\r\n\r\n      return {\r\n        bannerId,\r\n        termCode,\r\n        courseReferenceNumber: course?.courseReferenceNumber || null,\r\n        courseTitle: course?.courseTitle || null,\r\n        credits: grades\r\n          ? { creditHours: grades?.creditHours || null, modifiedOn: grades?.modifiedOn || null }\r\n          : null,\r\n        grade: grades?.grade || null,\r\n        changeReason: grades?.changeReasonDescription || null,\r\n        comment: grades?.commentDescription || null,\r\n        courseNumber: course?.courseNumber || null,\r\n      };\r\n    })\r\n    .filter((course) => {\r\n      const crn = course.courseReferenceNumber;\r\n      if (!crn || seen.has(crn)) return false;\r\n      seen.add(crn);\r\n      return true;\r\n    });\r\n\r\n  message.payload.courseDetails = courseDetails;\r\n\r\n  delete message.payload.bannerId;\r\n  delete message.payload.termCode;\r\n  delete message.payload.academicHistoryCourseDetails;\r\n  delete message.payload.personId;\r\n\r\n  return message;\r\n}\r\n"
+      }
+    },
+    "For-Each-Course": {
+      "class": "forEach",
+      "config": {
+        "source": "payload.courseDetails"
+      }
+    },
+    "Section-Assigned-Instructors": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "section-assigned-instructors",
+        "filter": "?criteria={\"termCode\": \"{{message.payload.termCode}}\", \"crn\":\"{{message.payload.courseReferenceNumber}}\"}",
+        "payloadTargetPath": "sectionInstructors",
+        "acceptVersions": [
+          "1"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errSectionInstructors",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Process-Section-Assigned-Instructors": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const {\r\n    bannerId,\r\n    termCode,\r\n    courseReferenceNumber,\r\n    courseTitle,\r\n    credits,\r\n    grade,\r\n    changeReason,\r\n    comment,\r\n    courseNumber,\r\n    sectionInstructors = [],\r\n  } = message.payload;\r\n\r\n  const sectionInstructorDetails = Array.isArray(sectionInstructors)\r\n    ? sectionInstructors.map((item) => ({\r\n        instructorId: item.idno,\r\n        bannerId,\r\n        termCode,\r\n        courseReferenceNumber,\r\n        courseTitle,\r\n        credits,\r\n        grade,\r\n        changeReason,\r\n        comment,\r\n        courseNumber,\r\n      }))\r\n    : [];\r\n\r\n  message.payload.sectionInstructorDetails = sectionInstructorDetails;\r\n\r\n  [\r\n    \"bannerId\",\r\n    \"termCode\",\r\n    \"courseReferenceNumber\",\r\n    \"courseTitle\",\r\n    \"credits\",\r\n    \"grade\",\r\n    \"changeReason\",\r\n    \"comment\",\r\n    \"courseNumber\",\r\n    \"sectionInstructors\",\r\n  ].forEach((key) => delete message.payload[key]);\r\n\r\n  return message;\r\n}\r\n"
+      }
+    },
+    "For-Each-Section-Instructor-Details": {
+      "class": "forEach",
+      "config": {
+        "source": "payload.sectionInstructorDetails"
+      }
+    },
+    "Instructor-Details": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "persons",
+        "filter": "?criteria={\"credentials\":[{\"type\": \"bannerId\",\"value\": \"{{message.payload.instructorId}}\"}]}",
+        "payloadTargetPath": "instructorDetails",
+        "acceptVersions": [
+          "12"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errInstructorDetails",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Process-Instructor-Details": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const instructorDetails = Array.isArray(message.payload?.instructorDetails)\r\n    ? message.payload?.instructorDetails\r\n    : [];\r\n\r\n  const instructorFullName =\r\n    instructorDetails.length > 0 && instructorDetails[0]?.names\r\n      ? instructorDetails[0].names[0]?.fullName\r\n      : null;\r\n  const matchedEmail =\r\n    instructorDetails.length > 0 && instructorDetails[0]?.emails\r\n      ? instructorDetails[0].emails.find((email) => email.type.emailType === \"business\")\r\n      : null;\r\n\r\n  const instructorEmail = matchedEmail ? matchedEmail.address : null;\r\n\r\n  message.payload.instructorFullName = instructorFullName;\r\n  message.payload.instructorEmail = instructorEmail;\r\n\r\n  delete message.payload?.instructorDetails;\r\n\r\n  return message;\r\n}\r\n"
+      }
+    },
+    "Reducer": {
+      "class": "reducer",
+      "config": {
+        "accumulator": "payload.studentDetails"
+      }
+    },
+    "Processing-Learner-Curriculla": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const studentDetails = Array.isArray(message.payload?.studentDetails)\r\n    ? message.payload?.studentDetails\r\n    : [];\r\n\r\n  message.payload.bannerId = studentDetails?.[0]?.bannerId;\r\n\r\n  return message;\r\n}\r\n"
+      }
+    },
+    "Learner-Concurrent-Curricula": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "learner-concurrent-curricula",
+        "filter": "?criteria={\"bannerId\": \"{{message.payload.bannerId}}\",\"term\": \"{{context.termCode}}\"}",
+        "payloadTargetPath": "learnerCurricula",
+        "acceptVersions": [
+          "1"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errLearnerCurriculla",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Get-Study-Path": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const learnerCurricula = Array.isArray(message.payload?.learnerCurricula)\r\n    ? message.payload.learnerCurricula\r\n    : [];\r\n\r\n  const studyPathDescription = learnerCurricula?.[0]?.primaryCurriculum?.studyPathDescription ?? \"\";\r\n\r\n  message.payload.studyPathDescription = studyPathDescription;\r\n  delete message.payload.learnerCurricula;\r\n  return message;\r\n}\r\n"
+      }
+    },
+    "Get-Static-Data": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform (message, context) {\n  // Put your code here.\n  return message.payload.studentDetails;\n}\n"
+      }
+    }
+  }
+}
