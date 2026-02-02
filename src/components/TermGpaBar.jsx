@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -9,6 +9,7 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import PropTypes from "prop-types";
 
 // Register Chart.js components
 ChartJS.register(
@@ -34,25 +35,31 @@ const options = {
   },
 };
 
-// Labels
-const labels = ["January", "February", "March"];
+export default function App({ termData, termGpaData }) {
+  // Chart data
+  const data = {
+    labels: termData,
+    datasets: [
+      {
+        label: "Term GPA",
+        data: termGpaData?.map(data => data.termGpa),
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+      },
+    ],
+  };
 
-// Chart data (NO faker)
-const data = {
-  labels,
-  datasets: [
-    {
-      label: "Term GPA",
-      data: [120, 450, 300, 700, 200, 900, 500],
-      backgroundColor: "rgba(255, 99, 132, 0.5)",
-    },
-  ],
-};
-
-export default function App() {
   return (
     <div style={{ width: "100%", margin: "0px 0px" }}>
       <Bar options={options} data={data} />
     </div>
   );
 }
+
+App.propTypes = {
+  termData: PropTypes.arrayOf(
+    PropTypes.shape({
+      term: PropTypes.string,
+    }),
+  ),
+  termGpaData: PropTypes.array
+};
