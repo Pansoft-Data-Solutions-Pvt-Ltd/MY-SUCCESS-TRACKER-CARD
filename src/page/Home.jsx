@@ -95,15 +95,19 @@ const styles = {
     },
   },
   topBar: {
-    display: "flex",
-    flexDirection: "column",
+    display: "grid",
+    gridTemplateColumns: "1fr",
     gap: spacing20,
     marginBottom: spacing30,
     "@media (min-width: 768px)": {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: spacing40,
+      gridTemplateColumns: "auto 1fr",
+      gap: spacing30,
       marginBottom: spacing40,
+      alignItems: "start",
+    },
+    "@media (min-width: 1200px)": {
+      gridTemplateColumns: "480px 1fr 480px",
+      gap: spacing30,
     },
   },
   termSection: {
@@ -112,7 +116,7 @@ const styles = {
     gap: spacing10,
     width: "100%",
     "@media (min-width: 768px)": {
-      width: "auto",
+      width: "280px",
     },
   },
   termLabel: {
@@ -123,10 +127,43 @@ const styles = {
       fontSize: "1.1rem",
     },
   },
+  gpaCardsWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    gap: spacing20,
+    width: "100%",
+    "@media (min-width: 768px)": {
+      flexDirection: "column",
+      gap: spacing30,
+    },
+    "@media (min-width: 1200px)": {
+      gridColumn: "2",
+    },
+  },
+  termGpaBarCard: {
+    padding: 0,
+    width: "100%",
+    height: "210px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    background: "linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%)",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+    borderRadius: "12px",
+    border: "1px solid #E5E7EB",
+    overflow: "hidden",
+    "@media (min-width: 1200px)": {
+      gridColumn: "3",
+      gridRow: "1 / 3",
+      height: "auto",
+      minHeight: "210px",
+    },
+  },
   gpaTopCard: {
     padding: spacing20,
     width: "100%",
-    minHeight: "100px",
+    minHeight: "110px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
@@ -135,12 +172,38 @@ const styles = {
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
     borderRadius: "12px",
     border: "1px solid #E5E7EB",
+    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
+    },
     "@media (min-width: 768px)": {
       padding: spacing30,
       minWidth: "280px",
-      width: "auto",
-      height: "110px",
-      marginLeft: "auto",
+      flex: 1,
+    },
+  },
+  termGpaCard: {
+    padding: spacing20,
+    width: "100%",
+    minHeight: "110px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    position: "relative",
+    background: "linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
+    borderRadius: "12px",
+    border: "1px solid #BAE6FD",
+    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
+    },
+    "@media (min-width: 768px)": {
+      padding: spacing30,
+      minWidth: "280px",
+      flex: 1,
     },
   },
   gpaLeft: {
@@ -166,6 +229,7 @@ const styles = {
     backgroundColor: "#FFFFFF",
     boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
     flexShrink: 0,
+    transition: "all 0.3s ease",
     "@media (min-width: 768px)": {
       width: "80px",
       height: "80px",
@@ -475,6 +539,7 @@ const MySuccessTrackerTable = ({ classes }) => {
   const [currentBannerId, setCurrentBannerId] = useState(null);
   const [currentTermCode, setCurrentTermCode] = useState(null);
   const [currentGpa, setCurrentGpa] = useState(0);
+  const [termGpa, setTermGpa] = useState(0);
   const [gpaDelta, setGpaDelta] = useState(0);
   const [courseData, setCourseData] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
@@ -546,14 +611,16 @@ const MySuccessTrackerTable = ({ classes }) => {
     getCurrentGpa()
       .then((data) => {
         console.log("Current GPA data:", data);
-        // Expected payload: { termGpa, cumulativeGpa }
         const gpaValue = data?.cumulativeGpa;
+        const termGpaValue = data?.termGpa;
         setCurrentGpa(gpaValue);
+        setTermGpa(termGpaValue);
         setGpaDelta(data?.gpaIncrease);
       })
       .catch((error) => {
         console.error("Failed to fetch current GPA:", error);
         setCurrentGpa(0);
+        setTermGpa(0);
       });
   }, [currentTermCode, getCurrentGpa, currentBannerId]);
 
@@ -675,6 +742,7 @@ const MySuccessTrackerTable = ({ classes }) => {
 
   const isPositive = gpaDelta >= 0;
   const gpaCircleColor = getGpaCircleColor(currentGpa);
+  const termGpaCircleColor = getGpaCircleColor(termGpa);
   const deltaColor = isPositive ? COLOR_CONFIG.ON_TRACK : COLOR_CONFIG.CRITICAL;
   const isLoading = loadingCurrentGpa || loadingStudentDetails;
 
@@ -684,7 +752,6 @@ const MySuccessTrackerTable = ({ classes }) => {
 
   return (
     <div className={classes.root}>
-      <TermGpaBar />
       {/* ENHANCED BACK BUTTON */}
       <div className={classes.backButtonWrapper}>
         <Button onClick={handleBack} className={classes.backButton}>
@@ -706,6 +773,7 @@ const MySuccessTrackerTable = ({ classes }) => {
 
       {/* TOP BAR */}
       <div className={classes.topBar}>
+        {/* TERM SELECTOR */}
         <div className={classes.termSection}>
           <Typography className={classes.termLabel}>Select Term</Typography>
           <Button
@@ -723,45 +791,94 @@ const MySuccessTrackerTable = ({ classes }) => {
           </Button>
         </div>
 
-        {/* ENHANCED GPA CARD */}
-
-        <Card className={classes.gpaTopCard}>
-          <div className={classes.gpaLeft}>
-            <Typography
-              variant="p"
-              style={{ fontSize: "1.05rem", fontWeight: 700, color: "#1F2937" }}
-            >
-              Term CGPA
-            </Typography>
-
-            <div className={classes.gpaDeltaRow}>
-              <DoubleChevronIcon
-                orientation={isPositive ? "up" : "down"}
-                size={20}
-                backgroundColor={deltaColor}
-                style={{ transform: "translateY(4px)" }}
-              />
+        {/* GPA CARDS WRAPPER */}
+        <div className={classes.gpaCardsWrapper}>
+          {/* CUMULATIVE GPA CARD */}
+          <Card className={classes.gpaTopCard}>
+            <div className={classes.gpaLeft}>
               <Typography
-                className={classes.gpaDeltaText}
-                style={{ fontWeight: 500, top: "2px", position: "relative" }}
+                variant="p"
+                style={{
+                  fontSize: "1.05rem",
+                  fontWeight: 700,
+                  color: "#1F2937",
+                }}
               >
-                <span style={{ color: deltaColor, fontWeight: 700 }}>
-                  {gpaDelta}
-                </span>
-                <span style={{ marginLeft: 3, color: "#6B7280" }}>
-                  {" "}
-                  From Last Term GPA
-                </span>
+                Cumulative GPA
+              </Typography>
+
+              <div className={classes.gpaDeltaRow}>
+                <DoubleChevronIcon
+                  orientation={isPositive ? "up" : "down"}
+                  size={20}
+                  backgroundColor={deltaColor}
+                  style={{ transform: "translateY(4px)" }}
+                />
+                <Typography
+                  className={classes.gpaDeltaText}
+                  style={{ fontWeight: 500, top: "2px", position: "relative" }}
+                >
+                  <span style={{ color: deltaColor, fontWeight: 700 }}>
+                    {gpaDelta}
+                  </span>
+                  <span style={{ marginLeft: 3, color: "#6B7280" }}>
+                    {" "}
+                    From Last Term
+                  </span>
+                </Typography>
+              </div>
+            </div>
+
+            <div
+              className={classes.gpaCircle}
+              style={{ borderColor: gpaCircleColor, color: gpaCircleColor }}
+            >
+              {loadingCurrentGpa ? "..." : currentGpa}
+            </div>
+          </Card>
+
+          {/* TERM GPA CARD */}
+          <Card className={classes.termGpaCard}>
+            <div className={classes.gpaLeft}>
+              <Typography
+                variant="p"
+                style={{
+                  fontSize: "1.05rem",
+                  fontWeight: 700,
+                  color: "#0369A1",
+                }}
+              >
+                Term GPA
+              </Typography>
+
+              <Typography
+                variant="body2"
+                style={{
+                  fontSize: "0.875rem",
+                  color: "#0C4A6E",
+                  marginTop: spacing10,
+                  fontWeight: 500,
+                }}
+              >
+                Current term performance
               </Typography>
             </div>
-          </div>
 
-          <div
-            className={classes.gpaCircle}
-            style={{ borderColor: gpaCircleColor, color: gpaCircleColor }}
-          >
-            {loadingCurrentGpa ? "..." : currentGpa}
-          </div>
+            <div
+              className={classes.gpaCircle}
+              style={{
+                borderColor: termGpaCircleColor,
+                color: termGpaCircleColor,
+              }}
+            >
+              {loadingCurrentGpa ? "..." : termGpa}
+            </div>
+          </Card>
+        </div>
+
+        {/* TERM GPA BAR CHART */}
+        <Card className={classes.termGpaBarCard}>
+          <TermGpaBar />
         </Card>
       </div>
 

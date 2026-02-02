@@ -29,7 +29,7 @@ const options = {
     },
     title: {
       display: true,
-      text: "Monthly Sales Report",
+      text: "Term GPA Report",
     },
   },
 };
@@ -51,7 +51,7 @@ const data = {
 
 export default function App() {
   return (
-    <div style={{ width: "80%", margin: "50px auto" }}>
+    <div style={{ width: "100%", margin: "0px 0px" }}>
       <Bar options={options} data={data} />
     </div>
   );
