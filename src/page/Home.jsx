@@ -173,10 +173,6 @@ const styles = {
     borderRadius: "12px",
     border: "1px solid #E5E7EB",
     transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    "&:hover": {
-      transform: "translateY(-2px)",
-      boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
-    },
     "@media (min-width: 768px)": {
       padding: spacing30,
       minWidth: "280px",
@@ -196,10 +192,6 @@ const styles = {
     borderRadius: "12px",
     border: "1px solid #BAE6FD",
     transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    "&:hover": {
-      transform: "translateY(-2px)",
-      boxShadow: "0 6px 16px rgba(0, 0, 0, 0.12)",
-    },
     "@media (min-width: 768px)": {
       padding: spacing30,
       minWidth: "280px",
@@ -536,6 +528,7 @@ const transformCourseData = (apiCourses) => {
 /* ================= COMPONENT ================= */
 const MySuccessTrackerTable = ({ classes }) => {
   const [currentTerm, setCurrentTerm] = useState(null);
+  const [termData, setTermData] = useState([]);
   const [currentBannerId, setCurrentBannerId] = useState(null);
   const [currentTermCode, setCurrentTermCode] = useState(null);
   const [currentGpa, setCurrentGpa] = useState(0);
@@ -543,6 +536,8 @@ const MySuccessTrackerTable = ({ classes }) => {
   const [gpaDelta, setGpaDelta] = useState(0);
   const [courseData, setCourseData] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [termGpaData, setTermGpaData] = useState([]);
+  const [loadingAllTermGpas, setLoadingAllTermGpas] = useState(false);
 
   const { authenticatedEthosFetch } = useData();
   const { cardId } = useCardInfo();
@@ -581,6 +576,7 @@ const MySuccessTrackerTable = ({ classes }) => {
       .then((data) => {
         // Set default selected term (latest / first item)
         if (Array.isArray(data) && data.length > 0) {
+          setTermData(data.map((term) => term.term));
           setCurrentTerm(data[0]?.term);
           setCurrentTermCode(data[0]?.termCode);
           setCurrentBannerId(data[0]?.bannerId);
@@ -603,6 +599,66 @@ const MySuccessTrackerTable = ({ classes }) => {
     currentBannerId,
     currentTermCode,
   );
+
+  // Fetch GPA data for all terms
+  useEffect(() => {
+    if (!termCodesResult || termCodesResult.length === 0) return;
+
+    const fetchAllTermGpas = async () => {
+      setLoadingAllTermGpas(true);
+
+      try {
+        const gpaPromises = termCodesResult.map(async (termInfo) => {
+          try {
+            const url = `Get-StudentGPA?cardId=${encodeURIComponent(
+              cardId,
+            )}&term=${encodeURIComponent(termInfo.termCode)}&bannerId=${encodeURIComponent(termInfo.bannerId)}`;
+
+            const response = await authenticatedEthosFetch(url, {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
+            });
+
+            if (!response || !response.ok) {
+              throw new Error("Failed to fetch GPA");
+            }
+
+            const data = await response.json().catch(() => null);
+
+            return {
+              term: termInfo.term,
+              termCode: termInfo.termCode,
+              termGpa: data?.termGpa || 0,
+              cumulativeGpa: data?.cumulativeGpa || 0,
+            };
+          } catch (error) {
+            console.error(
+              `Failed to fetch GPA for term ${termInfo.term}:`,
+              error,
+            );
+            return {
+              term: termInfo.term,
+              termCode: termInfo.termCode,
+              termGpa: 0,
+              cumulativeGpa: 0,
+            };
+          }
+        });
+
+        const allGpaData = await Promise.all(gpaPromises);
+        setTermGpaData(allGpaData);
+      } catch (error) {
+        console.error("Error fetching all term GPAs:", error);
+        setTermGpaData([]);
+      } finally {
+        setLoadingAllTermGpas(false);
+      }
+    };
+
+    fetchAllTermGpas();
+  }, [termCodesResult, authenticatedEthosFetch, cardId]);
 
   // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
@@ -878,7 +934,11 @@ const MySuccessTrackerTable = ({ classes }) => {
 
         {/* TERM GPA BAR CHART */}
         <Card className={classes.termGpaBarCard}>
-          <TermGpaBar />
+          <TermGpaBar
+            termData={termData}
+            termGpaData={termGpaData}
+            loading={loadingAllTermGpas}
+          />
         </Card>
       </div>
 
