@@ -581,9 +581,9 @@ const MySuccessTrackerTable = ({ classes }) => {
       .then((data) => {
         // Set default selected term (latest / first item)
         if (Array.isArray(data) && data.length > 0) {
-          setCurrentTerm(data[1]?.term);
-          setCurrentTermCode(data[1]?.termCode);
-          setCurrentBannerId(data[1]?.bannerId);
+          setCurrentTerm(data[0]?.term);
+          setCurrentTermCode(data[0]?.termCode);
+          setCurrentBannerId(data[0]?.bannerId);
         }
       })
       .catch(() => {
