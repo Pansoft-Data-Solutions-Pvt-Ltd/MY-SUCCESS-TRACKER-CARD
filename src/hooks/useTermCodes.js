@@ -4,6 +4,7 @@ const useStudentTermCodes = (authenticatedEthosFetch, cardId) => {
   const [loadingTermCodes, setLoadingTermCodes] = useState(false);
   const [errorTermCodes, setErrorTermCodes] = useState(null);
   const [termCodesResult, setTermCodesResult] = useState(null);
+  const blockedTermCodes = ["199610", "199510", "199520"];
 
   const getStudentTermCodes = useCallback(async () => {
     setLoadingTermCodes(true);
@@ -39,7 +40,11 @@ const useStudentTermCodes = (authenticatedEthosFetch, cardId) => {
         );
       }
 
-      setTermCodesResult(data.termCodeDetails);
+      setTermCodesResult(
+        data?.termCodeDetails?.filter(
+          (item) => !blockedTermCodes.includes(item.termCode)
+        ));
+      console.log(data.termCodeDetails, "<--- term code result");
       return data.termCodeDetails;
     } catch (error) {
       setErrorTermCodes(error instanceof Error ? error.message : String(error));

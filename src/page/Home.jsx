@@ -542,6 +542,8 @@ const MySuccessTrackerTable = ({ classes }) => {
   const { authenticatedEthosFetch } = useData();
   const { cardId } = useCardInfo();
 
+  const blockedTermCodes = ["199610", "199510", "199520"];
+
   const backHref = useMemo(() => {
     const segments = window.location.pathname.split("/").filter(Boolean);
     if (segments.length > 0) {
@@ -576,7 +578,11 @@ const MySuccessTrackerTable = ({ classes }) => {
       .then((data) => {
         // Set default selected term (latest / first item)
         if (Array.isArray(data) && data.length > 0) {
-          setTermData(data.map((term) => term.term));
+          setTermData(
+            data
+              .filter((item) => !blockedTermCodes.includes(item.termCode))
+              .map((term) => term.term),
+          );
           setCurrentTerm(data[0]?.term);
           setCurrentTermCode(data[0]?.termCode);
           setCurrentBannerId(data[0]?.bannerId);
@@ -889,7 +895,7 @@ const MySuccessTrackerTable = ({ classes }) => {
               className={classes.gpaCircle}
               style={{ borderColor: gpaCircleColor, color: gpaCircleColor }}
             >
-              {loadingCurrentGpa ? "..." : currentGpa}
+              {loadingCurrentGpa ? "..." : currentGpa?.toFixed(2)}
             </div>
           </Card>
 
@@ -927,7 +933,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 color: termGpaCircleColor,
               }}
             >
-              {loadingCurrentGpa ? "..." : termGpa}
+              {loadingCurrentGpa ? "..." : termGpa?.toFixed(2)}
             </div>
           </Card>
         </div>
