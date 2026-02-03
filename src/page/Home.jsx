@@ -583,9 +583,9 @@ const MySuccessTrackerTable = ({ classes }) => {
               .filter((item) => !blockedTermCodes.includes(item.termCode))
               .map((term) => term.term),
           );
-          setCurrentTerm(data[0]?.term);
-          setCurrentTermCode(data[0]?.termCode);
-          setCurrentBannerId(data[0]?.bannerId);
+          setCurrentTerm(data[data.length-1]?.term);
+          setCurrentTermCode(data[data.length-1]?.termCode);
+          setCurrentBannerId(data[data.length-1]?.bannerId);
         }
       })
       .catch(() => {

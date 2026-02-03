@@ -287,8 +287,8 @@ const MySuccessTrackerCard = ({ classes }) => {
       .then((data) => {
         if (Array.isArray(data) && data.length > 0) {
           // Set the latest term (first item)
-          setCurrentTermCode(data[0].termCode);
-          setCurrentBannerId(data[0].bannerId);
+          setCurrentTermCode(data[data.length-1].termCode);
+          setCurrentBannerId(data[data.length-1].bannerId);
         }
       })
       .catch(() => {
@@ -463,7 +463,7 @@ const MySuccessTrackerCard = ({ classes }) => {
             <Typography variant="body2" style={{ textAlign: "center" }}>
               {loadingTermCodes
                 ? "Loading..."
-                : termCodesResult?.[0]?.term || "Current Term"}
+                : termCodesResult?.[termCodesResult.length-1]?.term || "Current Term"}
             </Typography>
           </header>
 
