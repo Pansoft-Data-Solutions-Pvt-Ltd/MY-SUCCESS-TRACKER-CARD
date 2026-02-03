@@ -42,7 +42,7 @@ export default function App({ termData, termGpaData }) {
     datasets: [
       {
         label: "Term GPA",
-        data: termGpaData?.map(data => data.termGpa),
+        data: termGpaData?.map((data) => data.termGpa),
         backgroundColor: "rgba(255, 99, 132, 0.5)",
       },
     ],
@@ -61,5 +61,5 @@ App.propTypes = {
       term: PropTypes.string,
     }),
   ),
-  termGpaData: PropTypes.array
+  termGpaData: PropTypes.array,
 };
