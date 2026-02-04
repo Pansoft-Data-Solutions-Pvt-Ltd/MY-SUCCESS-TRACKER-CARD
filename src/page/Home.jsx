@@ -901,7 +901,7 @@ const MySuccessTrackerTable = ({ classes }) => {
               className={classes.gpaCircle}
               style={{ borderColor: gpaCircleColor, color: gpaCircleColor }}
             >
-              {loadingCurrentGpa ? "..." : currentGpa?.toFixed(2)}
+              {currentTermCode !== '202520' ? loadingCurrentGpa ? "..." : currentGpa?.toFixed(2) : '00'}
             </div>
           </Card>
 
