@@ -1048,7 +1048,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 <TableRow>
                   <TableCell className={classes.headerCell}>Course</TableCell>
                   <TableCell className={classes.headerCell}>Grade</TableCell>
-                  <TableCell className={classes.headerCell}>Credits</TableCell>
+                  <TableCell className={classes.headerCell}>Credit Hours</TableCell>
                   <TableCell
                     className={`${classes.headerCell} ${classes.lastCell}`}
                   >
