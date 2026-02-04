@@ -583,9 +583,9 @@ const MySuccessTrackerTable = ({ classes }) => {
               .filter((item) => !blockedTermCodes.includes(item.termCode))
               .map((term) => term.term),
           );
-          setCurrentTerm(data[data.length-1]?.term);
-          setCurrentTermCode(data[data.length-1]?.termCode);
-          setCurrentBannerId(data[data.length-1]?.bannerId);
+          setCurrentTerm(data[data.length - 1]?.term);
+          setCurrentTermCode(data[data.length - 1]?.termCode);
+          setCurrentBannerId(data[data.length - 1]?.bannerId);
         }
       })
       .catch(() => {
@@ -869,26 +869,32 @@ const MySuccessTrackerTable = ({ classes }) => {
                 Cumulative GPA
               </Typography>
 
-              <div className={classes.gpaDeltaRow}>
-                <DoubleChevronIcon
-                  orientation={isPositive ? "up" : "down"}
-                  size={20}
-                  backgroundColor={deltaColor}
-                  style={{ transform: "translateY(4px)" }}
-                />
-                <Typography
-                  className={classes.gpaDeltaText}
-                  style={{ fontWeight: 500, top: "2px", position: "relative" }}
-                >
-                  <span style={{ color: deltaColor, fontWeight: 700 }}>
-                    {gpaDelta}
-                  </span>
-                  <span style={{ marginLeft: 3, color: "#6B7280" }}>
-                    {" "}
-                    From Last Term
-                  </span>
-                </Typography>
-              </div>
+              {currentTermCode !== '202520' && (
+                <div className={classes.gpaDeltaRow}>
+                  <DoubleChevronIcon
+                    orientation={isPositive ? "up" : "down"}
+                    size={20}
+                    backgroundColor={deltaColor}
+                    style={{ transform: "translateY(4px)" }}
+                  />
+                  <Typography
+                    className={classes.gpaDeltaText}
+                    style={{
+                      fontWeight: 500,
+                      top: "2px",
+                      position: "relative",
+                    }}
+                  >
+                    <span style={{ color: deltaColor, fontWeight: 700 }}>
+                      {gpaDelta}
+                    </span>
+                    <span style={{ marginLeft: 3, color: "#6B7280" }}>
+                      {" "}
+                      From Last Term
+                    </span>
+                  </Typography>
+                </div>
+              )}
             </div>
 
             <div
