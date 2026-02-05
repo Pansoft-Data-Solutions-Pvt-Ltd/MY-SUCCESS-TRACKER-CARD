@@ -869,7 +869,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 Cumulative GPA
               </Typography>
 
-              {currentTermCode !== '202520' && (
+              {currentTermCode !== "202520" && (
                 <div className={classes.gpaDeltaRow}>
                   <DoubleChevronIcon
                     orientation={isPositive ? "up" : "down"}
@@ -899,9 +899,17 @@ const MySuccessTrackerTable = ({ classes }) => {
 
             <div
               className={classes.gpaCircle}
-              style={{ borderColor: gpaCircleColor, color: gpaCircleColor }}
+              style={{
+                borderColor:
+                  currentTermCode === "202520" ? "green" : gpaCircleColor,
+                color: currentTermCode === "202520" ? "green" : gpaCircleColor,
+              }}
             >
-              {currentTermCode !== '202520' ? loadingCurrentGpa ? "..." : currentGpa?.toFixed(2) : '00'}
+              {currentTermCode !== "202520"
+                ? loadingCurrentGpa
+                  ? "..."
+                  : currentGpa?.toFixed(2)
+                : "00"}
             </div>
           </Card>
 
@@ -1048,7 +1056,9 @@ const MySuccessTrackerTable = ({ classes }) => {
                 <TableRow>
                   <TableCell className={classes.headerCell}>Course</TableCell>
                   <TableCell className={classes.headerCell}>Grade</TableCell>
-                  <TableCell className={classes.headerCell}>Credit Hours</TableCell>
+                  <TableCell className={classes.headerCell}>
+                    Credit Hours
+                  </TableCell>
                   <TableCell
                     className={`${classes.headerCell} ${classes.lastCell}`}
                   >
