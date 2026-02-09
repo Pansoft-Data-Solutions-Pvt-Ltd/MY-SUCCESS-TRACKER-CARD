@@ -22,8 +22,8 @@ const COLOR_CONFIG = {
 };
 
 const GPA_CONFIG = {
-  GOOD: 3.5,
-  MEDIUM: 3.0,
+  GOOD: 3.0,
+  MEDIUM: 2.5,
 };
 
 const styles = (theme) => ({

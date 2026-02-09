@@ -3,13 +3,17 @@ import PropTypes from "prop-types";
 import { withStyles } from "@ellucian/react-design-system/core/styles";
 import DoubleChevronIcon from "../components/DoubleChevron";
 import useStudentTermCodes from "../hooks/useTermCodes";
-import useGetTermInformation from "../hooks/useGetTermInformation";
-import useGetSectionAttendance from "../hooks/useGetSectionAttendance";
-import useGetAcademicPerformance from "../hooks/useGetAcademicPerformance";
+import useStudentDetails from "../hooks/useStudentDetails";
+import useStudentGpa from "../hooks/useStudentGpa";
+import useStudentAttendance from "../hooks/useStudentAttendance";
 import TermGpaBar from "../components/TermGpaBar";
 
 // Ellucian provided hooks
-import { useData, useCardInfo } from "@ellucian/experience-extension-utils";
+import {
+  useData,
+  useCardInfo,
+  usePageControl,
+} from "@ellucian/experience-extension-utils";
 
 import {
   Button,
@@ -234,6 +238,10 @@ const styles = {
     gap: spacing10,
     marginTop: spacing10,
     flexWrap: "wrap",
+    "@media (min-width: 768px)": {
+      position: "relative",
+      top: "-3px",
+    },
   },
   gpaDeltaText: {
     fontSize: "0.875rem",
@@ -261,6 +269,7 @@ const styles = {
       fontSize: "1.5rem",
     },
   },
+  // Desktop table styles
   tableContainer: {
     display: "none",
     "@media (min-width: 768px)": {
@@ -292,6 +301,7 @@ const styles = {
     borderRight: "1px solid #E5E7EB",
     width: "25%",
     padding: spacing20,
+    transition: "background-color 0.2s ease",
   },
   tableRow: {
     "&:hover": {
@@ -318,11 +328,13 @@ const styles = {
     borderRadius: "6px",
     backgroundColor: "#E5E7EB",
     overflow: "hidden",
+    boxShadow: "inset 0 1px 3px rgba(0, 0, 0, 0.1)",
   },
   progressFill: {
     height: "100%",
     transition: "width 0.3s ease",
   },
+  // Mobile card list styles
   mobileCardList: {
     display: "flex",
     flexDirection: "column",
@@ -337,6 +349,10 @@ const styles = {
     border: "1px solid #E5E7EB",
     borderRadius: "8px",
     boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+    transition: "box-shadow 0.2s ease",
+    "&:active": {
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    },
   },
   mobileCardHeader: {
     display: "flex",
@@ -391,6 +407,30 @@ const styles = {
     backgroundColor: "#E5E7EB",
     overflow: "hidden",
   },
+  legendSection: {
+    marginTop: spacing20,
+    marginBottom: spacing30,
+  },
+  legendTitle: {
+    fontSize: "0.95rem",
+    fontWeight: 600,
+    color: "#1F2937",
+    marginBottom: spacing20,
+    "@media (min-width: 768px)": {
+      fontSize: "1rem",
+    },
+  },
+  legendGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr",
+    gap: spacing20,
+    "@media (min-width: 640px)": {
+      gridTemplateColumns: "repeat(2, 1fr)",
+    },
+    "@media (min-width: 1024px)": {
+      gridTemplateColumns: "repeat(3, 1fr)",
+    },
+  },
   gradeLegendBar: {
     display: "inline-flex",
     alignItems: "center",
@@ -400,6 +440,9 @@ const styles = {
     padding: `${spacing10} ${spacing20}`,
     borderRadius: "8px",
     flexWrap: "wrap",
+    "@media (min-width: 768px)": {
+      gap: spacing30,
+    },
   },
   legendItem: {
     display: "flex",
@@ -410,9 +453,76 @@ const styles = {
     width: "12px",
     height: "12px",
     borderRadius: "50%",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
     flexShrink: 0,
     marginLeft: "6px",
   },
+  attendanceLegendCard: {
+    display: "flex",
+    alignItems: "center",
+    gap: spacing20,
+    padding: spacing20,
+    backgroundColor: "#F9FAFB",
+    borderRadius: "8px",
+    border: "2px solid",
+    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+    },
+  },
+  attendanceLegendIcon: {
+    width: "36px",
+    height: "36px",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontWeight: 700,
+    fontSize: "0.95rem",
+    color: "#FFFFFF",
+    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.2)",
+    flexShrink: 0,
+    "@media (min-width: 768px)": {
+      width: "40px",
+      height: "40px",
+      fontSize: "1rem",
+    },
+  },
+  attendanceLegendText: {
+    display: "flex",
+    flexDirection: "column",
+  },
+  attendanceLegendTitle: {
+    fontSize: "0.95rem",
+    "@media (min-width: 768px)": {
+      fontSize: "1rem",
+    },
+  },
+  attendanceLegendSubtitle: {
+    fontSize: "0.85rem",
+    "@media (min-width: 768px)": {
+      fontSize: "0.9rem",
+    },
+  },
+};
+
+/* ================= HELPER FUNCTIONS ================= */
+const transformCourseData = (apiCourses) => {
+  if (!Array.isArray(apiCourses) || apiCourses.length === 0) {
+    return [];
+  }
+
+  return apiCourses.map((course) => ({
+    CRN: course.courseReferenceNumber,
+    course: course.courseTitle,
+    grade: course.grade,
+    credit: course.credits?.creditHours || 0,
+    attendance: null, // Will be populated by API call
+    // Additional data for reference
+    courseNumber: course.courseNumber,
+    instructor: course.instructorFullName,
+  }));
 };
 
 /* ================= COMPONENT ================= */
@@ -428,7 +538,6 @@ const MySuccessTrackerTable = ({ classes }) => {
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [termGpaData, setTermGpaData] = useState([]);
   const [loadingAllTermGpas, setLoadingAllTermGpas] = useState(false);
-  const [sectionIds, setSectionIds] = useState([]);
 
   const { authenticatedEthosFetch } = useData();
   const { cardId } = useCardInfo();
@@ -443,170 +552,232 @@ const MySuccessTrackerTable = ({ classes }) => {
     return window.location.origin;
   }, []);
 
-  const { getStudentTermCodes, loadingTermCodes, termCodesResult } =
-    useStudentTermCodes(authenticatedEthosFetch, cardId);
+  const {
+    getStudentTermCodes,
+    loadingTermCodes,
+    errorTermCodes,
+    termCodesResult,
+  } = useStudentTermCodes(authenticatedEthosFetch, cardId);
 
-  const { getStudentDetails, loadingTermInformation } = useGetTermInformation(
+  const {
+    getStudentDetails,
+    loadingStudentDetails,
+    errorStudentDetails,
+    studentDetailsResult,
+  } = useStudentDetails(authenticatedEthosFetch, cardId);
+
+  // Hook for student attendance
+  const { getStudentAttendance } = useStudentAttendance(
     authenticatedEthosFetch,
     cardId,
   );
 
-  const { getSectionAttendance } = useGetSectionAttendance(
-    authenticatedEthosFetch,
-    cardId,
-  );
-
-  const { getAcademicPerformance } = useGetAcademicPerformance(
-    authenticatedEthosFetch,
-    cardId,
-  );
-
+  // Fetch term codes on mount
   useEffect(() => {
-    getStudentTermCodes().then((data) => {
-      if (Array.isArray(data) && data.length > 0) {
-        const filteredTerms = data.filter(
-          (item) => !blockedTermCodes.includes(item.termCode),
-        );
-        setTermData(filteredTerms.map((term) => term.term));
-        setCurrentTerm(data[data.length - 1]?.term);
-        setCurrentTermCode(data[data.length - 1]?.termCode);
-        setCurrentBannerId(data[data.length - 1]?.bannerId);
-      }
-    });
+    getStudentTermCodes()
+      .then((data) => {
+        // Set default selected term (latest / first item)
+        if (Array.isArray(data) && data.length > 0) {
+          setTermData(
+            data
+              .filter((item) => !blockedTermCodes.includes(item.termCode))
+              .map((term) => term.term),
+          );
+          setCurrentTerm(data[data.length - 1]?.term);
+          setCurrentTermCode(data[data.length - 1]?.termCode);
+          setCurrentBannerId(data[data.length - 1]?.bannerId);
+        }
+      })
+      .catch(() => {
+        // error state already handled by hook
+      });
   }, [getStudentTermCodes]);
 
+  // Hook for current term GPA
+  const {
+    getStudentGpa: getCurrentGpa,
+    loadingGpa: loadingCurrentGpa,
+    errorGpa: errorCurrentGpa,
+    gpaResult: currentGpaResult,
+  } = useStudentGpa(
+    authenticatedEthosFetch,
+    cardId,
+    currentBannerId,
+    currentTermCode,
+  );
+
+  // Fetch GPA data for all terms
+  useEffect(() => {
+    if (!termCodesResult || termCodesResult.length === 0) return;
+
+    const fetchAllTermGpas = async () => {
+      setLoadingAllTermGpas(true);
+
+      try {
+        const gpaPromises = termCodesResult.map(async (termInfo) => {
+          try {
+            const url = `Get-StudentGPA?cardId=${encodeURIComponent(
+              cardId,
+            )}&term=${encodeURIComponent(termInfo.termCode)}&bannerId=${encodeURIComponent(termInfo.bannerId)}`;
+
+            const response = await authenticatedEthosFetch(url, {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
+            });
+
+            if (!response || !response.ok) {
+              throw new Error("Failed to fetch GPA");
+            }
+
+            const data = await response.json().catch(() => null);
+
+            return {
+              term: termInfo.term,
+              termCode: termInfo.termCode,
+              termGpa: data?.termGpa || 0,
+              cumulativeGpa: data?.cumulativeGpa || 0,
+            };
+          } catch (error) {
+            console.error(
+              `Failed to fetch GPA for term ${termInfo.term}:`,
+              error,
+            );
+            return {
+              term: termInfo.term,
+              termCode: termInfo.termCode,
+              termGpa: 0,
+              cumulativeGpa: 0,
+            };
+          }
+        });
+
+        const allGpaData = await Promise.all(gpaPromises);
+        setTermGpaData(allGpaData);
+      } catch (error) {
+        console.error("Error fetching all term GPAs:", error);
+        setTermGpaData([]);
+      } finally {
+        setLoadingAllTermGpas(false);
+      }
+    };
+
+    fetchAllTermGpas();
+  }, [termCodesResult, authenticatedEthosFetch, cardId]);
+
+  // Fetch current term GPA when currentTermCode changes
+  useEffect(() => {
+    if (!currentTermCode || !currentBannerId) return;
+
+    getCurrentGpa()
+      .then((data) => {
+        console.log("Current GPA data:", data);
+        const gpaValue = data?.cumulativeGpa;
+        const termGpaValue = data?.termGpa;
+        setCurrentGpa(gpaValue);
+        setTermGpa(termGpaValue);
+        setGpaDelta(data?.gpaIncrease);
+      })
+      .catch((error) => {
+        console.error("Failed to fetch current GPA:", error);
+        setCurrentGpa(0);
+        setTermGpa(0);
+      });
+  }, [currentTermCode, getCurrentGpa, currentBannerId]);
+
+  // Fetch student course details when term changes
   useEffect(() => {
     if (!currentTermCode) return;
 
-    setLoadingAllTermGpas(true);
-
     getStudentDetails({ termCode: currentTermCode })
-      .then((data) => {
-        const cumGpa = parseFloat(data?.cumulativeGpa) || 0;
-        const trmGpa = parseFloat(data?.termGpa) || 0;
-        setCurrentGpa(cumGpa);
-        setTermGpa(trmGpa);
+      .then((response) => {
+        const courses = response;
+        console.log("Course details response:", response);
 
-        setCurrentBannerId(data?.bannerId);
-        if (Array.isArray(data?.sectionIds)) {
-          setSectionIds(data.sectionIds);
+        if (Array.isArray(courses) && courses.length > 0) {
+          // Transform the course data
+          const transformedCourses = transformCourseData(courses);
+          setCourseData(transformedCourses);
+        } else {
+          setCourseData([]);
         }
-
-        const currentTermGpaData = {
-          term: currentTerm,
-          termCode: currentTermCode,
-          termGpa: trmGpa,
-          cumulativeGpa: cumGpa,
-        };
-
-        setTermGpaData((prevData) => {
-          const existingIndex = prevData.findIndex(
-            (item) => item.termCode === currentTermCode,
-          );
-          if (existingIndex >= 0) {
-            const newData = [...prevData];
-            newData[existingIndex] = currentTermGpaData;
-            return newData;
-          }
-          return [...prevData, currentTermGpaData];
-        });
-
-        if (termCodesResult) {
-          const currentIndex = termCodesResult.findIndex(
-            (t) => t.termCode === currentTermCode,
-          );
-          if (currentIndex > 0) {
-            const previousTerm = termCodesResult[currentIndex - 1];
-            getStudentDetails({ termCode: previousTerm.termCode })
-              .then((prevData) => {
-                const prevCumGpa = parseFloat(prevData?.cumulativeGpa) || 0;
-                setGpaDelta((cumGpa - prevCumGpa).toFixed(2));
-              })
-              .catch(() => setGpaDelta(0));
-          } else {
-            setGpaDelta(0);
-          }
-        }
-
-        setLoadingAllTermGpas(false);
       })
-      .catch(() => {
-        setCurrentGpa(0);
-        setTermGpa(0);
-        setLoadingAllTermGpas(false);
+      .catch((error) => {
+        console.error("Failed to fetch student details:", error);
+        setCourseData([]);
       });
-  }, [currentTermCode, currentTerm, getStudentDetails, termCodesResult]);
+  }, [currentTermCode, getStudentDetails]);
 
+  // Fetch attendance for each course
   useEffect(() => {
-    if (!sectionIds.length || !currentTermCode || !currentBannerId) return;
+    if (!courseData.length || !currentTermCode || !currentBannerId) return;
 
-    const fetchAllCourseData = async () => {
+    const fetchAllAttendance = async () => {
       setLoadingAttendance(true);
 
       try {
-        const courseDataPromises = sectionIds.map(async (sectionId) => {
+        // Fetch attendance for all courses in parallel
+        const attendancePromises = courseData.map(async (course) => {
           try {
-            const attendanceData = await getSectionAttendance({
+            const attendanceData = await getStudentAttendance({
               termCode: currentTermCode,
               bannerId: currentBannerId,
-              sectionId,
+              courseReferenceNumber: course.CRN,
             });
 
-            const sectionData = Array.isArray(attendanceData)
-              ? attendanceData[0]
-              : attendanceData;
-
-            let performanceData = null;
-            try {
-              performanceData = await getAcademicPerformance({
-                termCode: currentTermCode,
-                crn: sectionData?.crn || sectionId,
-                bannerId: currentBannerId,
-              });
-            } catch(err) {
-              console.log(err)
-            }
+            // Extract attendance percentage from response
+            const attendancePercentage = attendanceData?.attendancePercentage;
 
             return {
-              crn: sectionData?.crn || sectionId,
-              course: sectionData?.title || "Unknown Course",
-              attendance: sectionData?.attendancePercentage
-                ? parseFloat(sectionData.attendancePercentage)
+              CRN: course.CRN,
+              attendance: attendancePercentage
+                ? parseFloat(attendancePercentage)
                 : null,
-              grade: performanceData?.grade || "N/A",
-              credit: performanceData?.earnedCreditHours,
-              gradeMode: performanceData?.gradeMode || "",
             };
-          } catch {
+          } catch (error) {
+            console.error(
+              `Failed to fetch attendance for CRN ${course.CRN}:`,
+              error,
+            );
             return {
-              crn: sectionId,
-              course: "Unknown Course",
+              CRN: course.CRN,
               attendance: null,
-              grade: "N/A",
-              credit: 0,
-              gradeMode: "",
             };
           }
         });
 
-        const courseResults = await Promise.all(courseDataPromises);
-        setCourseData(courseResults);
+        const attendanceResults = await Promise.all(attendancePromises);
+
+        // Update course data with attendance
+        setCourseData((prevCourses) =>
+          prevCourses.map((course) => {
+            const attendanceData = attendanceResults.find(
+              (result) => result.CRN === course.CRN,
+            );
+            return {
+              ...course,
+              attendance: attendanceData?.attendance ?? null,
+            };
+          }),
+        );
+      } catch (error) {
+        console.error("Error fetching attendance data:", error);
       } finally {
         setLoadingAttendance(false);
       }
     };
 
-    fetchAllCourseData();
+    fetchAllAttendance();
   }, [
-    sectionIds,
+    courseData.length,
     currentTermCode,
     currentBannerId,
-    getSectionAttendance,
-    getAcademicPerformance,
+    getStudentAttendance,
   ]);
 
   const getStatusColor = (value) => {
-    if (value === null) return "#999";
+    if (value === null) return "#999"; // Gray for missing data
     if (value >= TABLE_CONFIG.attendanceGood) return COLOR_CONFIG.ON_TRACK;
     if (value >= TABLE_CONFIG.attendanceWarning)
       return COLOR_CONFIG.NEEDS_ATTENTION;
@@ -620,6 +791,12 @@ const MySuccessTrackerTable = ({ classes }) => {
   };
 
   const handleTermChange = (term) => {
+    // Find the selected term's index
+    const selectedIndex = termCodesResult.findIndex(
+      (t) => t.termCode === term.termCode,
+    );
+
+    // Set current term
     setCurrentTerm(term.term);
     setCurrentTermCode(term.termCode);
     setCurrentBannerId(term.bannerId);
@@ -629,7 +806,7 @@ const MySuccessTrackerTable = ({ classes }) => {
   const gpaCircleColor = getGpaCircleColor(currentGpa);
   const termGpaCircleColor = getGpaCircleColor(termGpa);
   const deltaColor = isPositive ? COLOR_CONFIG.ON_TRACK : COLOR_CONFIG.CRITICAL;
-  const isLoading = loadingTermInformation;
+  const isLoading = loadingCurrentGpa || loadingStudentDetails;
 
   const handleBack = () => {
     window.location.assign(backHref);
@@ -663,7 +840,7 @@ const MySuccessTrackerTable = ({ classes }) => {
           <Typography className={classes.termLabel}>Select Term</Typography>
           <Button
             disabled={loadingTermCodes || !termCodesResult}
-            dropdown={termCodesResult?.map((term) => (
+            dropdown={termCodesResult?.sort((a, b) => a.termCode.localeCompare(b.termCode))?.map((term) => (
               <DropdownButtonItem
                 key={term.termCode}
                 onClick={() => handleTermChange(term)}
@@ -692,7 +869,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 Cumulative GPA
               </Typography>
 
-              {gpaDelta !== 0 && (
+              {currentTermCode !== '202520' && (
                 <div className={classes.gpaDeltaRow}>
                   <DoubleChevronIcon
                     orientation={isPositive ? "up" : "down"}
@@ -722,12 +899,9 @@ const MySuccessTrackerTable = ({ classes }) => {
 
             <div
               className={classes.gpaCircle}
-              style={{
-                borderColor: gpaCircleColor,
-                color: gpaCircleColor,
-              }}
+              style={{ borderColor: gpaCircleColor, color: gpaCircleColor }}
             >
-              {loadingTermInformation ? "..." : currentGpa.toFixed(2)}
+              {currentTermCode !== '202520' ? loadingCurrentGpa ? "..." : currentGpa?.toFixed(2) : '00'}
             </div>
           </Card>
 
@@ -765,7 +939,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 color: termGpaCircleColor,
               }}
             >
-              {loadingTermInformation ? "..." : termGpa.toFixed(2)}
+              {loadingCurrentGpa ? "..." : termGpa?.toFixed(2)}
             </div>
           </Card>
         </div>
@@ -804,7 +978,7 @@ const MySuccessTrackerTable = ({ classes }) => {
           </Typography>
         )}
 
-        {!isLoading && (
+        {!loadingStudentDetails && (
           <>
             <div className={classes.gradeLegendBar}>
               <div className={classes.legendItem}>
@@ -834,20 +1008,32 @@ const MySuccessTrackerTable = ({ classes }) => {
 
             <div className={classes.gradeLegendBar}>
               <div className={classes.legendItem}>
-                <Typography variant="body2">F = Fail</Typography>
-              </div>
-
-              <div className={classes.legendItem}>
-                <Typography variant="body2">P = Pass</Typography>
+                <Typography variant="body2">F = Fail ; </Typography>
               </div>
 
               <div className={classes.legendItem}>
                 <Typography variant="body2">
-                  A, B, C, D = Standard Letter Grades
+                   A, B, C, D = Standard Letter Grades
                 </Typography>
               </div>
             </div>
           </>
+        )}
+
+        {(errorStudentDetails || errorCurrentGpa) && !isLoading && (
+          <Typography
+            style={{
+              padding: spacing20,
+              textAlign: "center",
+              color: COLOR_CONFIG.NEEDS_ATTENTION,
+              backgroundColor: "#FEF3C7",
+              borderRadius: "8px",
+              marginBottom: spacing20,
+            }}
+          >
+            ⚠️ Note: Some data may be unavailable. Showing available
+            information.
+          </Typography>
         )}
 
         {/* DESKTOP TABLE VIEW */}
@@ -858,9 +1044,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 <TableRow>
                   <TableCell className={classes.headerCell}>Course</TableCell>
                   <TableCell className={classes.headerCell}>Grade</TableCell>
-                  <TableCell className={classes.headerCell}>
-                    Credit Hours
-                  </TableCell>
+                  <TableCell className={classes.headerCell}>Credits Earned </TableCell>
                   <TableCell
                     className={`${classes.headerCell} ${classes.lastCell}`}
                   >
@@ -875,9 +1059,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                       <Typography
                         style={{ color: "#6B7280", fontStyle: "italic" }}
                       >
-                        {loadingAttendance
-                          ? "Loading course data..."
-                          : "No course data available for this term"}
+                        No course data available for this term
                       </Typography>
                     </TableCell>
                   </TableRow>
@@ -890,15 +1072,17 @@ const MySuccessTrackerTable = ({ classes }) => {
                     const attendanceDisplay =
                       row.attendance !== null
                         ? `${row.attendance.toFixed(2)}%`
-                        : "N/A";
+                        : loadingAttendance
+                          ? "..."
+                          : "N/A";
 
                     return (
                       <TableRow
-                        key={row.crn || index}
+                        key={row.CRN || index}
                         className={classes.tableRow}
                       >
                         <TableCell className={classes.bodyCell}>
-                          <Typography variant="body2">{row.crn}</Typography>
+                          <Typography variant="body2">{row.CRN}</Typography>
                           <Typography
                             variant="caption"
                             style={{ color: "#6B7280" }}
@@ -973,9 +1157,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                   padding: spacing30,
                 }}
               >
-                {loadingAttendance
-                  ? "Loading course data..."
-                  : "No course data available for this term"}
+                No course data available for this term
               </Typography>
             ) : (
               courseData.map((row, index) => {
@@ -984,10 +1166,12 @@ const MySuccessTrackerTable = ({ classes }) => {
                 const attendanceDisplay =
                   row.attendance !== null
                     ? `${row.attendance.toFixed(2)}%`
-                    : "N/A";
+                    : loadingAttendance
+                      ? "..."
+                      : "N/A";
 
                 return (
-                  <div key={row.crn || index} className={classes.mobileCard}>
+                  <div key={row.CRN || index} className={classes.mobileCard}>
                     {/* Header with course and grade */}
                     <div className={classes.mobileCardHeader}>
                       <div className={classes.mobileCardTitle}>
@@ -995,7 +1179,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                           variant="body1"
                           style={{ fontWeight: 700, marginBottom: "4px" }}
                         >
-                          {row.crn}
+                          {row.CRN}
                         </Typography>
                         <Typography
                           variant="body2"
