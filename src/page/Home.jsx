@@ -614,73 +614,75 @@ const MySuccessTrackerTable = ({ classes }) => {
       setLoadingAllTermGpas(true);
 
       try {
-        const gpaPromises = termCodesResult.map(async (termInfo) => {
+        const allTermGpaPromises = termCodesResult.map(async (term) => {
           try {
-            const url = `Get-StudentGPA?cardId=${encodeURIComponent(
-              cardId,
-            )}&term=${encodeURIComponent(termInfo.termCode)}&bannerId=${encodeURIComponent(termInfo.bannerId)}`;
-
-            const response = await authenticatedEthosFetch(url, {
-              method: "GET",
-              headers: {
-                Accept: "application/json",
-              },
-            });
-
-            if (!response || !response.ok) {
-              throw new Error("Failed to fetch GPA");
-            }
-
-            const data = await response.json().catch(() => null);
-
+            const data = await getStudentDetails({ termCode: term.termCode });
             return {
-              term: termInfo.term,
-              termCode: termInfo.termCode,
-              termGpa: data?.termGpa || 0,
-              cumulativeGpa: data?.cumulativeGpa || 0,
+              term: term.term,
+              termCode: term.termCode,
+              termGpa: parseFloat(data?.termGpa) || 0,
+              cumulativeGpa: parseFloat(data?.cumulativeGpa) || 0,
             };
           } catch (error) {
             console.error(
-              `Failed to fetch GPA for term ${termInfo.term}:`,
+              `Error fetching GPA for term ${term.termCode}:`,
               error,
             );
             return {
-              term: termInfo.term,
-              termCode: termInfo.termCode,
+              term: term.term,
+              termCode: term.termCode,
               termGpa: 0,
               cumulativeGpa: 0,
             };
           }
         });
 
-        const allGpaData = await Promise.all(gpaPromises);
-        setTermGpaData(allGpaData);
+        const allTermGpas = await Promise.all(allTermGpaPromises);
+        setTermGpaData(allTermGpas);
       } catch (error) {
         console.error("Error fetching all term GPAs:", error);
-        setTermGpaData([]);
       } finally {
         setLoadingAllTermGpas(false);
       }
     };
 
     fetchAllTermGpas();
-  }, [termCodesResult, authenticatedEthosFetch, cardId]);
+  }, [termCodesResult, getStudentDetails]);
 
-  // Fetch current term GPA when currentTermCode changes
   useEffect(() => {
-    if (!currentTermCode || !currentBannerId) return;
+    if (!currentTermCode) return;
 
-    getCurrentGpa()
+    getStudentDetails({ termCode: currentTermCode })
       .then((data) => {
-        console.log("Current GPA data:", data);
-        const gpaValue = data?.cumulativeGpa;
-        const termGpaValue = data?.termGpa;
-        setCurrentGpa(gpaValue);
-        setTermGpa(termGpaValue);
-        setGpaDelta(data?.gpaIncrease);
+        const cumGpa = parseFloat(data?.cumulativeGpa) || 0;
+        const trmGpa = parseFloat(data?.termGpa) || 0;
+        setCurrentGpa(cumGpa);
+        setTermGpa(trmGpa);
+
+        setCurrentBannerId(data?.bannerId);
+        if (Array.isArray(data?.sectionIds)) {
+          setSectionIds(data.sectionIds);
+        }
+
+        // Calculate GPA delta
+        if (termCodesResult) {
+          const currentIndex = termCodesResult.findIndex(
+            (t) => t.termCode === currentTermCode,
+          );
+          if (currentIndex > 0) {
+            const previousTerm = termCodesResult[currentIndex - 1];
+            getStudentDetails({ termCode: previousTerm.termCode })
+              .then((prevData) => {
+                const prevCumGpa = parseFloat(prevData?.cumulativeGpa) || 0;
+                setGpaDelta((cumGpa - prevCumGpa).toFixed(2));
+              })
+              .catch(() => setGpaDelta(0));
+          } else {
+            setGpaDelta(0);
+          }
+        }
       })
-      .catch((error) => {
-        console.error("Failed to fetch current GPA:", error);
+      .catch(() => {
         setCurrentGpa(0);
         setTermGpa(0);
       });
@@ -688,46 +690,34 @@ const MySuccessTrackerTable = ({ classes }) => {
 
   // Fetch student course details when term changes
   useEffect(() => {
-    if (!currentTermCode) return;
+    if (!sectionIds.length || !currentTermCode || !currentBannerId) return;
 
-    getStudentDetails({ termCode: currentTermCode })
-      .then((response) => {
-        const courses = response;
-        console.log("Course details response:", response);
-
-        if (Array.isArray(courses) && courses.length > 0) {
-          // Transform the course data
-          const transformedCourses = transformCourseData(courses);
-          setCourseData(transformedCourses);
-        } else {
-          setCourseData([]);
-        }
-      })
-      .catch((error) => {
-        console.error("Failed to fetch student details:", error);
-        setCourseData([]);
-      });
-  }, [currentTermCode, getStudentDetails]);
-
-  // Fetch attendance for each course
-  useEffect(() => {
-    if (!courseData.length || !currentTermCode || !currentBannerId) return;
-
-    const fetchAllAttendance = async () => {
+    const fetchAllCourseData = async () => {
       setLoadingAttendance(true);
 
       try {
-        // Fetch attendance for all courses in parallel
-        const attendancePromises = courseData.map(async (course) => {
+        const courseDataPromises = sectionIds.map(async (sectionId) => {
           try {
-            const attendanceData = await getStudentAttendance({
+            const attendanceData = await getSectionAttendance({
               termCode: currentTermCode,
               bannerId: currentBannerId,
-              courseReferenceNumber: course.CRN,
+              sectionId,
             });
 
-            // Extract attendance percentage from response
-            const attendancePercentage = attendanceData?.attendancePercentage;
+            const sectionData = Array.isArray(attendanceData)
+              ? attendanceData[0]
+              : attendanceData;
+
+            let performanceData = null;
+            try {
+              performanceData = await getAcademicPerformance({
+                termCode: currentTermCode,
+                crn: sectionData?.crn || sectionId,
+                bannerId: currentBannerId,
+              });
+            } catch (err) {
+              console.log(err);
+            }
 
             return {
               CRN: course.CRN,
