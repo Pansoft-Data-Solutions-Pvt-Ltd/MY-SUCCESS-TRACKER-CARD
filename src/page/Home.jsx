@@ -592,7 +592,7 @@ const MySuccessTrackerTable = ({ classes }) => {
             try {
               performanceData = await getAcademicPerformance({
                 termCode: currentTermCode,
-                crn: sectionData?.crn || "N/A",
+                crn: sectionData?.crn || sectionId,
                 bannerId: currentBannerId,
               });
             } catch (err) {
@@ -600,8 +600,8 @@ const MySuccessTrackerTable = ({ classes }) => {
             }
 
             return {
-              crn: sectionData?.crn || "N/A",
-              course: sectionData?.title || "N/A",
+              crn: sectionData?.crn || sectionId,
+              course: sectionData?.title || "Unknown Course",
               attendance: sectionData?.attendancePercentage
                 ? parseFloat(sectionData.attendancePercentage)
                 : null,
@@ -872,9 +872,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 <Typography variant="body2">F = Fail</Typography>
               </div>
 
-              <div className={classes.legendItem}>
-                <Typography variant="body2">P = Pass</Typography>
-              </div>
+              
 
               <div className={classes.legendItem}>
                 <Typography variant="body2">
@@ -894,7 +892,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                   <TableCell className={classes.headerCell}>Course</TableCell>
                   <TableCell className={classes.headerCell}>Grade</TableCell>
                   <TableCell className={classes.headerCell}>
-                    Credit Earned
+                    Credits Earned
                   </TableCell>
                   <TableCell
                     className={`${classes.headerCell} ${classes.lastCell}`}

@@ -158,9 +158,16 @@ const getStatusColor = (value) => {
 };
 
 const getGpaCircleColor = (gpa) => {
-  if (gpa >= GPA_CONFIG.GOOD) return COLOR_CONFIG.ON_TRACK;
-  if (gpa >= GPA_CONFIG.MEDIUM) return COLOR_CONFIG.NEEDS_ATTENTION;
-  return COLOR_CONFIG.CRITICAL;
+  if (gpa >= 3 && gpa <= 4) {
+    return COLOR_CONFIG.ON_TRACK;        // Green
+  }
+  if (gpa >= 2 && gpa < 3) {
+    return COLOR_CONFIG.NEEDS_ATTENTION; // Yellow
+  }
+  if (gpa >= 1 && gpa < 2) {
+    return COLOR_CONFIG.CRITICAL;        // Red
+  }
+  return "#999999"; // For 0, null, or invalid GPA
 };
 
 const MySuccessTrackerCard = ({ classes }) => {
