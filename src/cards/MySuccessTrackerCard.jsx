@@ -168,6 +168,7 @@ const MySuccessTrackerCard = ({ classes }) => {
   const { authenticatedEthosFetch } = useData();
 
   const [currentGpa, setCurrentGpa] = useState(0);
+  const [termName, setTermName] = useState("");
   // const [termGpa, setTermGpa] = useState(0);
   const [gpaDelta, setGpaDelta] = useState(0);
   const [termCode, setTermCode] = useState(null);
@@ -196,11 +197,13 @@ const MySuccessTrackerCard = ({ classes }) => {
           // setTermGpa(trmGpa);
 
           // Calculate GPA delta (term GPA - cumulative GPA)
-          setGpaDelta((trmGpa - cumGpa).toFixed(2));
+          setGpaDelta(0);
 
           // Store term code and banner ID for attendance calls
           setTermCode(data.termCode);
           setBannerId(data.bannerId);
+
+          setTermName(data.termName)
 
           // Store section IDs for later attendance API calls
           if (Array.isArray(data.sectionIds)) {
@@ -310,7 +313,7 @@ const MySuccessTrackerCard = ({ classes }) => {
               Attendance Overview
             </Typography>
             <Typography variant="body2" style={{ textAlign: "center" }}>
-              Current Term
+              { termName || "Current Term" }
             </Typography>
           </header>
 

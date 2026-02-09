@@ -592,7 +592,7 @@ const MySuccessTrackerTable = ({ classes }) => {
             try {
               performanceData = await getAcademicPerformance({
                 termCode: currentTermCode,
-                crn: sectionData?.crn || sectionId,
+                crn: sectionData?.crn || "N/A",
                 bannerId: currentBannerId,
               });
             } catch (err) {
@@ -600,8 +600,8 @@ const MySuccessTrackerTable = ({ classes }) => {
             }
 
             return {
-              crn: sectionData?.crn || sectionId,
-              course: sectionData?.title || "Unknown Course",
+              crn: sectionData?.crn || "N/A",
+              course: sectionData?.title || "N/A",
               attendance: sectionData?.attendancePercentage
                 ? parseFloat(sectionData.attendancePercentage)
                 : null,
@@ -894,7 +894,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                   <TableCell className={classes.headerCell}>Course</TableCell>
                   <TableCell className={classes.headerCell}>Grade</TableCell>
                   <TableCell className={classes.headerCell}>
-                    Credit Hours
+                    Credit Earned
                   </TableCell>
                   <TableCell
                     className={`${classes.headerCell} ${classes.lastCell}`}

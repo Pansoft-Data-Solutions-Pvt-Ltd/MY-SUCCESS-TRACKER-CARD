@@ -101,6 +101,18 @@ const options = {
       text: "Term GPA Report",
     },
   },
+  scales: {
+    y: {
+      min: 0,
+      max: 4,
+      ticks: {
+        stepSize: 1,
+        callback: function (value) {
+          return value; // Only show whole numbers
+        },
+      },
+    },
+  },
 };
 
 export default function App({ termData, termGpaData }) {
