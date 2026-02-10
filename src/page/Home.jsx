@@ -4,7 +4,6 @@ import { withStyles } from "@ellucian/react-design-system/core/styles";
 import DoubleChevronIcon from "../components/DoubleChevron";
 import useStudentTermCodes from "../hooks/useTermCodes";
 import useGetTermInformation from "../hooks/useGetTermInformation";
-import useGetSectionAttendance from "../hooks/useGetSectionAttendance";
 import useGetAcademicPerformance from "../hooks/useGetAcademicPerformance";
 import TermGpaBar from "../components/TermGpaBar";
 
@@ -425,10 +424,10 @@ const MySuccessTrackerTable = ({ classes }) => {
   const [termGpa, setTermGpa] = useState(0);
   const [gpaDelta, setGpaDelta] = useState(0);
   const [courseData, setCourseData] = useState([]);
-  const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [loadingCourseData, setLoadingCourseData] = useState(false);
   const [termGpaData, setTermGpaData] = useState([]);
   const [loadingAllTermGpas, setLoadingAllTermGpas] = useState(false);
-  const [sectionIds, setSectionIds] = useState([]);
+  const [initialCourseData, setInitialCourseData] = useState([]);
 
   const { authenticatedEthosFetch } = useData();
   const { cardId } = useCardInfo();
@@ -447,11 +446,6 @@ const MySuccessTrackerTable = ({ classes }) => {
     useStudentTermCodes(authenticatedEthosFetch, cardId);
 
   const { getStudentDetails, loadingTermInformation } = useGetTermInformation(
-    authenticatedEthosFetch,
-    cardId,
-  );
-
-  const { getSectionAttendance } = useGetSectionAttendance(
     authenticatedEthosFetch,
     cardId,
   );
@@ -477,6 +471,33 @@ const MySuccessTrackerTable = ({ classes }) => {
     });
   }, [getStudentTermCodes]);
 
+  // Fetch current term details
+  useEffect(() => {
+    if (!currentTermCode) return;
+
+    getStudentDetails({ termCode: currentTermCode })
+      .then((data) => {
+        const cumGpa = parseFloat(data?.cumulativeGpa) || 0;
+        const trmGpa = data?.termGpa;
+        setCurrentGpa(cumGpa);
+        setTermGpa(trmGpa);
+        setCurrentBannerId(data?.bannerId);
+        setGpaDelta(data?.cgpaDifference);
+
+        // Set the initial course data from termInformation
+        if (Array.isArray(data?.termInformation)) {
+          setInitialCourseData(data.termInformation);
+        } else {
+          setInitialCourseData([]);
+        }
+      })
+      .catch(() => {
+        setCurrentGpa(0);
+        setTermGpa(0);
+        setInitialCourseData([]);
+      });
+  }, [currentTermCode, currentTerm, getStudentDetails, termCodesResult]);
+
   // Fetch all term GPAs at once
   useEffect(() => {
     if (!termCodesResult || termCodesResult.length === 0) return;
@@ -495,7 +516,7 @@ const MySuccessTrackerTable = ({ classes }) => {
             return {
               term: term.term,
               termCode: term.termCode,
-              termGpa: parseFloat(data?.termGpa) || 0,
+              termGpa: data?.termGpa,
               cumulativeGpa: parseFloat(data?.cumulativeGpa) || 0,
             };
           } catch (error) {
@@ -524,116 +545,70 @@ const MySuccessTrackerTable = ({ classes }) => {
     fetchAllTermGpas();
   }, [termCodesResult, getStudentDetails]);
 
-  // Fetch current term details
+  // Fetch academic performance data for each course in courseData
   useEffect(() => {
-    if (!currentTermCode) return;
+    if (
+      !initialCourseData ||
+      initialCourseData.length === 0 ||
+      !currentTermCode ||
+      !currentBannerId
+    ) {
+      setCourseData([]);
+      return;
+    }
 
-    getStudentDetails({ termCode: currentTermCode })
-      .then((data) => {
-        const cumGpa = parseFloat(data?.cumulativeGpa) || 0;
-        const trmGpa = parseFloat(data?.termGpa) || 0;
-        setCurrentGpa(cumGpa);
-        setTermGpa(trmGpa);
-
-        setCurrentBannerId(data?.bannerId);
-        if (Array.isArray(data?.sectionIds)) {
-          setSectionIds(data.sectionIds);
-        }
-
-        // Calculate GPA delta
-        if (termCodesResult) {
-          const filteredTerms = termCodesResult
-            .filter((item) => !blockedTermCodes.includes(item.termCode))
-            .sort((a, b) => a.termCode.localeCompare(b.termCode));
-
-          const currentIndex = filteredTerms.findIndex(
-            (t) => t.termCode === currentTermCode,
-          );
-          if (currentIndex > 0) {
-            const previousTerm = filteredTerms[currentIndex - 1];
-            getStudentDetails({ termCode: previousTerm.termCode })
-              .then((prevData) => {
-                const prevCumGpa = parseFloat(prevData?.cumulativeGpa) || 0;
-                setGpaDelta((cumGpa - prevCumGpa).toFixed(2));
-              })
-              .catch(() => setGpaDelta(0));
-          } else {
-            setGpaDelta(0);
-          }
-        }
-      })
-      .catch(() => {
-        setCurrentGpa(0);
-        setTermGpa(0);
-      });
-  }, [currentTermCode, currentTerm, getStudentDetails, termCodesResult]);
-
-  // Fetch course data for current term
-  useEffect(() => {
-    if (!sectionIds.length || !currentTermCode || !currentBannerId) return;
-
-    const fetchAllCourseData = async () => {
-      setLoadingAttendance(true);
+    const fetchAcademicPerformanceData = async () => {
+      setLoadingCourseData(true);
 
       try {
-        const courseDataPromises = sectionIds.map(async (sectionId) => {
+        const performancePromises = initialCourseData.map(async (course) => {
           try {
-            const attendanceData = await getSectionAttendance({
+            const performanceData = await getAcademicPerformance({
               termCode: currentTermCode,
+              crn: course.crn,
               bannerId: currentBannerId,
-              sectionId,
             });
 
-            const sectionData = Array.isArray(attendanceData)
-              ? attendanceData[0]
-              : attendanceData;
-
-            let performanceData = null;
-            try {
-              performanceData = await getAcademicPerformance({
-                termCode: currentTermCode,
-                crn: sectionData?.crn || sectionId,
-                bannerId: currentBannerId,
-              });
-            } catch (err) {
-              console.log(err);
-            }
-
             return {
-              crn: sectionData?.crn || sectionId,
-              course: sectionData?.title || "Unknown Course",
-              attendance: sectionData?.attendancePercentage
-                ? parseFloat(sectionData.attendancePercentage)
+              crn: course.crn,
+              courseTitle: course.courseTitle || "-",
+              attendancePercentage: course?.attendancePercentage
+                ? parseFloat(course.attendancePercentage)
                 : null,
-              grade: performanceData?.grade || "N/A",
-              credit: performanceData?.earnedCreditHours,
-              gradeMode: performanceData?.gradeMode || "",
+              grade: performanceData?.grade || "-",
+              credit: performanceData?.earnedCreditHours || "-",
+              gradeMode: performanceData?.gradeMode || "-",
             };
-          } catch {
+          } catch (error) {
+            console.error(
+              `Error fetching performance for CRN ${course.crn}:`,
+              error,
+            );
             return {
-              crn: sectionId,
-              course: "Unknown Course",
-              attendance: null,
-              grade: "N/A",
-              credit: 0,
-              gradeMode: "",
+              crn: course.crn,
+              courseTitle: course.courseTitle || "-",
+              attendancePercentance: null,
+              grade: "-",
+              credit: course.credit || "-",
+              gradeMode: "-",
             };
           }
         });
 
-        const courseResults = await Promise.all(courseDataPromises);
-        setCourseData(courseResults);
+        const performanceResults = await Promise.all(performancePromises);
+        setCourseData(performanceResults);
+      } catch (error) {
+        console.error("Error fetching academic performance data:", error);
       } finally {
-        setLoadingAttendance(false);
+        setLoadingCourseData(false);
       }
     };
 
-    fetchAllCourseData();
+    fetchAcademicPerformanceData();
   }, [
-    sectionIds,
+    initialCourseData,
     currentTermCode,
     currentBannerId,
-    getSectionAttendance,
     getAcademicPerformance,
   ]);
 
@@ -652,6 +627,7 @@ const MySuccessTrackerTable = ({ classes }) => {
   };
 
   const handleTermChange = (term) => {
+    setCourseData([]);
     setCurrentTerm(term.term);
     setCurrentTermCode(term.termCode);
     setCurrentBannerId(term.bannerId);
@@ -800,7 +776,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 color: termGpaCircleColor,
               }}
             >
-              {loadingTermInformation ? "..." : termGpa.toFixed(2)}
+              {loadingTermInformation ? "..." : termGpa}
             </div>
           </Card>
         </div>
@@ -872,8 +848,6 @@ const MySuccessTrackerTable = ({ classes }) => {
                 <Typography variant="body2">F = Fail</Typography>
               </div>
 
-              
-
               <div className={classes.legendItem}>
                 <Typography variant="body2">
                   A, B, C, D = Standard Letter Grades
@@ -902,13 +876,13 @@ const MySuccessTrackerTable = ({ classes }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {courseData.length === 0 ? (
+                {loadingCourseData ? (
                   <TableRow>
                     <TableCell colSpan={4} className={classes.bodyCell}>
                       <Typography
                         style={{ color: "#6B7280", fontStyle: "italic" }}
                       >
-                        {loadingAttendance
+                        {loadingCourseData
                           ? "Loading course data..."
                           : "No course data available for this term"}
                       </Typography>
@@ -916,13 +890,17 @@ const MySuccessTrackerTable = ({ classes }) => {
                   </TableRow>
                 ) : (
                   courseData.map((row, index) => {
-                    const attendanceColor = getStatusColor(row.attendance);
+                    const attendanceColor = getStatusColor(
+                      row.attendancePercentage,
+                    );
                     const isLowGrade = TABLE_CONFIG.lowGrades.includes(
                       row.grade,
                     );
                     const attendanceDisplay =
-                      row.attendance !== null
-                        ? `${row.attendance.toFixed(2)}%`
+                      row.attendancePercentage !== null
+                        ? row.attendancePercentage > 100
+                          ? "100%"
+                          : `${row.attendancePercentage}%`
                         : "N/A";
 
                     return (
@@ -936,31 +914,31 @@ const MySuccessTrackerTable = ({ classes }) => {
                             variant="caption"
                             style={{ color: "#6B7280" }}
                           >
-                            {row.course}
+                            {row.courseTitle}
                           </Typography>
                         </TableCell>
 
                         <TableCell
                           className={`${classes.bodyCell} ${isLowGrade ? classes.lowGrade : ""}`}
                         >
-                          {row.grade}
+                          {row?.grade}
                         </TableCell>
 
                         <TableCell className={classes.bodyCell}>
-                          <Typography variant="body2">{row.credit}</Typography>
+                          <Typography variant="body2">{row?.credit}</Typography>
                         </TableCell>
 
                         <TableCell
                           className={`${classes.bodyCell} ${classes.lastCell}`}
                         >
                           <div className={classes.progressWrapper}>
-                            {row.attendance !== null ? (
+                            {row.attendancePercentage !== null ? (
                               <>
                                 <div className={classes.progressBar}>
                                   <div
                                     className={classes.progressFill}
                                     style={{
-                                      width: `${row.attendance}%`,
+                                      width: `${row.attendancePercentage}%`,
                                       backgroundColor: attendanceColor,
                                     }}
                                   />
@@ -1006,17 +984,19 @@ const MySuccessTrackerTable = ({ classes }) => {
                   padding: spacing30,
                 }}
               >
-                {loadingAttendance
+                {loadingCourseData
                   ? "Loading course data..."
                   : "No course data available for this term"}
               </Typography>
             ) : (
               courseData.map((row, index) => {
-                const attendanceColor = getStatusColor(row.attendance);
-                const isLowGrade = TABLE_CONFIG.lowGrades.includes(row.grade);
+                const attendanceColor = getStatusColor(
+                  row.attendancePercentage,
+                );
+                const isLowGrade = TABLE_CONFIG.lowGrades.includes(row?.grade);
                 const attendanceDisplay =
-                  row.attendance !== null
-                    ? `${row.attendance.toFixed(2)}%`
+                  row.attendancePercentage !== null
+                    ? `${row.attendancePercentage}%`
                     : "N/A";
 
                 return (
@@ -1034,7 +1014,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                           variant="body2"
                           style={{ color: "#6B7280" }}
                         >
-                          {row.course}
+                          {row.courseTitle}
                         </Typography>
                       </div>
                       <div
@@ -1061,13 +1041,13 @@ const MySuccessTrackerTable = ({ classes }) => {
                         Attendance
                       </span>
                       <div className={classes.mobileProgressWrapper}>
-                        {row.attendance !== null ? (
+                        {row.attendancePercentage !== null ? (
                           <>
                             <div className={classes.mobileProgressBar}>
                               <div
                                 className={classes.progressFill}
                                 style={{
-                                  width: `${row.attendance}%`,
+                                  width: `${row.attendancePercentage}%`,
                                   backgroundColor: attendanceColor,
                                 }}
                               />

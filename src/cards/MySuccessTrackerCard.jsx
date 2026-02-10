@@ -7,7 +7,6 @@ import React, { useState, useEffect } from "react";
 import SvgHollowCircle from "../components/SvgHollowCircle.jsx";
 import DoubleChevronIcon from "../components/DoubleChevron.jsx";
 import useGetLatestTermInformation from "../hooks/useGetLatestTermInformation";
-import useGetSectionAttendance from "../hooks/useGetSectionAttendance";
 
 /* ================= CONFIG ================= */
 const TABLE_CONFIG = {
@@ -180,17 +179,11 @@ const MySuccessTrackerCard = ({ classes }) => {
   const [gpaDelta, setGpaDelta] = useState(0);
   const [termCode, setTermCode] = useState(null);
   const [bannerId, setBannerId] = useState(null);
-  const [sectionIds, setSectionIds] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   const { getStudentDetails, loadingLatestTermInformation } =
     useGetLatestTermInformation(authenticatedEthosFetch, cardId);
-
-  const { getSectionAttendance } = useGetSectionAttendance(
-    authenticatedEthosFetch,
-    cardId,
-  );
 
   /* Fetch latest term information on mount */
   useEffect(() => {
@@ -199,12 +192,10 @@ const MySuccessTrackerCard = ({ classes }) => {
         if (data) {
           // Set GPA data
           const cumGpa = parseFloat(data.cumulativeGpa) || 0;
-          const trmGpa = parseFloat(data.termGpa) || 0;
           setCurrentGpa(cumGpa);
           // setTermGpa(trmGpa);
 
-          // Calculate GPA delta (term GPA - cumulative GPA)
-          setGpaDelta(0);
+          setGpaDelta(data.cgpaDifference);
 
           // Store term code and banner ID for attendance calls
           setTermCode(data.termCode);
@@ -212,67 +203,13 @@ const MySuccessTrackerCard = ({ classes }) => {
 
           setTermName(data.termName)
 
-          // Store section IDs for later attendance API calls
-          if (Array.isArray(data.sectionIds)) {
-            setSectionIds(data.sectionIds);
-          }
+          setAttendanceData(data.termInformation)
         }
       })
       .catch((error) => {
         console.error("Failed to fetch latest term information:", error);
       });
   }, [getStudentDetails]);
-
-  /* Fetch attendance data using sectionIds */
-  useEffect(() => {
-    if (sectionIds.length === 0 || !termCode || !bannerId) return;
-
-    const fetchAllAttendance = async () => {
-      setLoadingAttendance(true);
-      try {
-        const results = await Promise.all(
-          sectionIds.map(async (sectionId) => {
-            try {
-              const data = await getSectionAttendance({
-                termCode,
-                bannerId,
-                sectionId,
-              });
-
-              // API returns an array, get the first item
-              const sectionData = Array.isArray(data) ? data[0] : data;
-
-              return {
-                courseName: sectionData?.title || "Unknown Course",
-                crn: sectionData?.crn || sectionId,
-                percentage: sectionData?.attendancePercentage
-                  ? parseFloat(sectionData.attendancePercentage)
-                  : null,
-              };
-            } catch (error) {
-              console.error(
-                `Failed to fetch attendance for section ${sectionId}:`,
-                error,
-              );
-              return {
-                courseName: "Unknown Course",
-                crn: sectionId,
-                percentage: null,
-              };
-            }
-          }),
-        );
-
-        setAttendanceData(results);
-      } catch (error) {
-        console.error("Failed to fetch attendance data:", error);
-      } finally {
-        setLoadingAttendance(false);
-      }
-    };
-
-    fetchAllAttendance();
-  }, [sectionIds, termCode, bannerId, getSectionAttendance]);
 
   const gpaCircleColor = getGpaCircleColor(currentGpa);
   const isPositive = gpaDelta >= 0;
@@ -335,18 +272,18 @@ const MySuccessTrackerCard = ({ classes }) => {
           ) : (
             <div className={classes.attendanceList}>
               {attendanceData.map((at, index) => {
-                const percentage = at.percentage ?? 0;
+                const percentage = at.attendancePercentage ?? 0;
                 const displayPercentage =
-                  at.percentage !== null ? `${percentage.toFixed(2)}%` : "N/A";
+                  at.percentage !== null ? `${percentage}%` : "N/A";
 
                 return (
                   <div key={index} className={classes.attendanceRow}>
-                    <div className={classes.courseName} title={at.courseName}>
-                      {at.courseName}
+                    <div className={classes.courseName} title={at.courseTitle}>
+                      {at.courseTitle}
                     </div>
                     <div className={classes.attendancePercentage}>
                       <span>{displayPercentage}</span>
-                      <SvgHollowCircle color={getStatusColor(at.percentage)} />
+                      <SvgHollowCircle color={getStatusColor(at.attendancePercentage)} />
                     </div>
                   </div>
                 );
