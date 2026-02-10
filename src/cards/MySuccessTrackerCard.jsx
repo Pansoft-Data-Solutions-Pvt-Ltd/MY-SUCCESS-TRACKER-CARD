@@ -20,11 +20,6 @@ const COLOR_CONFIG = {
   CRITICAL: "#ED1012",
 };
 
-const GPA_CONFIG = {
-  GOOD: 3.0,
-  MEDIUM: 2.5,
-};
-
 const styles = (theme) => ({
   card: {
     padding: "0 1rem",
@@ -177,10 +172,10 @@ const MySuccessTrackerCard = ({ classes }) => {
   const [termName, setTermName] = useState("");
   // const [termGpa, setTermGpa] = useState(0);
   const [gpaDelta, setGpaDelta] = useState(0);
-  const [termCode, setTermCode] = useState(null);
-  const [bannerId, setBannerId] = useState(null);
+  // const [termCode, setTermCode] = useState(null);
+  // const [bannerId, setBannerId] = useState(null);
   const [attendanceData, setAttendanceData] = useState([]);
-  const [loadingAttendance, setLoadingAttendance] = useState(false);
+  // const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   const { getStudentDetails, loadingLatestTermInformation } =
     useGetLatestTermInformation(authenticatedEthosFetch, cardId);
@@ -198,8 +193,8 @@ const MySuccessTrackerCard = ({ classes }) => {
           setGpaDelta(data.cgpaDifference);
 
           // Store term code and banner ID for attendance calls
-          setTermCode(data.termCode);
-          setBannerId(data.bannerId);
+          // setTermCode(data.termCode);
+          // setBannerId(data.bannerId);
 
           setTermName(data.termName)
 
@@ -261,7 +256,7 @@ const MySuccessTrackerCard = ({ classes }) => {
             </Typography>
           </header>
 
-          {loadingLatestTermInformation || loadingAttendance ? (
+          {loadingLatestTermInformation ? (
             <Typography style={{ textAlign: "center", padding: "1rem" }}>
               Loading attendance data...
             </Typography>
