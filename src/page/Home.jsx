@@ -482,7 +482,7 @@ const MySuccessTrackerTable = ({ classes }) => {
         setCurrentGpa(cumGpa);
         setTermGpa(trmGpa);
         setCurrentBannerId(data?.bannerId);
-        setGpaDelta(data?.cgpaDifference);
+        setGpaDelta(data?.cgpaDifference)
 
         // Set the initial course data from termInformation
         if (Array.isArray(data?.termInformation)) {
@@ -627,7 +627,7 @@ const MySuccessTrackerTable = ({ classes }) => {
   };
 
   const handleTermChange = (term) => {
-    setCourseData([]);
+    setCourseData([])
     setCurrentTerm(term.term);
     setCurrentTermCode(term.termCode);
     setCurrentBannerId(term.bannerId);
@@ -898,9 +898,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                     );
                     const attendanceDisplay =
                       row.attendancePercentage !== null
-                        ? row.attendancePercentage > 100
-                          ? "100%"
-                          : `${row.attendancePercentage}%`
+                        ? `${row.attendancePercentage}%`
                         : "N/A";
 
                     return (
