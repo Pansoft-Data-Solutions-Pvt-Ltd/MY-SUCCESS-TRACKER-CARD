@@ -98,11 +98,12 @@ const styles = {
       gridTemplateColumns: "auto 1fr",
       gap: spacing30,
       marginBottom: spacing40,
-      alignItems: "start",
+      alignItems: "stretch",
     },
     "@media (min-width: 1200px)": {
       gridTemplateColumns: "480px 1fr 480px",
       gap: spacing30,
+      alignItems: "stretch",
     },
   },
   termSection: {
@@ -129,7 +130,7 @@ const styles = {
     width: "100%",
     "@media (min-width: 768px)": {
       flexDirection: "column",
-      gap: spacing30,
+      gap: spacing20,
     },
     "@media (min-width: 1200px)": {
       gridColumn: "2",
@@ -150,9 +151,8 @@ const styles = {
     overflow: "hidden",
     "@media (min-width: 1200px)": {
       gridColumn: "3",
-      gridRow: "1 / 3",
-      height: "auto",
-      minHeight: "210px",
+      gridRow: "1",
+      height: "100%",
     },
   },
   gpaTopCard: {
@@ -482,7 +482,7 @@ const MySuccessTrackerTable = ({ classes }) => {
         setCurrentGpa(cumGpa);
         setTermGpa(trmGpa);
         setCurrentBannerId(data?.bannerId);
-        setGpaDelta(data?.cgpaDifference)
+        setGpaDelta(data?.cgpaDifference);
 
         // Set the initial course data from termInformation
         if (Array.isArray(data?.termInformation)) {
@@ -570,6 +570,8 @@ const MySuccessTrackerTable = ({ classes }) => {
             });
 
             return {
+              courseNumber: course.courseNumber,
+              subjectCode: course.subjectCode,
               crn: course.crn,
               courseTitle: course.courseTitle || "-",
               attendancePercentage: course?.attendancePercentage
@@ -586,6 +588,8 @@ const MySuccessTrackerTable = ({ classes }) => {
             );
             return {
               crn: course.crn,
+              courseNumber: "-",
+              subjectCode: "-",
               courseTitle: course.courseTitle || "-",
               attendancePercentance: null,
               grade: "-",
@@ -627,7 +631,7 @@ const MySuccessTrackerTable = ({ classes }) => {
   };
 
   const handleTermChange = (term) => {
-    setCourseData([])
+    setCourseData([]);
     setCurrentTerm(term.term);
     setCurrentTermCode(term.termCode);
     setCurrentBannerId(term.bannerId);
@@ -645,7 +649,6 @@ const MySuccessTrackerTable = ({ classes }) => {
 
   return (
     <div className={classes.root}>
-      {/* ENHANCED BACK BUTTON */}
       <div className={classes.backButtonWrapper}>
         <Button onClick={handleBack} className={classes.backButton}>
           <svg
@@ -907,7 +910,9 @@ const MySuccessTrackerTable = ({ classes }) => {
                         className={classes.tableRow}
                       >
                         <TableCell className={classes.bodyCell}>
-                          <Typography variant="body2">{row.crn}</Typography>
+                          <Typography variant="body2">
+                            {row.subjectCode}-{row.courseNumber}
+                          </Typography>
                           <Typography
                             variant="caption"
                             style={{ color: "#6B7280" }}
