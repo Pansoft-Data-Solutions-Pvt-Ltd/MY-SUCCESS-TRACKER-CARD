@@ -89,6 +89,8 @@ ChartJS.register(
   Legend,
 );
 
+
+
 // Chart options
 const options = {
   responsive: true,

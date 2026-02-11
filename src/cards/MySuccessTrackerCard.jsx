@@ -59,6 +59,7 @@ const styles = (theme) => ({
     gap: "1.25rem",
     flexDirection: "column",
     alignItems: "center",
+     marginTop: "4.0rem", 
   },
   gpaMessage: {
     textAlign: "center",
@@ -70,7 +71,7 @@ const styles = (theme) => ({
     display: "flex",
   },
   gpaCircleInner: {
-    width: "clamp(4rem, 10rem, 5rem)",
+    width: "clamp(5rem, 12rem, 6rem)",
     aspectRatio: "1 / 1",
     borderRadius: "50%",
     display: "flex",
@@ -228,21 +229,8 @@ const MySuccessTrackerCard = ({ classes }) => {
               </div>
             </div>
 
-            {gpaDelta !== null && (
-              <div className={classes.gpaDelta}>
-                <div className={classes.iconText}>
-                  <DoubleChevronIcon
-                    backgroundColor={deltaColor}
-                    orientation={isPositive ? "up" : "down"}
-                    size="1rem"
-                  />
-                  <strong style={{ fontSize: "1rem" }}>{gpaDelta}</strong>
-                </div>
-                <Typography variant="p" style={{ fontSize: "0.6rem" }}>
-                  from last term
-                </Typography>
-              </div>
-            )}
+           
+               
           </div>
         </section>
 
