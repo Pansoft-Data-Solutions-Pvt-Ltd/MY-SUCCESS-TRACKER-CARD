@@ -101,7 +101,7 @@ const styles = {
       alignItems: "stretch",
     },
     "@media (min-width: 1200px)": {
-      gridTemplateColumns: "280px 1fr 1fr",
+      gridTemplateColumns: "440px 1fr 1fr",
       gap: spacing30,
       alignItems: "stretch",
     },
@@ -253,6 +253,9 @@ const styles = {
     marginBottom: spacing20,
     paddingBottom: spacing20,
     borderBottom: "2px solid #E5E7EB",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
   },
   cardTitle: {
     fontSize: "1.25rem",
@@ -454,6 +457,17 @@ const MySuccessTrackerTable = ({ classes }) => {
     authenticatedEthosFetch,
     cardId,
   );
+
+  const latestTermCode = useMemo(() => {
+    if (!termCodesResult || termCodesResult.length === 0) return null;
+
+    const filtered = termCodesResult
+      .filter((item) => !blockedTermCodes.includes(item.termCode))
+      .sort((a, b) => a.termCode.localeCompare(b.termCode));
+
+    return filtered[filtered.length - 1]?.termCode || null;
+  }, [termCodesResult]);
+  const isCurrentTerm = currentTermCode === latestTermCode;
 
   // Fetch and filter term codes
   useEffect(() => {
@@ -706,7 +720,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 Cumulative GPA
               </Typography>
 
-              {gpaDelta !== 0 && (
+              {gpaDelta !== 0.0 && (
                 <div className={classes.gpaDeltaRow}>
                   <DoubleChevronIcon
                     orientation={isPositive ? "up" : "down"}
@@ -797,13 +811,22 @@ const MySuccessTrackerTable = ({ classes }) => {
       {/* TABLE CARD */}
       <Card className={classes.card}>
         <div className={classes.cardHeader}>
-          <Typography
-            variant="h4"
-            className={classes.cardTitle}
-            style={{ fontWeight: 700, color: "#1F2937" ,textAlign: "center" }}
-          >
-            Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
-          </Typography>
+          <div>
+            <Typography
+              variant="h4"
+              className={classes.cardTitle}
+              style={{ fontWeight: 700, color: "#1F2937", textAlign: "center" }}
+            >
+              Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
+            </Typography>
+          </div>
+          {isCurrentTerm && (
+            <div>
+              <Typography variant="caption1">
+                This is the current term
+              </Typography>
+            </div>
+          )}
         </div>
 
         {isLoading && (
@@ -819,56 +842,77 @@ const MySuccessTrackerTable = ({ classes }) => {
         )}
 
         {!isLoading && (
-  <div 
-    style={{ 
-      display: "flex", 
-      justifyContent: "space-between", 
-      alignItems: "center",
-      borderRadius: "8px",
-      padding: `${spacing10} ${spacing20}`,
-      marginBottom: spacing20,
-      flexWrap: "wrap",
-      gap: spacing20
-    }}
-  >
-    {/* Left side - Grade legends */}
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-      <Typography variant="body2" style={{ fontWeight: 500, color: "#1F2937" }}>
-        F = Fail
-      </Typography>
-      <Typography variant="body2" style={{ fontWeight: 500, color: "#1F2937" }}>
-        A, B, C, D = Letter Grades
-      </Typography>
-    </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderRadius: "8px",
+              padding: `${spacing10} ${spacing20}`,
+              marginBottom: spacing20,
+              flexWrap: "wrap",
+              gap: spacing20,
+            }}
+          >
+            {/* Left side - Grade legends */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            >
+              <Typography
+                variant="body2"
+                style={{ fontWeight: 500, color: "#1F2937" }}
+              >
+                F = Fail
+              </Typography>
+              <Typography
+                variant="body2"
+                style={{ fontWeight: 500, color: "#1F2937" }}
+              >
+                A, B, C, D = Letter Grades
+              </Typography>
+            </div>
 
-    {/* Right side - Status color legends */}
-    <div style={{ display: "flex", alignItems: "center", gap: spacing20, flexWrap: "wrap" }}>
-      <div className={classes.legendItem}>
-        <div
-          className={classes.legendDot}
-          style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
-        />
-        <Typography variant="body2" style={{ fontWeight: 500 }}>On Track</Typography>
-      </div>
+            {/* Right side - Status color legends */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing20,
+                flexWrap: "wrap",
+              }}
+            >
+              <div className={classes.legendItem}>
+                <div
+                  className={classes.legendDot}
+                  style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
+                />
+                <Typography variant="body2" style={{ fontWeight: 500 }}>
+                  On Track
+                </Typography>
+              </div>
 
-      <div className={classes.legendItem}>
-        <div
-          className={classes.legendDot}
-          style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
-        />
-        <Typography variant="body2" style={{ fontWeight: 500 }}>Needs Attention</Typography>
-      </div>
+              <div className={classes.legendItem}>
+                <div
+                  className={classes.legendDot}
+                  style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
+                />
+                <Typography variant="body2" style={{ fontWeight: 500 }}>
+                  Needs Attention
+                </Typography>
+              </div>
 
-      <div className={classes.legendItem}>
-        <div
-          className={classes.legendDot}
-          style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-        />
-        <Typography variant="body2" style={{ fontWeight: 500 }}>Critical</Typography>
-      </div>
-    </div>
-  </div>
-)}
+              <div className={classes.legendItem}>
+                <div
+                  className={classes.legendDot}
+                  style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
+                />
+                <Typography variant="body2" style={{ fontWeight: 500 }}>
+                  Critical
+                </Typography>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* DESKTOP TABLE VIEW */}
         {!isLoading && (

@@ -20,6 +20,11 @@ const COLOR_CONFIG = {
   CRITICAL: "#ED1012",
 };
 
+const GPA_CONFIG = {
+  GOOD: 3.5,
+  MEDIUM: 3.0,
+};
+
 const styles = (theme) => ({
   card: {
     padding: "0 1rem",
@@ -59,16 +64,19 @@ const styles = (theme) => ({
     gap: "1.25rem",
     flexDirection: "column",
     alignItems: "center",
-     marginTop: "4.0rem", 
+    justifyContent: "center",
+    height: "70%",
   },
   gpaMessage: {
     textAlign: "center",
     fontSize: "0.75rem",
   },
   gpaCircleContainer: {
-    flexShrink: 0,
-    flex: 1,
+    // flexShrink: 0,
+    // flex: 1,
     display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   gpaCircleInner: {
     width: "clamp(5rem, 12rem, 6rem)",
@@ -153,16 +161,9 @@ const getStatusColor = (value) => {
 };
 
 const getGpaCircleColor = (gpa) => {
-  if (gpa >= 3 && gpa <= 4) {
-    return COLOR_CONFIG.ON_TRACK;        // Green
-  }
-  if (gpa >= 2 && gpa < 3) {
-    return COLOR_CONFIG.NEEDS_ATTENTION; // Yellow
-  }
-  if (gpa >= 1 && gpa < 2) {
-    return COLOR_CONFIG.CRITICAL;        // Red
-  }
-  return "#999999"; // For 0, null, or invalid GPA
+  if (gpa >= GPA_CONFIG.GOOD) return COLOR_CONFIG.ON_TRACK;
+  if (gpa >= GPA_CONFIG.MEDIUM) return COLOR_CONFIG.NEEDS_ATTENTION;
+  return COLOR_CONFIG.CRITICAL;
 };
 
 const MySuccessTrackerCard = ({ classes }) => {
@@ -197,9 +198,9 @@ const MySuccessTrackerCard = ({ classes }) => {
           // setTermCode(data.termCode);
           // setBannerId(data.bannerId);
 
-          setTermName(data.termName)
+          setTermName(data.termName);
 
-          setAttendanceData(data.termInformation)
+          setAttendanceData(data.termInformation);
         }
       })
       .catch((error) => {
@@ -228,9 +229,6 @@ const MySuccessTrackerCard = ({ classes }) => {
                 </strong>
               </div>
             </div>
-
-           
-               
           </div>
         </section>
 
@@ -240,7 +238,7 @@ const MySuccessTrackerCard = ({ classes }) => {
               Attendance Overview
             </Typography>
             <Typography variant="body2" style={{ textAlign: "center" }}>
-              { termName || "Current Term" }
+              {termName || "Current Term"}
             </Typography>
           </header>
 
@@ -266,7 +264,9 @@ const MySuccessTrackerCard = ({ classes }) => {
                     </div>
                     <div className={classes.attendancePercentage}>
                       <span>{displayPercentage}</span>
-                      <SvgHollowCircle color={getStatusColor(at.attendancePercentage)} />
+                      <SvgHollowCircle
+                        color={getStatusColor(at.attendancePercentage)}
+                      />
                     </div>
                   </div>
                 );

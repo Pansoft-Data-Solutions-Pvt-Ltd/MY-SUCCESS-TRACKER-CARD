@@ -89,14 +89,16 @@ ChartJS.register(
   Legend,
 );
 
-
-
 // Chart options
 const options = {
   responsive: true,
   plugins: {
     legend: {
       position: "top",
+      labels: {
+        usePointStyle: true,
+        pointStyle: "circle", // circle | rect | triangle | star | etc.
+      },
     },
     title: {
       display: true,
