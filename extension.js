@@ -58,6 +58,7 @@ module.exports = {
         }
     }],
     page: {
-        source: './src/page/router.jsx'
+        source: './src/page/router.jsx',
+        fullWidth: true
     }
 };

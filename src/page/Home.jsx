@@ -53,11 +53,11 @@ const styles = {
   root: {
     width: widthFluid,
     margin: "0 auto",
-    padding: `${spacing20} ${spacing20} ${spacing40}`,
-    maxWidth: "1400px",
-    "@media (min-width: 768px)": {
-      padding: `${spacing30} ${spacing30} ${spacing40}`,
-    },
+    // padding: `${spacing20} ${spacing20} ${spacing40}`,
+    // "@media (min-width: 768px)": {
+    //   padding: `${spacing30} ${spacing30} ${spacing40}`,
+    // },
+    padding: "0 15px 0 15px",
   },
   backButtonWrapper: {
     marginBottom: spacing20,
@@ -65,45 +65,13 @@ const styles = {
       marginBottom: spacing30,
     },
   },
-  backButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: spacing10,
-    padding: `${spacing10} ${spacing20}`,
-    backgroundColor: "#FFFFFF",
-    border: "2px solid #026BC8",
-    borderRadius: "8px",
-    color: "#026BC8",
-    fontWeight: 600,
-    fontSize: "0.875rem",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-    "@media (min-width: 768px)": {
-      fontSize: "0.95rem",
-    },
-    "&:hover": {
-      backgroundColor: "#026BC8",
-      color: "#FFFFFF",
-      transform: "translateY(-1px)",
-      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-    },
-  },
   topBar: {
-    display: "grid",
-    gridTemplateColumns: "1fr",
+    display: "flex",
+    flexDirection: "column",
     gap: spacing20,
     marginBottom: spacing30,
     "@media (min-width: 768px)": {
-      gridTemplateColumns: "auto 1fr",
-      gap: spacing30,
       marginBottom: spacing40,
-      alignItems: "stretch",
-    },
-    "@media (min-width: 1200px)": {
-      gridTemplateColumns: "440px 1fr 1fr",
-      gap: spacing30,
-      alignItems: "stretch",
     },
   },
   termSection: {
@@ -128,18 +96,31 @@ const styles = {
     flexDirection: "column",
     gap: spacing20,
     width: "100%",
+    marginBottom: spacing30,
     "@media (min-width: 768px)": {
-      flexDirection: "column",
+      flexDirection: "row",
       gap: spacing20,
+      justifyContent: "space-between",
+      alignItems: "stretch",
     },
     "@media (min-width: 1200px)": {
-      gridColumn: "2",
+      gap: spacing30,
+    },
+  },
+  gpaCardsColumn: {
+    display: "flex",
+    flexDirection: "column",
+    gap: spacing20,
+    "@media (min-width: 768px)": {
+      width: "auto",
+      minWidth: "280px",
     },
   },
   termGpaBarCard: {
     padding: 0,
     width: "100%",
-    height: "210px",
+    minWidth: "410px",
+    maxHeight: "310px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -149,10 +130,8 @@ const styles = {
     borderRadius: "12px",
     border: "1px solid #E5E7EB",
     overflow: "hidden",
-    "@media (min-width: 1200px)": {
-      gridColumn: "3",
-      gridRow: "1",
-      height: "100%",
+    "@media (min-width: 768px)": {
+      flex: 1,
     },
   },
   gpaTopCard: {
@@ -170,7 +149,6 @@ const styles = {
     transition: "transform 0.2s ease, box-shadow 0.2s ease",
     "@media (min-width: 768px)": {
       padding: spacing30,
-      minWidth: "280px",
       flex: 1,
     },
   },
@@ -189,7 +167,6 @@ const styles = {
     transition: "transform 0.2s ease, box-shadow 0.2s ease",
     "@media (min-width: 768px)": {
       padding: spacing30,
-      minWidth: "280px",
       flex: 1,
     },
   },
@@ -393,14 +370,28 @@ const styles = {
     backgroundColor: "#E5E7EB",
     overflow: "hidden",
   },
-  gradeLegendBar: {
-    display: "inline-flex",
+  legendsContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing30,
+    padding: `${spacing20} 0`,
+    marginBottom: spacing20,
+    flexWrap: "wrap",
+  },
+  gradeLegendsGroup: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    width: "100%",
+    gap: spacing20,
+    flexWrap: "wrap",
+  },
+  statusLegendsGroup: {
+    display: "flex",
     alignItems: "center",
     gap: spacing20,
-    marginTop: spacing10,
-    marginBottom: spacing20,
-    padding: `${spacing10} ${spacing20}`,
-    borderRadius: "8px",
     flexWrap: "wrap",
   },
   legendItem: {
@@ -413,7 +404,6 @@ const styles = {
     height: "12px",
     borderRadius: "50%",
     flexShrink: 0,
-    marginLeft: "6px",
   },
 };
 
@@ -664,26 +654,17 @@ const MySuccessTrackerTable = ({ classes }) => {
   return (
     <div className={classes.root}>
       <div className={classes.backButtonWrapper}>
-        <Button onClick={handleBack} className={classes.backButton}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Back to Dashboard
+        <Button
+          className={classes.backButton}
+          color="secondary"
+          onClick={handleBack}
+        >
+          Back
         </Button>
       </div>
 
-      {/* TOP BAR */}
+      {/* TOP BAR - TERM SELECTOR ONLY */}
       <div className={classes.topBar}>
-        {/* TERM SELECTOR */}
         <div className={classes.termSection}>
           <Typography className={classes.termLabel}>Select Term</Typography>
           <Button
@@ -703,112 +684,9 @@ const MySuccessTrackerTable = ({ classes }) => {
             {loadingTermCodes ? "Loading…" : currentTerm || "Select Term"}
           </Button>
         </div>
-
-        {/* GPA CARDS WRAPPER */}
-        <div className={classes.gpaCardsWrapper}>
-          {/* CUMULATIVE GPA CARD */}
-          <Card className={classes.gpaTopCard}>
-            <div className={classes.gpaLeft}>
-              <Typography
-                variant="p"
-                style={{
-                  fontSize: "1.05rem",
-                  fontWeight: 700,
-                  color: "#1F2937",
-                }}
-              >
-                Cumulative GPA
-              </Typography>
-
-              {gpaDelta !== 0.0 && (
-                <div className={classes.gpaDeltaRow}>
-                  <DoubleChevronIcon
-                    orientation={isPositive ? "up" : "down"}
-                    size={20}
-                    backgroundColor={deltaColor}
-                    style={{ transform: "translateY(4px)" }}
-                  />
-                  <Typography
-                    className={classes.gpaDeltaText}
-                    style={{
-                      fontWeight: 500,
-                      top: "2px",
-                      position: "relative",
-                    }}
-                  >
-                    <span style={{ color: deltaColor, fontWeight: 700 }}>
-                      {gpaDelta}
-                    </span>
-                    <span style={{ marginLeft: 3, color: "#6B7280" }}>
-                      {" "}
-                      From Last Term
-                    </span>
-                  </Typography>
-                </div>
-              )}
-            </div>
-
-            <div
-              className={classes.gpaCircle}
-              style={{
-                borderColor: gpaCircleColor,
-                color: gpaCircleColor,
-              }}
-            >
-              {loadingTermInformation ? "..." : currentGpa.toFixed(2)}
-            </div>
-          </Card>
-
-          {/* TERM GPA CARD */}
-          <Card className={classes.termGpaCard}>
-            <div className={classes.gpaLeft}>
-              <Typography
-                variant="p"
-                style={{
-                  fontSize: "1.05rem",
-                  fontWeight: 700,
-                  color: "#0369A1",
-                }}
-              >
-                Term GPA
-              </Typography>
-
-              <Typography
-                variant="body2"
-                style={{
-                  fontSize: "0.875rem",
-                  color: "#0C4A6E",
-                  marginTop: spacing10,
-                  fontWeight: 500,
-                }}
-              >
-                Current term performance
-              </Typography>
-            </div>
-
-            <div
-              className={classes.gpaCircle}
-              style={{
-                borderColor: termGpaCircleColor,
-                color: termGpaCircleColor,
-              }}
-            >
-              {loadingTermInformation ? "..." : termGpa}
-            </div>
-          </Card>
-        </div>
-
-        {/* TERM GPA BAR CHART */}
-        <Card className={classes.termGpaBarCard}>
-          <TermGpaBar
-            termData={termData}
-            termGpaData={termGpaData}
-            loading={loadingAllTermGpas}
-          />
-        </Card>
       </div>
 
-      {/* TABLE CARD */}
+      {/* ACADEMIC PERFORMANCE CARD */}
       <Card className={classes.card}>
         <div className={classes.cardHeader}>
           <div>
@@ -820,13 +698,6 @@ const MySuccessTrackerTable = ({ classes }) => {
               Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
             </Typography>
           </div>
-          {isCurrentTerm && (
-            <div>
-              <Typography variant="caption1">
-                This is the current term
-              </Typography>
-            </div>
-          )}
         </div>
 
         {isLoading && (
@@ -842,76 +713,167 @@ const MySuccessTrackerTable = ({ classes }) => {
         )}
 
         {!isLoading && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              borderRadius: "8px",
-              padding: `${spacing10} ${spacing20}`,
-              marginBottom: spacing20,
-              flexWrap: "wrap",
-              gap: spacing20,
-            }}
-          >
-            {/* Left side - Grade legends */}
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
-            >
-              <Typography
-                variant="body2"
-                style={{ fontWeight: 500, color: "#1F2937" }}
-              >
-                F = Fail
-              </Typography>
-              <Typography
-                variant="body2"
-                style={{ fontWeight: 500, color: "#1F2937" }}
-              >
-                A, B, C, D = Letter Grades
-              </Typography>
+          <>
+            {/* GPA CARDS WRAPPER - NOW INSIDE ACADEMIC PERFORMANCE CARD */}
+            <div className={classes.gpaCardsWrapper}>
+              <div className={classes.legendsContainer}>
+                {/* Grade legends */}
+                <div className={classes.gradeLegendsGroup}>
+                  <Typography
+                    variant="body2"
+                    style={{ fontWeight: 500, color: "#1F2937" }}
+                  >
+                    F = Fail
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    style={{ fontWeight: 500, color: "#1F2937" }}
+                  >
+                    A, B, C, D = Letter Grades
+                  </Typography>
+                </div>
+
+                {/* Status color legends */}
+                <div className={classes.statusLegendsGroup}>
+                  <div className={classes.legendItem}>
+                    <div
+                      className={classes.legendDot}
+                      style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
+                    />
+                    <Typography variant="body2" style={{ fontWeight: 500 }}>
+                      On Track
+                    </Typography>
+                  </div>
+
+                  <div className={classes.legendItem}>
+                    <div
+                      className={classes.legendDot}
+                      style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
+                    />
+                    <Typography variant="body2" style={{ fontWeight: 500 }}>
+                      Needs Attention
+                    </Typography>
+                  </div>
+
+                  <div className={classes.legendItem}>
+                    <div
+                      className={classes.legendDot}
+                      style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
+                    />
+                    <Typography variant="body2" style={{ fontWeight: 500 }}>
+                      Critical
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: spacing20 }}>
+                {/* COLUMN FOR CUMULATIVE AND TERM GPA */}
+                <div className={classes.gpaCardsColumn}>
+                  {/* CUMULATIVE GPA CARD */}
+                  <Card className={classes.gpaTopCard}>
+                    <div className={classes.gpaLeft}>
+                      <Typography
+                        variant="p"
+                        style={{
+                          fontSize: "1.05rem",
+                          fontWeight: 700,
+                          color: "#1F2937",
+                        }}
+                      >
+                        Cumulative GPA
+                      </Typography>
+
+                      {gpaDelta !== "0.00" && (
+                        <div className={classes.gpaDeltaRow}>
+                          <DoubleChevronIcon
+                            orientation={isPositive ? "up" : "down"}
+                            size={20}
+                            backgroundColor={deltaColor}
+                            style={{ transform: "translateY(4px)" }}
+                          />
+                          <Typography
+                            className={classes.gpaDeltaText}
+                            style={{
+                              fontWeight: 500,
+                              top: "2px",
+                              position: "relative",
+                            }}
+                          >
+                            <span
+                              style={{ color: deltaColor, fontWeight: 700 }}
+                            >
+                              {gpaDelta}
+                            </span>
+                            <span style={{ marginLeft: 3, color: "#6B7280" }}>
+                              {" "}
+                              From Last Term
+                            </span>
+                          </Typography>
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      className={classes.gpaCircle}
+                      style={{
+                        borderColor: gpaCircleColor,
+                        color: gpaCircleColor,
+                      }}
+                    >
+                      {loadingTermInformation ? "..." : currentGpa.toFixed(2)}
+                    </div>
+                  </Card>
+
+                  {/* TERM GPA CARD */}
+                  <Card className={classes.termGpaCard}>
+                    <div className={classes.gpaLeft}>
+                      <Typography
+                        variant="p"
+                        style={{
+                          fontSize: "1.05rem",
+                          fontWeight: 700,
+                          color: "#0369A1",
+                        }}
+                      >
+                        Term GPA
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        style={{
+                          fontSize: "0.875rem",
+                          color: "#0C4A6E",
+                          marginTop: spacing10,
+                          fontWeight: 500,
+                        }}
+                      >
+                        Current term performance
+                      </Typography>
+                    </div>
+
+                    <div
+                      className={classes.gpaCircle}
+                      style={{
+                        borderColor: termGpaCircleColor,
+                        color: termGpaCircleColor,
+                      }}
+                    >
+                      {loadingTermInformation ? "..." : termGpa}
+                    </div>
+                  </Card>
+                </div>
+
+                {/* TERM GPA BAR CHART */}
+                <Card className={classes.termGpaBarCard}>
+                  <TermGpaBar
+                    termData={termData}
+                    termGpaData={termGpaData}
+                    loading={loadingAllTermGpas}
+                  />
+                </Card>
+              </div>
             </div>
-
-            {/* Right side - Status color legends */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: spacing20,
-                flexWrap: "wrap",
-              }}
-            >
-              <div className={classes.legendItem}>
-                <div
-                  className={classes.legendDot}
-                  style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
-                />
-                <Typography variant="body2" style={{ fontWeight: 500 }}>
-                  On Track
-                </Typography>
-              </div>
-
-              <div className={classes.legendItem}>
-                <div
-                  className={classes.legendDot}
-                  style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
-                />
-                <Typography variant="body2" style={{ fontWeight: 500 }}>
-                  Needs Attention
-                </Typography>
-              </div>
-
-              <div className={classes.legendItem}>
-                <div
-                  className={classes.legendDot}
-                  style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-                />
-                <Typography variant="body2" style={{ fontWeight: 500 }}>
-                  Critical
-                </Typography>
-              </div>
-            </div>
-          </div>
+          </>
         )}
 
         {/* DESKTOP TABLE VIEW */}
