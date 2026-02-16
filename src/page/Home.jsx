@@ -288,53 +288,55 @@ const MySuccessTrackerTable = () => {
     <div className="root">
       {/* ACADEMIC PERFORMANCE CARD */}
       <Card className="card">
-        <div className="card-header">
-          {/* TOP BAR - TERM SELECTOR ONLY */}
-          <div className="top-bar">
-            <div className="term-section">
-              <Typography className="term-label">Select Term</Typography>
-              <Button
-                disabled={loadingTermCodes || !termCodesResult}
-                dropdown={termCodesResult
-                  ?.filter((item) => !blockedTermCodes.includes(item.termCode))
-                  .sort((a, b) => a.termCode.localeCompare(b.termCode))
-                  .map((term) => (
-                    <DropdownButtonItem
-                      key={term.termCode}
-                      onClick={() => handleTermChange(term)}
-                    >
-                      {term.term}
-                    </DropdownButtonItem>
-                  ))}
-              >
-                {loadingTermCodes ? "Loading…" : currentTerm || "Select Term"}
-              </Button>
-            </div>
-          </div>
+       <div className="card-header">
+  {/* BACK BUTTON - LEFT */}
+  <div className="back-button-wrapper">
+    <Button color="secondary" onClick={handleBack}>
+      Back
+    </Button>
+  </div>
 
-          <div>
-            <Typography
-              variant="h4"
-              className="card-title"
-              style={{ fontWeight: 700, color: "#1F2937", textAlign: "center" }}
+  {/* TITLE - CENTER */}
+  <div>
+    <Typography
+      variant="h4"
+      className="card-title"
+      style={{ fontWeight: 700, color: "#1F2937", textAlign: "center" }}
+    >
+      Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
+    </Typography>
+  </div>
+
+  {/* SELECT TERM - RIGHT */}
+  <div className="top-bar">
+    <div className="term-section">
+      <Typography className="term-label">Select Term</Typography>
+      <Button
+        disabled={loadingTermCodes || !termCodesResult}
+        dropdown={termCodesResult
+          ?.filter((item) => !blockedTermCodes.includes(item.termCode))
+          .sort((a, b) => a.termCode.localeCompare(b.termCode))
+          .map((term) => (
+            <DropdownButtonItem
+              key={term.termCode}
+              onClick={() => handleTermChange(term)}
             >
-              Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
-            </Typography>
-          </div>
-
-          <div className="back-button-wrapper">
-            <Button color="secondary" onClick={handleBack}>
-              Back
-            </Button>
-          </div>
-        </div>
+              {term.term}
+            </DropdownButtonItem>
+          ))}
+      >
+        {loadingTermCodes ? "Loading…" : currentTerm || "Select Term"}
+      </Button>
+    </div>
+  </div>
+</div>
 
         {isLoading && (
           <Typography
             style={{
               padding: "20px",
               textAlign: "center",
-              color: "#6B7280",
+              color: "#02050c",
             }}
           >
             Loading student details...
@@ -346,61 +348,69 @@ const MySuccessTrackerTable = () => {
             {/* GPA CARDS WRAPPER - NOW INSIDE ACADEMIC PERFORMANCE CARD */}
 
             <div className="gpa-cards-wrapper">
-              <div style={{ display: "flex", gap: "20px" }}>
-                <Card className="term-gpa-bar-card">
-                  <div className="legends-container">
-                    {/* Status color legends */}
-                    <div className="status-legends-group">
-                      <div className="legend-item">
-                        <div
-                          className="legend-dot"
-                          style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
-                        />
-                        <Typography variant="body2" style={{ fontWeight: 500 }}>
-                          On Track
-                        </Typography>
-                      </div>
-
-                      <div className="legend-item">
-                        <div
-                          className="legend-dot"
-                          style={{
-                            backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION,
-                          }}
-                        />
-                        <Typography variant="body2" style={{ fontWeight: 500 }}>
-                          Needs Attention
-                        </Typography>
-                      </div>
-
-                      <div className="legend-item">
-                        <div
-                          className="legend-dot"
-                          style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-                        />
-                        <Typography variant="body2" style={{ fontWeight: 500 }}>
-                          Critical
-                        </Typography>
-                      </div>
+              <div style={{ display: "flex", gap: "70px" }}>
+                <div className="legends-container">
+                  {/* Status color legends - TOP SECTION */}
+                  <div className="status-legends-group">
+                    <div className="legend-item">
+                      <div
+                        className="legend-dot"
+                        style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
+                      />
+                      <Typography variant="body2" style={{ fontWeight: 500 }}>
+                        On Track
+                      </Typography>
                     </div>
 
-                    {/* Grade legends */}
-                    <div className="grade-legends-group">
-                      <Typography
-                        variant="body2"
-                        style={{ fontWeight: 500, color: "#1F2937" }}
-                      >
-                        A, B, C, D = Letter Grades
+                    <div className="legend-item">
+                      <div
+                        className="legend-dot"
+                        style={{
+                          backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION,
+                        }}
+                      />
+                      <Typography variant="body2" style={{ fontWeight: 500 }}>
+                        Needs Attention
                       </Typography>
-                      <Typography
-                        variant="body2"
-                        style={{ fontWeight: 500, color: "#1F2937" }}
-                      >
-                        F = Fail
+                    </div>
+
+                    <div className="legend-item">
+                      <div
+                        className="legend-dot"
+                        style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
+                      />
+                      <Typography variant="body2" style={{ fontWeight: 500 }}>
+                        Critical
                       </Typography>
                     </div>
                   </div>
-                </Card>
+
+                  {/* Grade legends - MIDDLE SECTION */}
+                  <div className="grade-legends-group">
+                    <Typography
+                      variant="body2"
+                      style={{ fontWeight: 500, color: "#1F2937" }}
+                    >
+                      A, B, C, D = Letter Grades
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      style={{ fontWeight: 500, color: "#1F2937" }}
+                    >
+                      F = Fail
+                    </Typography>
+                  </div>
+
+                  {/* N/A - BOTTOM SECTION */}
+                  <div className="na-legend-group">
+                    <Typography
+                      variant="body2"
+                      style={{ fontWeight: 500, color: "#03060c" }}
+                    >
+                      N/A = Not Applicable
+                    </Typography>
+                  </div>
+                </div>
                 {/* COLUMN FOR CUMULATIVE AND TERM GPA */}
                 <div className="gpa-cards-column">
                   {/* CUMULATIVE GPA CARD */}
