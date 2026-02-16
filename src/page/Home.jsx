@@ -348,7 +348,7 @@ const MySuccessTrackerTable = () => {
             {/* GPA CARDS WRAPPER - NOW INSIDE ACADEMIC PERFORMANCE CARD */}
 
             <div className="gpa-cards-wrapper">
-              <div style={{ display: "flex", gap: "70px" }}>
+              <div style={{ display: "flex", gap: "70px", justifyContent: "space-between", width: "100%" }}>
                 {/* COLUMN FOR CUMULATIVE AND TERM GPA */}
                 <div className="gpa-cards-column">
                   <div style={{ display: 'flex', gap: '20px' }}>
@@ -559,15 +559,17 @@ const MySuccessTrackerTable = () => {
                     return (
                       <TableRow key={row.crn || index} className="table-row">
                         <TableCell className="body-cell">
-                          <Typography variant="body2">
-                            {row.subjectCode}-{row.courseNumber}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            style={{ color: "#6B7280" }}
-                          >
-                            {row.courseTitle}
-                          </Typography>
+                            <div style={{display: "flex", gap: "10px"}}>
+                              <Typography variant="body2">
+                                {row.subjectCode}-{row.courseNumber}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                style={{ color: "#6B7280" }}
+                              >
+                                {row.courseTitle}
+                              </Typography>
+                            </div>
                         </TableCell>
 
                         <TableCell
