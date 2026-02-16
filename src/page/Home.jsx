@@ -447,59 +447,64 @@ const MySuccessTrackerTable = () => {
                   </div>
                   <div className="legends-container">
                     {/* Status color legends - TOP SECTION */}
-                    <div className="legend-item">
-                      <div
-                        className="legend-dot"
-                        style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
-                      />
-                      <Typography variant="body2" style={{ fontWeight: 500 }}>
-                        On Track
-                      </Typography>
-                    </div>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      
+                      <div className="legend-item">
+                        <div
+                          className="legend-dot"
+                          style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
+                        />
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>
+                          On Track
+                        </Typography>
+                      </div>
 
-                    <div className="legend-item">
-                      <div
-                        className="legend-dot"
-                        style={{
-                          backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION,
-                        }}
-                      />
-                      <Typography variant="body2" style={{ fontWeight: 500 }}>
-                        Needs Attention
-                      </Typography>
-                    </div>
+                      <div className="legend-item">
+                        <div
+                          className="legend-dot"
+                          style={{
+                            backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION,
+                          }}
+                        />
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>
+                          Needs Attention
+                        </Typography>
+                      </div>
 
-                    <div className="legend-item">
-                      <div
-                        className="legend-dot"
-                        style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-                      />
-                      <Typography variant="body2" style={{ fontWeight: 500 }}>
-                        Critical
-                      </Typography>
+                      <div className="legend-item">
+                        <div
+                          className="legend-dot"
+                          style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
+                        />
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>
+                          Critical
+                        </Typography>
+                      </div>
                     </div>
 
                     {/* Grade legends - MIDDLE SECTION */}
-                    <Typography
-                      variant="body2"
-                      style={{ fontWeight: 500, color: "#1F2937" }}
-                    >
-                      A, B, C, D = Letter Grades
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      style={{ fontWeight: 500, color: "#1F2937" }}
-                    >
-                      F = Fail
-                    </Typography>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <Typography
+                        variant="body2"
+                        style={{ fontWeight: 500, color: "#1F2937" }}
+                      >
+                        A, B, C, D = Letter Grades
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        style={{ fontWeight: 500, color: "#1F2937" }}
+                      >
+                        F = Fail
+                      </Typography>
 
-                    {/* N/A - BOTTOM SECTION */}
-                    <Typography
-                      variant="body2"
-                      style={{ fontWeight: 500, color: "#03060c" }}
-                    >
-                      N/A = Not Applicable
-                    </Typography>
+                      {/* N/A - BOTTOM SECTION */}
+                      <Typography
+                        variant="body2"
+                        style={{ fontWeight: 500, color: "#03060c" }}
+                      >
+                        N/A = Not Applicable
+                      </Typography>
+                    </div>
                   </div>
                 </div>
 
