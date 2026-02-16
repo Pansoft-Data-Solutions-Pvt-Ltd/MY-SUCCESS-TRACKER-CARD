@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
-import { withStyles } from "@ellucian/react-design-system/core/styles";
 import DoubleChevronIcon from "../components/DoubleChevron";
 import useStudentTermCodes from "../hooks/useTermCodes";
 import useGetTermInformation from "../hooks/useGetTermInformation";
 import useGetAcademicPerformance from "../hooks/useGetAcademicPerformance";
 import TermGpaBar from "../components/TermGpaBar";
+import "./Home.css";
 
 // Ellucian provided hooks
 import { useData, useCardInfo } from "@ellucian/experience-extension-utils";
@@ -21,14 +21,6 @@ import {
   Card,
   DropdownButtonItem,
 } from "@ellucian/react-design-system/core";
-
-import {
-  spacing10,
-  spacing20,
-  spacing30,
-  spacing40,
-  widthFluid,
-} from "@ellucian/react-design-system/core/styles/tokens";
 
 /* ================= CONFIG ================= */
 const TABLE_CONFIG = {
@@ -48,367 +40,8 @@ const GPA_CONFIG = {
   MEDIUM: 3.0,
 };
 
-/* ================= STYLES ================= */
-const styles = {
-  root: {
-    width: widthFluid,
-    margin: "0 auto",
-    // padding: `${spacing20} ${spacing20} ${spacing40}`,
-    // "@media (min-width: 768px)": {
-    //   padding: `${spacing30} ${spacing30} ${spacing40}`,
-    // },
-    padding: "0 15px 0 15px",
-  },
-  backButtonWrapper: {
-    marginBottom: spacing20,
-    "@media (min-width: 768px)": {
-      marginBottom: spacing30,
-    },
-  },
-  topBar: {
-    display: "flex",
-    flexDirection: "column",
-    gap: spacing20,
-    marginBottom: spacing30,
-    "@media (min-width: 768px)": {
-      marginBottom: spacing40,
-    },
-  },
-  termSection: {
-    display: "flex",
-    flexDirection: "column",
-    gap: spacing10,
-    width: "100%",
-    "@media (min-width: 768px)": {
-      width: "280px",
-    },
-  },
-  termLabel: {
-    fontSize: "1rem",
-    fontWeight: 600,
-    color: "#1F2937",
-    "@media (min-width: 768px)": {
-      fontSize: "1.1rem",
-    },
-  },
-  gpaCardsWrapper: {
-    display: "flex",
-    flexDirection: "column",
-    gap: spacing20,
-    width: "100%",
-    marginBottom: spacing30,
-    "@media (min-width: 768px)": {
-      flexDirection: "row",
-      gap: spacing20,
-      justifyContent: "space-between",
-      alignItems: "stretch",
-    },
-    "@media (min-width: 1200px)": {
-      gap: spacing30,
-    },
-  },
-  gpaCardsColumn: {
-    display: "flex",
-    flexDirection: "column",
-    gap: spacing20,
-    "@media (min-width: 768px)": {
-      width: "auto",
-      minWidth: "280px",
-    },
-  },
-  termGpaBarCard: {
-    padding: 0,
-    width: "100%",
-    minWidth: "410px",
-    maxHeight: "310px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    background: "linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%)",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-    borderRadius: "12px",
-    border: "1px solid #E5E7EB",
-    overflow: "hidden",
-    "@media (min-width: 768px)": {
-      flex: 1,
-    },
-  },
-  gpaTopCard: {
-    padding: spacing20,
-    width: "100%",
-    minHeight: "110px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    position: "relative",
-    background: "linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-    borderRadius: "12px",
-    border: "1px solid #E5E7EB",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    "@media (min-width: 768px)": {
-      padding: spacing30,
-      flex: 1,
-    },
-  },
-  termGpaCard: {
-    padding: spacing20,
-    width: "100%",
-    minHeight: "110px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    position: "relative",
-    background: "linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%)",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-    borderRadius: "12px",
-    border: "1px solid #BAE6FD",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    "@media (min-width: 768px)": {
-      padding: spacing30,
-      flex: 1,
-    },
-  },
-  gpaLeft: {
-    display: "flex",
-    flexDirection: "column",
-    flex: 1,
-    paddingRight: spacing20,
-    "@media (min-width: 768px)": {
-      paddingRight: "100px",
-      transform: "translateY(-5px)",
-    },
-  },
-  gpaCircle: {
-    width: "70px",
-    height: "70px",
-    borderRadius: "50%",
-    border: "4px solid",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontWeight: 700,
-    fontSize: "1.2rem",
-    backgroundColor: "#FFFFFF",
-    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-    flexShrink: 0,
-    transition: "all 0.3s ease",
-    "@media (min-width: 768px)": {
-      width: "80px",
-      height: "80px",
-      fontSize: "1.3rem",
-      position: "absolute",
-      right: spacing30,
-      top: "50%",
-      transform: "translateY(-50%)",
-    },
-  },
-  gpaDeltaRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing10,
-    marginTop: spacing10,
-    flexWrap: "wrap",
-  },
-  gpaDeltaText: {
-    fontSize: "0.875rem",
-    "@media (min-width: 768px)": {
-      fontSize: "1rem",
-    },
-  },
-  card: {
-    padding: spacing20,
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.08)",
-    border: "1px solid #E5E7EB",
-    "@media (min-width: 768px)": {
-      padding: spacing30,
-    },
-  },
-  cardHeader: {
-    marginBottom: spacing20,
-    paddingBottom: spacing20,
-    borderBottom: "2px solid #E5E7EB",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  cardTitle: {
-    fontSize: "1.25rem",
-    "@media (min-width: 768px)": {
-      fontSize: "1.5rem",
-    },
-  },
-  tableContainer: {
-    display: "none",
-    "@media (min-width: 768px)": {
-      display: "block",
-      overflowX: "auto",
-    },
-  },
-  table: {
-    width: "100%",
-    tableLayout: "fixed",
-    border: "1px solid #D1D5DB",
-    borderCollapse: "collapse",
-    borderRadius: "8px",
-    overflow: "hidden",
-  },
-  headerCell: {
-    backgroundColor: "#026BC8",
-    color: "#FFFFFF",
-    fontWeight: 600,
-    textAlign: "center",
-    height: "52px",
-    borderRight: "1px solid rgba(255, 255, 255, 0.2)",
-    width: "25%",
-    fontSize: "1rem",
-  },
-  bodyCell: {
-    textAlign: "center",
-    borderBottom: "1px solid #E5E7EB",
-    borderRight: "1px solid #E5E7EB",
-    width: "25%",
-    padding: spacing20,
-  },
-  tableRow: {
-    "&:hover": {
-      backgroundColor: "#F9FAFB",
-    },
-  },
-  lastCell: {
-    borderRight: "none",
-  },
-  lowGrade: {
-    color: COLOR_CONFIG.CRITICAL,
-    fontWeight: 700,
-    fontSize: "1.1rem",
-  },
-  progressWrapper: {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing10,
-    justifyContent: "center",
-  },
-  progressBar: {
-    flexGrow: 1,
-    height: "8px",
-    borderRadius: "6px",
-    backgroundColor: "#E5E7EB",
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    transition: "width 0.3s ease",
-  },
-  mobileCardList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: spacing20,
-    "@media (min-width: 768px)": {
-      display: "none",
-    },
-  },
-  mobileCard: {
-    padding: spacing20,
-    backgroundColor: "#FFFFFF",
-    border: "1px solid #E5E7EB",
-    borderRadius: "8px",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
-  },
-  mobileCardHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: spacing20,
-    paddingBottom: spacing20,
-    borderBottom: "2px solid #E5E7EB",
-  },
-  mobileCardTitle: {
-    flex: 1,
-    paddingRight: spacing10,
-  },
-  mobileCardGrade: {
-    fontSize: "1.5rem",
-    fontWeight: 700,
-    minWidth: "50px",
-    textAlign: "right",
-  },
-  mobileCardRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: `${spacing10} 0`,
-    borderBottom: "1px solid #F3F4F6",
-    "&:last-child": {
-      borderBottom: "none",
-    },
-  },
-  mobileCardLabel: {
-    fontSize: "0.875rem",
-    fontWeight: 600,
-    color: "#6B7280",
-  },
-  mobileCardValue: {
-    fontSize: "0.875rem",
-    fontWeight: 500,
-    color: "#1F2937",
-  },
-  mobileProgressWrapper: {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing10,
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  mobileProgressBar: {
-    flexGrow: 1,
-    maxWidth: "120px",
-    height: "8px",
-    borderRadius: "6px",
-    backgroundColor: "#E5E7EB",
-    overflow: "hidden",
-  },
-  legendsContainer: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing30,
-    padding: `${spacing20} 0`,
-    marginBottom: spacing20,
-    flexWrap: "wrap",
-  },
-  gradeLegendsGroup: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    width: "100%",
-    gap: spacing20,
-    flexWrap: "wrap",
-  },
-  statusLegendsGroup: {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing20,
-    flexWrap: "wrap",
-  },
-  legendItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: spacing10,
-  },
-  legendDot: {
-    width: "12px",
-    height: "12px",
-    borderRadius: "50%",
-    flexShrink: 0,
-  },
-};
-
 /* ================= COMPONENT ================= */
-const MySuccessTrackerTable = ({ classes }) => {
+const MySuccessTrackerTable = () => {
   const [currentTerm, setCurrentTerm] = useState(null);
   const [termData, setTermData] = useState([]);
   const [currentBannerId, setCurrentBannerId] = useState(null);
@@ -652,58 +285,54 @@ const MySuccessTrackerTable = ({ classes }) => {
   };
 
   return (
-    <div className={classes.root}>
-      <div className={classes.backButtonWrapper}>
-        <Button
-          className={classes.backButton}
-          color="secondary"
-          onClick={handleBack}
-        >
-          Back
-        </Button>
-      </div>
-
-      {/* TOP BAR - TERM SELECTOR ONLY */}
-      <div className={classes.topBar}>
-        <div className={classes.termSection}>
-          <Typography className={classes.termLabel}>Select Term</Typography>
-          <Button
-            disabled={loadingTermCodes || !termCodesResult}
-            dropdown={termCodesResult
-              ?.filter((item) => !blockedTermCodes.includes(item.termCode))
-              .sort((a, b) => a.termCode.localeCompare(b.termCode))
-              .map((term) => (
-                <DropdownButtonItem
-                  key={term.termCode}
-                  onClick={() => handleTermChange(term)}
-                >
-                  {term.term}
-                </DropdownButtonItem>
-              ))}
-          >
-            {loadingTermCodes ? "Loading…" : currentTerm || "Select Term"}
-          </Button>
-        </div>
-      </div>
-
+    <div className="root">
       {/* ACADEMIC PERFORMANCE CARD */}
-      <Card className={classes.card}>
-        <div className={classes.cardHeader}>
+      <Card className="card">
+        <div className="card-header">
+          {/* TOP BAR - TERM SELECTOR ONLY */}
+          <div className="top-bar">
+            <div className="term-section">
+              <Typography className="term-label">Select Term</Typography>
+              <Button
+                disabled={loadingTermCodes || !termCodesResult}
+                dropdown={termCodesResult
+                  ?.filter((item) => !blockedTermCodes.includes(item.termCode))
+                  .sort((a, b) => a.termCode.localeCompare(b.termCode))
+                  .map((term) => (
+                    <DropdownButtonItem
+                      key={term.termCode}
+                      onClick={() => handleTermChange(term)}
+                    >
+                      {term.term}
+                    </DropdownButtonItem>
+                  ))}
+              >
+                {loadingTermCodes ? "Loading…" : currentTerm || "Select Term"}
+              </Button>
+            </div>
+          </div>
+
           <div>
             <Typography
               variant="h4"
-              className={classes.cardTitle}
+              className="card-title"
               style={{ fontWeight: 700, color: "#1F2937", textAlign: "center" }}
             >
               Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
             </Typography>
+          </div>
+
+          <div className="back-button-wrapper">
+            <Button color="secondary" onClick={handleBack}>
+              Back
+            </Button>
           </div>
         </div>
 
         {isLoading && (
           <Typography
             style={{
-              padding: spacing20,
+              padding: "20px",
               textAlign: "center",
               color: "#6B7280",
             }}
@@ -715,63 +344,68 @@ const MySuccessTrackerTable = ({ classes }) => {
         {!isLoading && (
           <>
             {/* GPA CARDS WRAPPER - NOW INSIDE ACADEMIC PERFORMANCE CARD */}
-            <div className={classes.gpaCardsWrapper}>
-              <div className={classes.legendsContainer}>
-                {/* Grade legends */}
-                <div className={classes.gradeLegendsGroup}>
-                  <Typography
-                    variant="body2"
-                    style={{ fontWeight: 500, color: "#1F2937" }}
-                  >
-                    F = Fail
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    style={{ fontWeight: 500, color: "#1F2937" }}
-                  >
-                    A, B, C, D = Letter Grades
-                  </Typography>
-                </div>
 
-                {/* Status color legends */}
-                <div className={classes.statusLegendsGroup}>
-                  <div className={classes.legendItem}>
-                    <div
-                      className={classes.legendDot}
-                      style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
-                    />
-                    <Typography variant="body2" style={{ fontWeight: 500 }}>
-                      On Track
-                    </Typography>
-                  </div>
+            <div className="gpa-cards-wrapper">
+              <div style={{ display: "flex", gap: "20px" }}>
+                <Card className="term-gpa-bar-card">
+                  <div className="legends-container">
+                    {/* Status color legends */}
+                    <div className="status-legends-group">
+                      <div className="legend-item">
+                        <div
+                          className="legend-dot"
+                          style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
+                        />
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>
+                          On Track
+                        </Typography>
+                      </div>
 
-                  <div className={classes.legendItem}>
-                    <div
-                      className={classes.legendDot}
-                      style={{ backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION }}
-                    />
-                    <Typography variant="body2" style={{ fontWeight: 500 }}>
-                      Needs Attention
-                    </Typography>
-                  </div>
+                      <div className="legend-item">
+                        <div
+                          className="legend-dot"
+                          style={{
+                            backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION,
+                          }}
+                        />
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>
+                          Needs Attention
+                        </Typography>
+                      </div>
 
-                  <div className={classes.legendItem}>
-                    <div
-                      className={classes.legendDot}
-                      style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-                    />
-                    <Typography variant="body2" style={{ fontWeight: 500 }}>
-                      Critical
-                    </Typography>
+                      <div className="legend-item">
+                        <div
+                          className="legend-dot"
+                          style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
+                        />
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>
+                          Critical
+                        </Typography>
+                      </div>
+                    </div>
+
+                    {/* Grade legends */}
+                    <div className="grade-legends-group">
+                      <Typography
+                        variant="body2"
+                        style={{ fontWeight: 500, color: "#1F2937" }}
+                      >
+                        A, B, C, D = Letter Grades
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        style={{ fontWeight: 500, color: "#1F2937" }}
+                      >
+                        F = Fail
+                      </Typography>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: spacing20 }}>
+                </Card>
                 {/* COLUMN FOR CUMULATIVE AND TERM GPA */}
-                <div className={classes.gpaCardsColumn}>
+                <div className="gpa-cards-column">
                   {/* CUMULATIVE GPA CARD */}
-                  <Card className={classes.gpaTopCard}>
-                    <div className={classes.gpaLeft}>
+                  <Card className="gpa-top-card">
+                    <div className="gpa-left">
                       <Typography
                         variant="p"
                         style={{
@@ -784,7 +418,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                       </Typography>
 
                       {gpaDelta !== "0.00" && (
-                        <div className={classes.gpaDeltaRow}>
+                        <div className="gpa-delta-row">
                           <DoubleChevronIcon
                             orientation={isPositive ? "up" : "down"}
                             size={20}
@@ -792,7 +426,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                             style={{ transform: "translateY(4px)" }}
                           />
                           <Typography
-                            className={classes.gpaDeltaText}
+                            className="gpa-delta-text"
                             style={{
                               fontWeight: 500,
                               top: "2px",
@@ -814,7 +448,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                     </div>
 
                     <div
-                      className={classes.gpaCircle}
+                      className="gpa-circle"
                       style={{
                         borderColor: gpaCircleColor,
                         color: gpaCircleColor,
@@ -825,8 +459,8 @@ const MySuccessTrackerTable = ({ classes }) => {
                   </Card>
 
                   {/* TERM GPA CARD */}
-                  <Card className={classes.termGpaCard}>
-                    <div className={classes.gpaLeft}>
+                  <Card className="term-gpa-card">
+                    <div className="gpa-left">
                       <Typography
                         variant="p"
                         style={{
@@ -843,7 +477,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                         style={{
                           fontSize: "0.875rem",
                           color: "#0C4A6E",
-                          marginTop: spacing10,
+                          marginTop: "10px",
                           fontWeight: 500,
                         }}
                       >
@@ -852,7 +486,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                     </div>
 
                     <div
-                      className={classes.gpaCircle}
+                      className="gpa-circle"
                       style={{
                         borderColor: termGpaCircleColor,
                         color: termGpaCircleColor,
@@ -864,7 +498,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                 </div>
 
                 {/* TERM GPA BAR CHART */}
-                <Card className={classes.termGpaBarCard}>
+                <Card className="term-gpa-bar-card">
                   <TermGpaBar
                     termData={termData}
                     termGpaData={termGpaData}
@@ -878,18 +512,14 @@ const MySuccessTrackerTable = ({ classes }) => {
 
         {/* DESKTOP TABLE VIEW */}
         {!isLoading && (
-          <div className={classes.tableContainer}>
-            <Table className={classes.table}>
+          <div className="table-container">
+            <Table className="table">
               <TableHead>
                 <TableRow>
-                  <TableCell className={classes.headerCell}>Course</TableCell>
-                  <TableCell className={classes.headerCell}>Grade</TableCell>
-                  <TableCell className={classes.headerCell}>
-                    Credits Earned
-                  </TableCell>
-                  <TableCell
-                    className={`${classes.headerCell} ${classes.lastCell}`}
-                  >
+                  <TableCell className="header-cell">Course</TableCell>
+                  <TableCell className="header-cell">Grade</TableCell>
+                  <TableCell className="header-cell">Credits Earned</TableCell>
+                  <TableCell className="header-cell last-cell">
                     Attendance
                   </TableCell>
                 </TableRow>
@@ -897,7 +527,7 @@ const MySuccessTrackerTable = ({ classes }) => {
               <TableBody>
                 {loadingCourseData ? (
                   <TableRow>
-                    <TableCell colSpan={4} className={classes.bodyCell}>
+                    <TableCell colSpan={4} className="body-cell">
                       <Typography
                         style={{ color: "#6B7280", fontStyle: "italic" }}
                       >
@@ -921,11 +551,8 @@ const MySuccessTrackerTable = ({ classes }) => {
                         : "N/A";
 
                     return (
-                      <TableRow
-                        key={row.crn || index}
-                        className={classes.tableRow}
-                      >
-                        <TableCell className={classes.bodyCell}>
+                      <TableRow key={row.crn || index} className="table-row">
+                        <TableCell className="body-cell">
                           <Typography variant="body2">
                             {row.subjectCode}-{row.courseNumber}
                           </Typography>
@@ -938,24 +565,22 @@ const MySuccessTrackerTable = ({ classes }) => {
                         </TableCell>
 
                         <TableCell
-                          className={`${classes.bodyCell} ${isLowGrade ? classes.lowGrade : ""}`}
+                          className={`body-cell ${isLowGrade ? "low-grade" : ""}`}
                         >
                           {row?.grade}
                         </TableCell>
 
-                        <TableCell className={classes.bodyCell}>
+                        <TableCell className="body-cell">
                           <Typography variant="body2">{row?.credit}</Typography>
                         </TableCell>
 
-                        <TableCell
-                          className={`${classes.bodyCell} ${classes.lastCell}`}
-                        >
-                          <div className={classes.progressWrapper}>
+                        <TableCell className="body-cell last-cell">
+                          <div className="progress-wrapper">
                             {row.attendancePercentage !== null ? (
                               <>
-                                <div className={classes.progressBar}>
+                                <div className="progress-bar">
                                   <div
-                                    className={classes.progressFill}
+                                    className="progress-fill"
                                     style={{
                                       width: `${row.attendancePercentage}%`,
                                       backgroundColor: attendanceColor,
@@ -993,14 +618,14 @@ const MySuccessTrackerTable = ({ classes }) => {
 
         {/* MOBILE CARD VIEW */}
         {!isLoading && (
-          <div className={classes.mobileCardList}>
+          <div className="mobile-card-list">
             {courseData.length === 0 ? (
               <Typography
                 style={{
                   textAlign: "center",
                   color: "#6B7280",
                   fontStyle: "italic",
-                  padding: spacing30,
+                  padding: "30px",
                 }}
               >
                 {loadingCourseData
@@ -1019,10 +644,10 @@ const MySuccessTrackerTable = ({ classes }) => {
                     : "N/A";
 
                 return (
-                  <div key={row.crn || index} className={classes.mobileCard}>
+                  <div key={row.crn || index} className="mobile-card">
                     {/* Header with course and grade */}
-                    <div className={classes.mobileCardHeader}>
-                      <div className={classes.mobileCardTitle}>
+                    <div className="mobile-card-header">
+                      <div className="mobile-card-title">
                         <Typography
                           variant="body1"
                           style={{ fontWeight: 700, marginBottom: "4px" }}
@@ -1037,7 +662,7 @@ const MySuccessTrackerTable = ({ classes }) => {
                         </Typography>
                       </div>
                       <div
-                        className={classes.mobileCardGrade}
+                        className="mobile-card-grade"
                         style={{
                           color: isLowGrade ? COLOR_CONFIG.CRITICAL : "#1F2937",
                         }}
@@ -1047,24 +672,20 @@ const MySuccessTrackerTable = ({ classes }) => {
                     </div>
 
                     {/* Credits row */}
-                    <div className={classes.mobileCardRow}>
-                      <span className={classes.mobileCardLabel}>Credits</span>
-                      <span className={classes.mobileCardValue}>
-                        {row.credit}
-                      </span>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Credits</span>
+                      <span className="mobile-card-value">{row.credit}</span>
                     </div>
 
                     {/* Attendance row */}
-                    <div className={classes.mobileCardRow}>
-                      <span className={classes.mobileCardLabel}>
-                        Attendance
-                      </span>
-                      <div className={classes.mobileProgressWrapper}>
+                    <div className="mobile-card-row">
+                      <span className="mobile-card-label">Attendance</span>
+                      <div className="mobile-progress-wrapper">
                         {row.attendancePercentage !== null ? (
                           <>
-                            <div className={classes.mobileProgressBar}>
+                            <div className="mobile-progress-bar">
                               <div
-                                className={classes.progressFill}
+                                className="progress-fill"
                                 style={{
                                   width: `${row.attendancePercentage}%`,
                                   backgroundColor: attendanceColor,
@@ -1108,7 +729,7 @@ const MySuccessTrackerTable = ({ classes }) => {
 };
 
 MySuccessTrackerTable.propTypes = {
-  classes: PropTypes.object.isRequired,
+  classes: PropTypes.object,
 };
 
-export default withStyles(styles)(MySuccessTrackerTable);
+export default MySuccessTrackerTable;
