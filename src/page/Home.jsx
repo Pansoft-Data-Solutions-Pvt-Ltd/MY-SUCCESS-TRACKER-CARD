@@ -288,48 +288,48 @@ const MySuccessTrackerTable = () => {
     <div className="root">
       {/* ACADEMIC PERFORMANCE CARD */}
       <Card className="card">
-       <div className="card-header">
-  {/* BACK BUTTON - LEFT */}
-  <div className="back-button-wrapper">
-    <Button color="secondary" onClick={handleBack}>
-      Back
-    </Button>
-  </div>
+        <div className="card-header">
+          {/* BACK BUTTON - LEFT */}
+          <div className="back-button-wrapper">
+            <Button color="secondary" onClick={handleBack}>
+              Back
+            </Button>
+          </div>
 
-  {/* TITLE - CENTER */}
-  <div>
-    <Typography
-      variant="h4"
-      className="card-title"
-      style={{ fontWeight: 700, color: "#1F2937", textAlign: "center" }}
-    >
-      Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
-    </Typography>
-  </div>
-
-  {/* SELECT TERM - RIGHT */}
-  <div className="top-bar">
-    <div className="term-section">
-      <Typography className="term-label">Select Term</Typography>
-      <Button
-        disabled={loadingTermCodes || !termCodesResult}
-        dropdown={termCodesResult
-          ?.filter((item) => !blockedTermCodes.includes(item.termCode))
-          .sort((a, b) => a.termCode.localeCompare(b.termCode))
-          .map((term) => (
-            <DropdownButtonItem
-              key={term.termCode}
-              onClick={() => handleTermChange(term)}
+          {/* TITLE - CENTER */}
+          <div>
+            <Typography
+              variant="h4"
+              className="card-title"
+              style={{ fontWeight: 700, color: "#1F2937", textAlign: "center" }}
             >
-              {term.term}
-            </DropdownButtonItem>
-          ))}
-      >
-        {loadingTermCodes ? "Loading…" : currentTerm || "Select Term"}
-      </Button>
-    </div>
-  </div>
-</div>
+              Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
+            </Typography>
+          </div>
+
+          {/* SELECT TERM - RIGHT */}
+          <div className="top-bar">
+            <div className="term-section">
+              <Typography className="term-label">Select Term</Typography>
+              <Button
+                disabled={loadingTermCodes || !termCodesResult}
+                dropdown={termCodesResult
+                  ?.filter((item) => !blockedTermCodes.includes(item.termCode))
+                  .sort((a, b) => a.termCode.localeCompare(b.termCode))
+                  .map((term) => (
+                    <DropdownButtonItem
+                      key={term.termCode}
+                      onClick={() => handleTermChange(term)}
+                    >
+                      {term.term}
+                    </DropdownButtonItem>
+                  ))}
+              >
+                {loadingTermCodes ? "Loading…" : currentTerm || "Select Term"}
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {isLoading && (
           <Typography
@@ -349,9 +349,104 @@ const MySuccessTrackerTable = () => {
 
             <div className="gpa-cards-wrapper">
               <div style={{ display: "flex", gap: "70px" }}>
-                <div className="legends-container">
-                  {/* Status color legends - TOP SECTION */}
-                  <div className="status-legends-group">
+                {/* COLUMN FOR CUMULATIVE AND TERM GPA */}
+                <div className="gpa-cards-column">
+                  <div style={{ display: 'flex', gap: '20px' }}>
+                    {/* CUMULATIVE GPA CARD */}
+                    <Card className="gpa-top-card">
+                      <div className="gpa-left">
+                        <Typography
+                          variant="p"
+                          style={{
+                            fontSize: "1.05rem",
+                            fontWeight: 700,
+                            color: "#1F2937",
+                          }}
+                        >
+                          Cumulative GPA
+                        </Typography>
+
+                        {gpaDelta !== "0.00" && (
+                          <div className="gpa-delta-row">
+                            <DoubleChevronIcon
+                              orientation={isPositive ? "up" : "down"}
+                              size={20}
+                              backgroundColor={deltaColor}
+                              style={{ transform: "translateY(4px)" }}
+                            />
+                            <Typography
+                              className="gpa-delta-text"
+                              style={{
+                                fontWeight: 500,
+                                top: "2px",
+                                position: "relative",
+                              }}
+                            >
+                              <span
+                                style={{ color: deltaColor, fontWeight: 700 }}
+                              >
+                                {gpaDelta}
+                              </span>
+                              <span style={{ marginLeft: 3, color: "#6B7280" }}>
+                                {" "}
+                                From Last Term
+                              </span>
+                            </Typography>
+                          </div>
+                        )}
+                      </div>
+
+                      <div
+                        className="gpa-circle"
+                        style={{
+                          borderColor: gpaCircleColor,
+                          color: gpaCircleColor,
+                        }}
+                      >
+                        {loadingTermInformation ? "..." : currentGpa.toFixed(2)}
+                      </div>
+                    </Card>
+
+                    {/* TERM GPA CARD */}
+                    <Card className="term-gpa-card">
+                      <div className="gpa-left">
+                        <Typography
+                          variant="p"
+                          style={{
+                            fontSize: "1.05rem",
+                            fontWeight: 700,
+                            color: "#0369A1",
+                          }}
+                        >
+                          Term GPA
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
+                          style={{
+                            fontSize: "0.875rem",
+                            color: "#0C4A6E",
+                            marginTop: "10px",
+                            fontWeight: 500,
+                          }}
+                        >
+                          Current term performance
+                        </Typography>
+                      </div>
+
+                      <div
+                        className="gpa-circle"
+                        style={{
+                          borderColor: termGpaCircleColor,
+                          color: termGpaCircleColor,
+                        }}
+                      >
+                        {loadingTermInformation ? "..." : termGpa}
+                      </div>
+                    </Card>
+                  </div>
+                  <div className="legends-container">
+                    {/* Status color legends - TOP SECTION */}
                     <div className="legend-item">
                       <div
                         className="legend-dot"
@@ -383,10 +478,8 @@ const MySuccessTrackerTable = () => {
                         Critical
                       </Typography>
                     </div>
-                  </div>
 
-                  {/* Grade legends - MIDDLE SECTION */}
-                  <div className="grade-legends-group">
+                    {/* Grade legends - MIDDLE SECTION */}
                     <Typography
                       variant="body2"
                       style={{ fontWeight: 500, color: "#1F2937" }}
@@ -399,10 +492,8 @@ const MySuccessTrackerTable = () => {
                     >
                       F = Fail
                     </Typography>
-                  </div>
 
-                  {/* N/A - BOTTOM SECTION */}
-                  <div className="na-legend-group">
+                    {/* N/A - BOTTOM SECTION */}
                     <Typography
                       variant="body2"
                       style={{ fontWeight: 500, color: "#03060c" }}
@@ -410,101 +501,6 @@ const MySuccessTrackerTable = () => {
                       N/A = Not Applicable
                     </Typography>
                   </div>
-                </div>
-                {/* COLUMN FOR CUMULATIVE AND TERM GPA */}
-                <div className="gpa-cards-column">
-                  {/* CUMULATIVE GPA CARD */}
-                  <Card className="gpa-top-card">
-                    <div className="gpa-left">
-                      <Typography
-                        variant="p"
-                        style={{
-                          fontSize: "1.05rem",
-                          fontWeight: 700,
-                          color: "#1F2937",
-                        }}
-                      >
-                        Cumulative GPA
-                      </Typography>
-
-                      {gpaDelta !== "0.00" && (
-                        <div className="gpa-delta-row">
-                          <DoubleChevronIcon
-                            orientation={isPositive ? "up" : "down"}
-                            size={20}
-                            backgroundColor={deltaColor}
-                            style={{ transform: "translateY(4px)" }}
-                          />
-                          <Typography
-                            className="gpa-delta-text"
-                            style={{
-                              fontWeight: 500,
-                              top: "2px",
-                              position: "relative",
-                            }}
-                          >
-                            <span
-                              style={{ color: deltaColor, fontWeight: 700 }}
-                            >
-                              {gpaDelta}
-                            </span>
-                            <span style={{ marginLeft: 3, color: "#6B7280" }}>
-                              {" "}
-                              From Last Term
-                            </span>
-                          </Typography>
-                        </div>
-                      )}
-                    </div>
-
-                    <div
-                      className="gpa-circle"
-                      style={{
-                        borderColor: gpaCircleColor,
-                        color: gpaCircleColor,
-                      }}
-                    >
-                      {loadingTermInformation ? "..." : currentGpa.toFixed(2)}
-                    </div>
-                  </Card>
-
-                  {/* TERM GPA CARD */}
-                  <Card className="term-gpa-card">
-                    <div className="gpa-left">
-                      <Typography
-                        variant="p"
-                        style={{
-                          fontSize: "1.05rem",
-                          fontWeight: 700,
-                          color: "#0369A1",
-                        }}
-                      >
-                        Term GPA
-                      </Typography>
-
-                      <Typography
-                        variant="body2"
-                        style={{
-                          fontSize: "0.875rem",
-                          color: "#0C4A6E",
-                          marginTop: "10px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        Current term performance
-                      </Typography>
-                    </div>
-
-                    <div
-                      className="gpa-circle"
-                      style={{
-                        borderColor: termGpaCircleColor,
-                        color: termGpaCircleColor,
-                      }}
-                    >
-                      {loadingTermInformation ? "..." : termGpa}
-                    </div>
-                  </Card>
                 </div>
 
                 {/* TERM GPA BAR CHART */}
