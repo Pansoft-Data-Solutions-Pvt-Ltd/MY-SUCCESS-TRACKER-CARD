@@ -81,17 +81,6 @@ const MySuccessTrackerTable = () => {
     cardId,
   );
 
-  // const latestTermCode = useMemo(() => {
-  //   if (!termCodesResult || termCodesResult.length === 0) return null;
-  //
-  //   const filtered = termCodesResult
-  //     .filter((item) => !blockedTermCodes.includes(item.termCode))
-  //     .sort((a, b) => a.termCode.localeCompare(b.termCode));
-  //
-  //   return filtered[filtered.length - 1]?.termCode || null;
-  // }, [termCodesResult]);
-  // const isCurrentTerm = currentTermCode === latestTermCode;
-
   // Fetch and filter term codes
   useEffect(() => {
     getStudentTermCodes().then((data) => {
@@ -274,6 +263,16 @@ const MySuccessTrackerTable = () => {
     setCurrentBannerId(term.bannerId);
   };
 
+  // Derive whether the currently selected term is the very first (earliest) term
+  const isFirstTerm = useMemo(() => {
+    if (!termCodesResult || termCodesResult.length === 0) return false;
+    const sorted = termCodesResult
+      .filter((item) => !blockedTermCodes.includes(item.termCode))
+      .sort((a, b) => a.termCode.localeCompare(b.termCode));
+    return sorted[0]?.termCode === currentTermCode;
+  }, [termCodesResult, currentTermCode]);
+
+  const isZeroDelta = parseFloat(gpaDelta) === 0;
   const isPositive = gpaDelta >= 0;
   const gpaCircleColor = getGpaCircleColor(currentGpa);
   const termGpaCircleColor = getGpaCircleColor(termGpa);
@@ -348,10 +347,17 @@ const MySuccessTrackerTable = () => {
             {/* GPA CARDS WRAPPER - NOW INSIDE ACADEMIC PERFORMANCE CARD */}
 
             <div className="gpa-cards-wrapper">
-              <div style={{ display: "flex", gap: "70px", justifyContent: "space-between", width: "100%" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "70px",
+                  justifyContent: "space-between",
+                  width: "100%",
+                }}
+              >
                 {/* COLUMN FOR CUMULATIVE AND TERM GPA */}
                 <div className="gpa-cards-column">
-                  <div style={{ display: 'flex', gap: '20px' }}>
+                  <div style={{ display: "flex", gap: "20px" }}>
                     {/* CUMULATIVE GPA CARD */}
                     <Card className="gpa-top-card">
                       <div className="gpa-left">
@@ -366,32 +372,58 @@ const MySuccessTrackerTable = () => {
                           Cumulative GPA
                         </Typography>
 
-                        {gpaDelta !== "0.00" && (
+                        {/* 
+                          Delta display rules:
+                          - First term → hide entirely (no previous term to compare)
+                          - Any other term, delta = 0 → "Same as Last Term"
+                          - Any other term, delta ≠ 0 → chevron + coloured value
+                        */}
+                        {!isFirstTerm && (
                           <div className="gpa-delta-row">
-                            <DoubleChevronIcon
-                              orientation={isPositive ? "up" : "down"}
-                              size={20}
-                              backgroundColor={deltaColor}
-                              style={{ transform: "translateY(4px)" }}
-                            />
-                            <Typography
-                              className="gpa-delta-text"
-                              style={{
-                                fontWeight: 500,
-                                top: "2px",
-                                position: "relative",
-                              }}
-                            >
-                              <span
-                                style={{ color: deltaColor, fontWeight: 700 }}
+                            {isZeroDelta ? (
+                              <Typography
+                                className="gpa-delta-text"
+                                style={{ fontWeight: 500 }}
                               >
-                                {gpaDelta}
-                              </span>
-                              <span style={{ marginLeft: 3, color: "#6B7280" }}>
-                                {" "}
-                                From Last Term
-                              </span>
-                            </Typography>
+                                <span
+                                  style={{ color: "#6B7280", fontWeight: 700 }}
+                                >
+                                  Same as Last Term
+                                </span>
+                              </Typography>
+                            ) : (
+                              <>
+                                <DoubleChevronIcon
+                                  orientation={isPositive ? "up" : "down"}
+                                  size={20}
+                                  backgroundColor={deltaColor}
+                                  style={{ transform: "translateY(4px)" }}
+                                />
+                                <Typography
+                                  className="gpa-delta-text"
+                                  style={{
+                                    fontWeight: 500,
+                                    top: "2px",
+                                    position: "relative",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      color: deltaColor,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {gpaDelta}
+                                  </span>
+                                  <span
+                                    style={{ marginLeft: 3, color: "#6B7280" }}
+                                  >
+                                    {" "}
+                                    From Last Term
+                                  </span>
+                                </Typography>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
@@ -448,7 +480,6 @@ const MySuccessTrackerTable = () => {
                   <div className="legends-container">
                     {/* Status color legends - TOP SECTION */}
                     <div style={{ display: "flex", gap: "10px" }}>
-                      
                       <div className="legend-item">
                         <div
                           className="legend-dot"
@@ -564,17 +595,17 @@ const MySuccessTrackerTable = () => {
                     return (
                       <TableRow key={row.crn || index} className="table-row">
                         <TableCell className="body-cell">
-                            <div style={{display: "flex", gap: "10px"}}>
-                              <Typography variant="body2">
-                                {row.subjectCode}-{row.courseNumber}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                style={{ color: "#6B7280" }}
-                              >
-                                {row.courseTitle}
-                              </Typography>
-                            </div>
+                          <div style={{ display: "flex", gap: "10px" }}>
+                            <Typography variant="body2">
+                              {row.subjectCode}-{row.courseNumber}
+                            </Typography>
+                            <Typography
+                              variant="caption"
+                              style={{ color: "#6B7280" }}
+                            >
+                              {row.courseTitle}
+                            </Typography>
+                          </div>
                         </TableCell>
 
                         <TableCell
