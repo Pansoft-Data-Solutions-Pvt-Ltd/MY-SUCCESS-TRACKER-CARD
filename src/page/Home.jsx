@@ -81,16 +81,16 @@ const MySuccessTrackerTable = () => {
     cardId,
   );
 
-  const latestTermCode = useMemo(() => {
-    if (!termCodesResult || termCodesResult.length === 0) return null;
-
-    const filtered = termCodesResult
-      .filter((item) => !blockedTermCodes.includes(item.termCode))
-      .sort((a, b) => a.termCode.localeCompare(b.termCode));
-
-    return filtered[filtered.length - 1]?.termCode || null;
-  }, [termCodesResult]);
-  const isCurrentTerm = currentTermCode === latestTermCode;
+  // const latestTermCode = useMemo(() => {
+  //   if (!termCodesResult || termCodesResult.length === 0) return null;
+  //
+  //   const filtered = termCodesResult
+  //     .filter((item) => !blockedTermCodes.includes(item.termCode))
+  //     .sort((a, b) => a.termCode.localeCompare(b.termCode));
+  //
+  //   return filtered[filtered.length - 1]?.termCode || null;
+  // }, [termCodesResult]);
+  // const isCurrentTerm = currentTermCode === latestTermCode;
 
   // Fetch and filter term codes
   useEffect(() => {

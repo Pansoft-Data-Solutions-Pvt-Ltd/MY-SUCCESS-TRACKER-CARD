@@ -5,7 +5,7 @@ import { useCardInfo, useData } from "@ellucian/experience-extension-utils";
 import PropTypes from "prop-types";
 import React, { useState, useEffect } from "react";
 import SvgHollowCircle from "../components/SvgHollowCircle.jsx";
-import DoubleChevronIcon from "../components/DoubleChevron.jsx";
+// import DoubleChevronIcon from "../components/DoubleChevron.jsx";
 import useGetLatestTermInformation from "../hooks/useGetLatestTermInformation";
 
 /* ================= CONFIG ================= */
@@ -173,7 +173,7 @@ const MySuccessTrackerCard = ({ classes }) => {
   const [currentGpa, setCurrentGpa] = useState(0);
   const [termName, setTermName] = useState("");
   // const [termGpa, setTermGpa] = useState(0);
-  const [gpaDelta, setGpaDelta] = useState(0);
+  // const [gpaDelta, setGpaDelta] = useState(0);
   // const [termCode, setTermCode] = useState(null);
   // const [bannerId, setBannerId] = useState(null);
   const [attendanceData, setAttendanceData] = useState([]);
@@ -192,7 +192,7 @@ const MySuccessTrackerCard = ({ classes }) => {
           setCurrentGpa(cumGpa);
           // setTermGpa(trmGpa);
 
-          setGpaDelta(data.cgpaDifference);
+          // setGpaDelta(data.cgpaDifference);
 
           // Store term code and banner ID for attendance calls
           // setTermCode(data.termCode);
@@ -209,8 +209,8 @@ const MySuccessTrackerCard = ({ classes }) => {
   }, [getStudentDetails]);
 
   const gpaCircleColor = getGpaCircleColor(currentGpa);
-  const isPositive = gpaDelta >= 0;
-  const deltaColor = isPositive ? COLOR_CONFIG.ON_TRACK : COLOR_CONFIG.CRITICAL;
+  // const isPositive = gpaDelta >= 0;
+  // const deltaColor = isPositive ? COLOR_CONFIG.ON_TRACK : COLOR_CONFIG.CRITICAL;
 
   return (
     <div className={classes.card}>
