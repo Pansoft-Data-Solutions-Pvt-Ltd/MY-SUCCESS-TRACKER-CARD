@@ -1,6 +1,5 @@
 import { Typography } from "@ellucian/react-design-system/core";
 import { useCardInfo, useData } from "@ellucian/experience-extension-utils";
-import PropTypes from "prop-types";
 import React, { useState, useEffect } from "react";
 import DoubleChevronIcon from "../components/DoubleChevron";
 import useGetLatestTermInformation from "../hooks/useGetLatestTermInformation";
@@ -46,7 +45,7 @@ const MySuccessTrackerCard = () => {
   const [currentGpa, setCurrentGpa] = useState(null);
   const [avgAttendance, setAvgAttendance] = useState(null);
   const [termName, setTermName] = useState("");
-  const [attendanceData, setAttendanceData] = useState([]);
+  // const [attendanceData, setAttendanceData] = useState([]);
   const [diffAttendance, setDiffAttendance] = useState(null);
 
   const { getStudentDetails, loadingLatestTermInformation } =
@@ -59,7 +58,7 @@ const MySuccessTrackerCard = () => {
           const cumGpa = parseFloat(data.cumulativeGpa) || 0;
           setCurrentGpa(cumGpa);
           setTermName(data.termName);
-          setAttendanceData(data.termInformation);
+          // setAttendanceData(data.termInformation);
           setAvgAttendance(data.averageAttendancePercentage);
           setDiffAttendance(data.differenceInAttendance);
         }
