@@ -1,0 +1,163 @@
+/* ================= LAYOUT ================= */
+.card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.cardBody {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+@media (max-width: 960px) {
+  .cardBody {
+    flex-direction: column;
+  }
+}
+
+/* ================= METRIC SECTIONS ================= */
+.metricSection {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.metricHeading {
+  padding-top: 0.75rem;
+  text-align: center;
+}
+
+.metricCircleArea {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.metricFooter {
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 0.5rem;
+}
+
+.termName {
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+}
+
+/* ================= CIRCLE ================= */
+.circleWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.metricCircle {
+  width: clamp(5rem, 20vw, 7rem);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.3s ease;
+}
+
+.metricValue {
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
+  user-select: none;
+}
+
+.subLabel {
+  font-size: 0.72rem;
+  color: #666;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ================= ATTENDANCE LIST ================= */
+.attendanceSection {
+  flex: 2;
+  min-width: 0;
+  padding-left: 0.25rem;
+  padding-right: 0.5rem;
+  overflow: visible;
+}
+
+.attendanceHeader {
+  margin-bottom: 0.25rem;
+}
+
+.iconText {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.attendanceList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.attendanceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  gap: 0.5rem;
+  min-height: 32px;
+}
+
+.attendanceRow:last-child {
+  border-bottom: none;
+}
+
+@media (max-width: 600px) {
+  .attendanceRow {
+    padding: 0.5rem;
+    gap: 0.5rem;
+    min-height: 40px;
+  }
+}
+
+.courseName {
+  flex: 1;
+  font-size: 0.7rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+@media (max-width: 600px) {
+  .courseName {
+    font-size: 0.75rem;
+  }
+}
+
+.attendancePercentage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 400;
+  flex-shrink: 0;
+}
