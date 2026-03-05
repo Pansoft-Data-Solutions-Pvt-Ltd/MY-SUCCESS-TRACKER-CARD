@@ -54,6 +54,8 @@ const MySuccessTrackerTable = () => {
   const [termGpaData, setTermGpaData] = useState([]);
   const [loadingAllTermGpas, setLoadingAllTermGpas] = useState(false);
   const [initialCourseData, setInitialCourseData] = useState([]);
+  const [avgAttendance, setAvgAttendance] = useState(null);
+  const [diffAttendance, setDiffAttendance] = useState(null);
 
   const { authenticatedEthosFetch } = useData();
   const { cardId } = useCardInfo();
@@ -109,8 +111,9 @@ const MySuccessTrackerTable = () => {
         setTermGpa(trmGpa);
         setCurrentBannerId(data?.bannerId);
         setGpaDelta(data?.cgpaDifference);
+        setAvgAttendance(data?.averageAttendancePercentage ?? null);
+        setDiffAttendance(data?.differenceInAttendance ?? null);
 
-        // Set the initial course data from termInformation
         if (Array.isArray(data?.termInformation)) {
           setInitialCourseData(data.termInformation);
         } else {
@@ -120,6 +123,8 @@ const MySuccessTrackerTable = () => {
       .catch(() => {
         setCurrentGpa(0);
         setTermGpa(0);
+        setAvgAttendance(null);
+        setDiffAttendance(null);
         setInitialCourseData([]);
       });
   }, [currentTermCode, currentTerm, getStudentDetails, termCodesResult]);
@@ -130,7 +135,6 @@ const MySuccessTrackerTable = () => {
 
     const fetchAllTermGpas = async () => {
       setLoadingAllTermGpas(true);
-
       try {
         const filteredTerms = termCodesResult
           .filter((item) => !blockedTermCodes.includes(item.termCode))
@@ -171,7 +175,7 @@ const MySuccessTrackerTable = () => {
     fetchAllTermGpas();
   }, [termCodesResult, getStudentDetails]);
 
-  // Fetch academic performance data for each course in courseData
+  // Fetch academic performance data for each course
   useEffect(() => {
     if (
       !initialCourseData ||
@@ -185,7 +189,6 @@ const MySuccessTrackerTable = () => {
 
     const fetchAcademicPerformanceData = async () => {
       setLoadingCourseData(true);
-
       try {
         const performancePromises = initialCourseData.map(async (course) => {
           try {
@@ -194,7 +197,6 @@ const MySuccessTrackerTable = () => {
               crn: course.crn,
               bannerId: currentBannerId,
             });
-
             return {
               courseNumber: course.courseNumber,
               subjectCode: course.subjectCode,
@@ -217,7 +219,7 @@ const MySuccessTrackerTable = () => {
               courseNumber: "-",
               subjectCode: "-",
               courseTitle: course.courseTitle || "-",
-              attendancePercentance: null,
+              attendancePercentage: null,
               grade: "-",
               credit: course.credit || "-",
               gradeMode: "-",
@@ -243,7 +245,7 @@ const MySuccessTrackerTable = () => {
   ]);
 
   const getStatusColor = (value) => {
-    if (value === null) return "#999";
+    if (value === null || value === undefined) return "#999";
     if (value >= TABLE_CONFIG.attendanceGood) return COLOR_CONFIG.ON_TRACK;
     if (value >= TABLE_CONFIG.attendanceWarning)
       return COLOR_CONFIG.NEEDS_ATTENTION;
@@ -263,7 +265,6 @@ const MySuccessTrackerTable = () => {
     setCurrentBannerId(term.bannerId);
   };
 
-  // Derive whether the currently selected term is the very first (earliest) term
   const isFirstTerm = useMemo(() => {
     if (!termCodesResult || termCodesResult.length === 0) return false;
     const sorted = termCodesResult
@@ -276,7 +277,16 @@ const MySuccessTrackerTable = () => {
   const isPositive = gpaDelta >= 0;
   const gpaCircleColor = getGpaCircleColor(currentGpa);
   const termGpaCircleColor = getGpaCircleColor(termGpa);
+  const attendanceCircleColor = getStatusColor(avgAttendance);
   const deltaColor = isPositive ? COLOR_CONFIG.ON_TRACK : COLOR_CONFIG.CRITICAL;
+
+  const attendanceDiff = parseFloat(diffAttendance);
+  const isZeroAttendanceDiff = attendanceDiff === 0;
+  const isPositiveAttendanceDiff = attendanceDiff > 0;
+  const attendanceDiffColor = isPositiveAttendanceDiff
+    ? COLOR_CONFIG.ON_TRACK
+    : COLOR_CONFIG.CRITICAL;
+
   const isLoading = loadingTermInformation;
 
   const handleBack = () => {
@@ -285,17 +295,14 @@ const MySuccessTrackerTable = () => {
 
   return (
     <div className="root">
-      {/* ACADEMIC PERFORMANCE CARD */}
       <Card className="card">
         <div className="card-header">
-          {/* BACK BUTTON - LEFT */}
           <div className="back-button-wrapper">
             <Button color="secondary" onClick={handleBack}>
               Back
             </Button>
           </div>
 
-          {/* TITLE - CENTER */}
           <div>
             <Typography
               variant="h4"
@@ -306,7 +313,6 @@ const MySuccessTrackerTable = () => {
             </Typography>
           </div>
 
-          {/* SELECT TERM - RIGHT */}
           <div className="top-bar">
             <div className="term-section">
               <Typography className="term-label">Select Term</Typography>
@@ -332,11 +338,7 @@ const MySuccessTrackerTable = () => {
 
         {isLoading && (
           <Typography
-            style={{
-              padding: "20px",
-              textAlign: "center",
-              color: "#02050c",
-            }}
+            style={{ padding: "20px", textAlign: "center", color: "#02050c" }}
           >
             Loading student details...
           </Typography>
@@ -344,8 +346,6 @@ const MySuccessTrackerTable = () => {
 
         {!isLoading && (
           <>
-            {/* GPA CARDS WRAPPER - NOW INSIDE ACADEMIC PERFORMANCE CARD */}
-
             <div className="gpa-cards-wrapper">
               <div
                 style={{
@@ -355,7 +355,7 @@ const MySuccessTrackerTable = () => {
                   width: "100%",
                 }}
               >
-                {/* COLUMN FOR CUMULATIVE AND TERM GPA */}
+                {/* COLUMN FOR CUMULATIVE GPA, TERM GPA, TERM ATTENDANCE */}
                 <div className="gpa-cards-column">
                   <div style={{ display: "flex", gap: "20px" }}>
                     {/* CUMULATIVE GPA CARD */}
@@ -371,13 +371,6 @@ const MySuccessTrackerTable = () => {
                         >
                           Cumulative GPA
                         </Typography>
-
-                        {/* 
-                          Delta display rules:
-                          - First term → hide entirely (no previous term to compare)
-                          - Any other term, delta = 0 → "Same as Last Term"
-                          - Any other term, delta ≠ 0 → chevron + coloured value
-                        */}
                         {!isFirstTerm && (
                           <div className="gpa-delta-row">
                             {isZeroDelta ? (
@@ -427,7 +420,6 @@ const MySuccessTrackerTable = () => {
                           </div>
                         )}
                       </div>
-
                       <div
                         className="gpa-circle"
                         style={{
@@ -452,7 +444,6 @@ const MySuccessTrackerTable = () => {
                         >
                           Term GPA
                         </Typography>
-
                         <Typography
                           variant="body2"
                           style={{
@@ -465,7 +456,6 @@ const MySuccessTrackerTable = () => {
                           Current term performance
                         </Typography>
                       </div>
-
                       <div
                         className="gpa-circle"
                         style={{
@@ -476,9 +466,88 @@ const MySuccessTrackerTable = () => {
                         {loadingTermInformation ? "..." : termGpa}
                       </div>
                     </Card>
+
+                    {/* TERM ATTENDANCE CARD */}
+                    <Card className="term-attendance-card">
+                      <div className="gpa-left">
+                        <Typography
+                          variant="p"
+                          style={{
+                            fontSize: "1.05rem",
+                            fontWeight: 700,
+                            color: "#065F46",
+                          }}
+                        >
+                          Term Attendance
+                        </Typography>
+                        {!isFirstTerm && diffAttendance != null && (
+                          <div className="gpa-delta-row">
+                            {isZeroAttendanceDiff ? (
+                              <Typography
+                                className="gpa-delta-text"
+                                style={{ fontWeight: 500 }}
+                              >
+                                <span
+                                  style={{ color: "#6B7280", fontWeight: 700 }}
+                                >
+                                  Same as Last Term
+                                </span>
+                              </Typography>
+                            ) : (
+                              <>
+                                <DoubleChevronIcon
+                                  orientation={
+                                    isPositiveAttendanceDiff ? "up" : "down"
+                                  }
+                                  size={20}
+                                  backgroundColor={attendanceDiffColor}
+                                  style={{ transform: "translateY(4px)" }}
+                                />
+                                <Typography
+                                  className="gpa-delta-text"
+                                  style={{
+                                    fontWeight: 500,
+                                    top: "2px",
+                                    position: "relative",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      color: attendanceDiffColor,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {Math.abs(attendanceDiff)}%
+                                  </span>
+                                  <span
+                                    style={{ marginLeft: 3, color: "#6B7280" }}
+                                  >
+                                    {" "}
+                                    From Last Term
+                                  </span>
+                                </Typography>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <div
+                        className="gpa-circle"
+                        style={{
+                          borderColor: attendanceCircleColor,
+                          color: attendanceCircleColor,
+                        }}
+                      >
+                        {loadingTermInformation
+                          ? "..."
+                          : avgAttendance != null
+                            ? `${avgAttendance}%`
+                            : "N/A"}
+                      </div>
+                    </Card>
                   </div>
+
                   <div className="legends-container">
-                    {/* Status color legends - TOP SECTION */}
                     <div style={{ display: "flex", gap: "10px" }}>
                       <div className="legend-item">
                         <div
@@ -489,7 +558,6 @@ const MySuccessTrackerTable = () => {
                           On Track
                         </Typography>
                       </div>
-
                       <div className="legend-item">
                         <div
                           className="legend-dot"
@@ -501,7 +569,6 @@ const MySuccessTrackerTable = () => {
                           Needs Attention
                         </Typography>
                       </div>
-
                       <div className="legend-item">
                         <div
                           className="legend-dot"
@@ -512,8 +579,6 @@ const MySuccessTrackerTable = () => {
                         </Typography>
                       </div>
                     </div>
-
-                    {/* Grade legends - MIDDLE SECTION */}
                     <div style={{ display: "flex", gap: "10px" }}>
                       <Typography
                         variant="body2"
@@ -527,8 +592,6 @@ const MySuccessTrackerTable = () => {
                       >
                         F = Fail
                       </Typography>
-
-                      {/* N/A - BOTTOM SECTION */}
                       <Typography
                         variant="body2"
                         style={{ fontWeight: 500, color: "#03060c" }}
@@ -607,17 +670,14 @@ const MySuccessTrackerTable = () => {
                             </Typography>
                           </div>
                         </TableCell>
-
                         <TableCell
                           className={`body-cell ${isLowGrade ? "low-grade" : ""}`}
                         >
                           {row?.grade}
                         </TableCell>
-
                         <TableCell className="body-cell">
                           <Typography variant="body2">{row?.credit}</Typography>
                         </TableCell>
-
                         <TableCell className="body-cell last-cell">
                           <div className="progress-wrapper">
                             {row.attendancePercentage !== null ? (
@@ -689,7 +749,6 @@ const MySuccessTrackerTable = () => {
 
                 return (
                   <div key={row.crn || index} className="mobile-card">
-                    {/* Header with course and grade */}
                     <div className="mobile-card-header">
                       <div className="mobile-card-title">
                         <Typography
@@ -714,14 +773,10 @@ const MySuccessTrackerTable = () => {
                         {row.grade}
                       </div>
                     </div>
-
-                    {/* Credits row */}
                     <div className="mobile-card-row">
                       <span className="mobile-card-label">Credits</span>
                       <span className="mobile-card-value">{row.credit}</span>
                     </div>
-
-                    {/* Attendance row */}
                     <div className="mobile-card-row">
                       <span className="mobile-card-label">Attendance</span>
                       <div className="mobile-progress-wrapper">

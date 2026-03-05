@@ -45,6 +45,7 @@ const MySuccessTrackerCard = () => {
   const [currentGpa, setCurrentGpa] = useState(null);
   const [avgAttendance, setAvgAttendance] = useState(null);
   const [termName, setTermName] = useState("");
+  const [isFirstTerm, setIsFirstTerm] = useState(true);
   // const [attendanceData, setAttendanceData] = useState([]);
   const [diffAttendance, setDiffAttendance] = useState(null);
 
@@ -61,6 +62,7 @@ const MySuccessTrackerCard = () => {
           // setAttendanceData(data.termInformation);
           setAvgAttendance(data.averageAttendancePercentage);
           setDiffAttendance(data.differenceInAttendance);
+          setIsFirstTerm(data.flag);
         }
       })
       .catch((error) => {
@@ -98,7 +100,7 @@ const MySuccessTrackerCard = () => {
                   className="metricValue"
                   style={{ color: gpaCircleColor }}
                 >
-                  {loading ? "…" : currentGpa}
+                  {loading ? "…" : currentGpa?.toFixed(2)}
                 </strong>
               </div>
             </div>
@@ -145,7 +147,7 @@ const MySuccessTrackerCard = () => {
             className="metricFooter"
             style={{ flexDirection: "column", height: "auto", gap: "2px" }}
           >
-            {!loading && diffAttendance != null && (
+            {!loading && !isFirstTerm && diffAttendance != null && (
               <span className="subLabel">
                 {isZeroDiff ? (
                   <span style={{ color: "#6B7280", fontWeight: 600 }}>

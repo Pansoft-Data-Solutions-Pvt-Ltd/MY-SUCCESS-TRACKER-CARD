@@ -4,6 +4,7 @@
   margin: 0 auto;
   padding: 0 15px 0 15px;
 }
+
 /* ================= TOP BAR ================= */
 .top-bar {
   display: flex;
@@ -61,7 +62,7 @@
   }
 }
 
-/* ================= GPA CARDS ================= */
+/* ================= GPA CARDS WRAPPER ================= */
 .gpa-cards-wrapper {
   display: flex;
   flex-direction: column;
@@ -74,15 +75,14 @@
 @media (min-width: 768px) {
   .gpa-cards-wrapper {
     flex-direction: row;
-    gap: 50px;
-    /* justify-content: space-between; */
+    gap: 20px; /* reduced from 50px */
     align-items: stretch;
   }
 }
 
 @media (min-width: 1200px) {
   .gpa-cards-wrapper {
-    gap: 30px;
+    gap: 20px; /* reduced from 30px */
   }
 }
 
@@ -94,27 +94,15 @@
   max-width: 800px;
 }
 
-.legends-card-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  flex: 1;
-}
-
 @media (min-width: 768px) {
   .gpa-cards-column {
     width: auto;
     min-width: 280px;
     flex: 1;
   }
-
-  .legends-card-wrapper {
-    width: auto;
-    min-width: 280px;
-    flex: 1;
-  }
 }
 
+/* ================= TERM GPA BAR CARD ================= */
 .term-gpa-bar-card {
   padding: 0;
   width: 100%;
@@ -133,28 +121,15 @@
   overflow: hidden;
 }
 
-.legends-card-wrapper {
-  padding: 0;
-  width: 100%;
-  min-width: unset;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 @media (min-width: 768px) {
   .term-gpa-bar-card {
     flex: 1;
   }
-
-  .legends-card-wrapper {
-    flex: 1;
-  }
 }
 
+/* ================= GPA CARDS ================= */
 .gpa-top-card {
-  padding: 20px;
+  padding: 16px 20px; /* reduced from 20px */
   width: 100%;
   min-height: 80px;
   display: flex;
@@ -170,32 +145,15 @@
     box-shadow 0.2s ease;
 }
 
-/* .legends-top-card { */
-/*   padding: 20px; */
-/*   width: 35%; */
-/*   min-height: 110px; */
-/*   display: flex; */
-/*   align-items: center; */
-/*   justify-content: space-between; */
-/*   position: relative; */
-/*   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); */
-/*   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); */
-/*   border-radius: 12px; */
-/*   border: 1px solid #e5e7eb; */
-/*   transition: */
-/*     transform 0.2s ease, */
-/*     box-shadow 0.2s ease; */
-/* } */
-
 @media (min-width: 768px) {
   .gpa-top-card {
-    padding: 30px;
+    padding: 20px 24px; /* reduced from 30px */
     flex: 1;
   }
 }
 
 .term-gpa-card {
-  padding: 20px;
+  padding: 16px 20px;
   width: 100%;
   min-height: 80px;
   display: flex;
@@ -213,25 +171,51 @@
 
 @media (min-width: 768px) {
   .term-gpa-card {
-    padding: 30px;
+    padding: 20px 24px;
     flex: 1;
   }
 }
 
+.term-attendance-card {
+  padding: 16px 20px;
+  width: 100%;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .term-attendance-card {
+    padding: 20px 24px;
+    flex: 1;
+  }
+}
+
+/* ================= GPA LEFT CONTENT ================= */
 .gpa-left {
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding-right: 20px;
+  padding-right: 12px; /* reduced from 20px */
 }
 
 @media (min-width: 768px) {
   .gpa-left {
-    padding-right: 100px;
+    padding-right: 60px; /* reduced from 100px */
     transform: translateY(-5px);
   }
 }
 
+/* ================= GPA CIRCLE ================= */
 .gpa-circle {
   width: 70px;
   height: 70px;
@@ -241,7 +225,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.1rem; /* reduced from 1.2rem to fit % values */
   background-color: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
@@ -250,31 +234,32 @@
 
 @media (min-width: 768px) {
   .gpa-circle {
-    width: 80px;
-    height: 80px;
-    font-size: 1.3rem;
+    width: 75px; /* slightly reduced from 80px */
+    height: 75px;
+    font-size: 1.15rem;
     position: absolute;
-    right: 30px;
+    right: 20px; /* reduced from 30px */
     top: 50%;
     transform: translateY(-50%);
   }
 }
 
+/* ================= GPA DELTA ================= */
 .gpa-delta-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  flex-wrap: no-wrap;
+  gap: 6px; /* reduced from 10px */
+  margin-top: 8px; /* reduced from 10px */
+  flex-wrap: nowrap;
 }
 
 .gpa-delta-text {
-  font-size: 0.875rem;
+  font-size: 0.8rem; /* reduced from 0.875rem */
 }
 
 @media (min-width: 768px) {
   .gpa-delta-text {
-    font-size: 1rem;
+    font-size: 0.875rem; /* reduced from 1rem */
   }
 }
 
@@ -361,16 +346,16 @@
 
 .header-cell:nth-child(1) {
   width: 30%;
-} /* Course */
+}
 .header-cell:nth-child(2) {
   width: 20%;
-} /* Grade */
+}
 .header-cell:nth-child(3) {
   width: 20%;
-} /* Credits Earned */
+}
 .header-cell:nth-child(4) {
   width: 30%;
-} /* Attendance */
+}
 
 .body-cell {
   text-align: center;
@@ -502,40 +487,6 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* padding: 16px 20px; */
-  /* background-color: #ffffff; */
-  /* border-radius: 8px; */
-  /* border: 1px solid #d1d5db; */
-  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); */
-  /* height: 100%; */
-  /* justify-content: space-between; */
-}
-
-.grade-legends-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-  gap: 6px;
-  padding: 14px 0;
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.na-legend-group {
-  display: flex;
-  align-items: flex-start;
-  width: 100%;
-  padding-top: 14px;
-}
-
-.status-legends-group {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  /* gap: 32px; */
-  /* flex-wrap: wrap; */
-  /* padding-bottom: 14px; */
 }
 
 .legend-item {
