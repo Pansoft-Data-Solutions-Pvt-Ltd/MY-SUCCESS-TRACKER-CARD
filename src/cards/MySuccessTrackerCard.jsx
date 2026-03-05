@@ -1,11 +1,9 @@
 import { withStyles } from "@ellucian/react-design-system/core/styles";
-import { spacing24 } from "@ellucian/react-design-system/core/styles/tokens";
 import { Typography } from "@ellucian/react-design-system/core";
 import { useCardInfo, useData } from "@ellucian/experience-extension-utils";
 import PropTypes from "prop-types";
 import React, { useState, useEffect } from "react";
 import SvgHollowCircle from "../components/SvgHollowCircle.jsx";
-import DoubleChevronIcon from "../components/DoubleChevron.jsx";
 import useGetLatestTermInformation from "../hooks/useGetLatestTermInformation";
 
 /* ================= CONFIG ================= */
@@ -184,8 +182,8 @@ const MySuccessTrackerCard = ({ classes }) => {
   const [termName, setTermName] = useState("");
   const [attendanceData, setAttendanceData] = useState([]);
   const [avgAttendance, setAvgAttendance] = useState(null);
-  const [diffAttendance, setDiffAttendance] = useState(null);
-  const [isFirstTerm, setIsFirstTerm] = useState(true);
+  // const [diffAttendance, setDiffAttendance] = useState(null);
+  // const [isFirstTerm, setIsFirstTerm] = useState(true);
 
   const { getStudentDetails, loadingLatestTermInformation } =
     useGetLatestTermInformation(authenticatedEthosFetch, cardId);
@@ -199,8 +197,8 @@ const MySuccessTrackerCard = ({ classes }) => {
           setTermName(data.termName);
           setAttendanceData(data.termInformation);
           setAvgAttendance(data.averageAttendancePercentage ?? null);
-          setDiffAttendance(data.differenceInAttendance ?? null);
-          setIsFirstTerm(data.flag ?? true);
+          // setDiffAttendance(data.differenceInAttendance ?? null);
+          // setIsFirstTerm(data.flag ?? true);
         }
       })
       .catch((error) => {
@@ -212,12 +210,12 @@ const MySuccessTrackerCard = ({ classes }) => {
   const attendanceCircleColor = getStatusColor(avgAttendance);
   const loading = loadingLatestTermInformation;
 
-  const diff = parseFloat(diffAttendance);
-  const isZeroDiff = diff === 0;
-  const isPositiveDiff = diff > 0;
-  const diffColor = isPositiveDiff
-    ? COLOR_CONFIG.ON_TRACK
-    : COLOR_CONFIG.CRITICAL;
+  // const diff = parseFloat(diffAttendance);
+  // const isZeroDiff = diff === 0;
+  // const isPositiveDiff = diff > 0;
+  // const diffColor = isPositiveDiff
+  //   ? COLOR_CONFIG.ON_TRACK
+  //   : COLOR_CONFIG.CRITICAL;
 
   return (
     <div className={classes.card}>
