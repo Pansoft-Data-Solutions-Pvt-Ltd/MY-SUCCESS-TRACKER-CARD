@@ -66,7 +66,7 @@ const MySuccessTrackerTable = () => {
   const blockedTermCodes = useMemo(() => ["199610", "199510", "199520"], []);
 
   const backHref = useMemo(() => {
-    const segments = window.location?.pathname?.split("/").filter(Boolean);
+    const segments = window?.location?.pathname?.split("/").filter(Boolean);
     if (segments.length > 0) {
       return `${window.location.origin}/${segments[0]}/`;
     }
