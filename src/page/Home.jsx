@@ -497,7 +497,7 @@ const MySuccessTrackerTable = () => {
                                 position: "relative",
                               }}
                             >
-                              Attendance Til Date
+                              Attendance Till Date
                             </Typography>
                           </div>
                         )}
