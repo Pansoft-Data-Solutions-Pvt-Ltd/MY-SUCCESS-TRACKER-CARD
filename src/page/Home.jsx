@@ -1,26 +1,18 @@
 import React, { useState, useEffect, useMemo } from "react";
 import PropTypes from "prop-types";
-import DoubleChevronIcon from "../components/DoubleChevron";
 import useStudentTermCodes from "../hooks/useTermCodes";
 import useGetTermInformation from "../hooks/useGetTermInformation";
 import useGetAcademicPerformance from "../hooks/useGetAcademicPerformance";
 import TermGpaBar from "../components/TermGpaBar";
+import HomeHeader from "../components/HomeHeader";
+import GpaMetrics from "../components/GpaMetrics";
+import CourseDataView from "../components/CourseDataView";
 import "./Home.css";
 
 // Ellucian provided hooks
 import { useData, useCardInfo } from "@ellucian/experience-extension-utils";
 
-import {
-  Button,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Typography,
-  Card,
-  DropdownButtonItem,
-} from "@ellucian/react-design-system/core";
+import { Typography, Card } from "@ellucian/react-design-system/core";
 
 /* ================= CONFIG ================= */
 const TABLE_CONFIG = {
@@ -64,14 +56,6 @@ const MySuccessTrackerTable = () => {
 
   // Defined as a constant outside render cycle to avoid stale closure issues
   const blockedTermCodes = useMemo(() => ["199610", "199510", "199520"], []);
-
-  const backHref = useMemo(() => {
-    const segments = window?.location?.pathname?.split("/").filter(Boolean);
-    if (segments.length > 0) {
-      return `${window.location.origin}/${segments[0]}/`;
-    }
-    return window.location.origin;
-  }, []);
 
   const { getStudentTermCodes, loadingTermCodes, termCodesResult } =
     useStudentTermCodes(authenticatedEthosFetch, cardId);
@@ -296,52 +280,16 @@ const MySuccessTrackerTable = () => {
 
   const isLoading = loadingTermInformation;
 
-  const handleBack = () => {
-    window.location.assign(backHref);
-  };
-
   return (
     <div className="root">
       <Card className="card">
-        <div className="card-header">
-          <div className="back-button-wrapper">
-            <Button color="secondary" onClick={handleBack}>
-              Back
-            </Button>
-          </div>
-
-          <div>
-            <Typography
-              variant="h4"
-              className="card-title"
-              style={{ fontWeight: 700, color: "#1F2937", textAlign: "center" }}
-            >
-              Academic Performance{currentTerm ? ` – ${currentTerm}` : ""}
-            </Typography>
-          </div>
-
-          <div className="top-bar">
-            <div className="term-section">
-              <Typography className="term-label">Select Term</Typography>
-              <Button
-                disabled={loadingTermCodes || !termCodesResult}
-                dropdown={termCodesResult
-                  ?.filter((item) => !blockedTermCodes.includes(item.termCode))
-                  .sort((a, b) => a.termCode.localeCompare(b.termCode))
-                  .map((term) => (
-                    <DropdownButtonItem
-                      key={term.termCode}
-                      onClick={() => handleTermChange(term)}
-                    >
-                      {term.term}
-                    </DropdownButtonItem>
-                  ))}
-              >
-                {loadingTermCodes ? "Loading…" : currentTerm || "Select Term"}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <HomeHeader
+          currentTerm={currentTerm}
+          termCodesResult={termCodesResult}
+          blockedTermCodes={blockedTermCodes}
+          loadingTermCodes={loadingTermCodes}
+          handleTermChange={handleTermChange}
+        />
 
         {isLoading && (
           <Typography
@@ -362,266 +310,27 @@ const MySuccessTrackerTable = () => {
                   width: "100%",
                 }}
               >
-                {/* COLUMN FOR CUMULATIVE GPA, TERM GPA, TERM ATTENDANCE */}
-                <div className="gpa-cards-column">
-                  <div style={{ display: "flex", gap: "20px" }}>
-                    {/* CUMULATIVE GPA CARD */}
-                    <Card className="gpa-top-card">
-                      <div className="gpa-left">
-                        <Typography
-                          variant="p"
-                          style={{
-                            fontSize: "1.05rem",
-                            fontWeight: 700,
-                            color: "#1F2937",
-                          }}
-                        >
-                          Cumulative GPA
-                        </Typography>
-                        {!isFirstTerm && (
-                          <div className="gpa-delta-row">
-                            {isZeroDelta ? (
-                              <Typography
-                                className="gpa-delta-text"
-                                style={{ fontWeight: 500 }}
-                              >
-                                <span
-                                  style={{ color: "#6B7280", fontWeight: 700 }}
-                                >
-                                  Same as Last Term
-                                </span>
-                              </Typography>
-                            ) : (
-                              <>
-                                <DoubleChevronIcon
-                                  orientation={isPositive ? "up" : "down"}
-                                  size={20}
-                                  backgroundColor={deltaColor}
-                                  style={{ transform: "translateY(4px)" }}
-                                />
-                                <Typography
-                                  className="gpa-delta-text"
-                                  style={{
-                                    fontWeight: 500,
-                                    top: "2px",
-                                    position: "relative",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      color: deltaColor,
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    {gpaDelta}
-                                  </span>
-                                  <span
-                                    style={{ marginLeft: 3, color: "#6B7280" }}
-                                  >
-                                    {" "}
-                                    From Last Term
-                                  </span>
-                                </Typography>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div
-                        className="gpa-circle"
-                        style={{
-                          borderColor: gpaCircleColor,
-                          color: gpaCircleColor,
-                        }}
-                      >
-                        {loadingTermInformation ? "..." : currentGpa.toFixed(2)}
-                      </div>
-                    </Card>
-
-                    {/* TERM GPA CARD */}
-                    <Card className="term-gpa-card">
-                      <div className="gpa-left">
-                        <Typography
-                          variant="p"
-                          style={{
-                            fontSize: "1.05rem",
-                            fontWeight: 700,
-                            color: "#0369A1",
-                          }}
-                        >
-                          Term GPA
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          style={{
-                            fontSize: "0.875rem",
-                            color: "#0C4A6E",
-                            marginTop: "10px",
-                            fontWeight: 500,
-                          }}
-                        >
-                          Current term performance
-                        </Typography>
-                      </div>
-                      <div
-                        className="gpa-circle"
-                        style={{
-                          borderColor: termGpaCircleColor,
-                          color: termGpaCircleColor,
-                        }}
-                      >
-                        {loadingTermInformation ? "..." : termGpa}
-                      </div>
-                    </Card>
-
-                    {/* TERM ATTENDANCE CARD */}
-                    <Card className="term-attendance-card">
-                      <div className="gpa-left">
-                        <Typography
-                          variant="p"
-                          style={{
-                            fontSize: "1.05rem",
-                            fontWeight: 700,
-                            color: "#065F46",
-                          }}
-                        >
-                          Term Attendance
-                        </Typography>
-                        {isLatestTerm && (
-                          <div className="gpa-delta-row">
-                            <Typography
-                              className="gpa-delta-text"
-                              style={{
-                                fontWeight: 500,
-                                top: "2px",
-                                position: "relative",
-                              }}
-                            >
-                              Attendance Till Date
-                            </Typography>
-                          </div>
-                        )}
-                        {!isFirstTermFlag && !isLatestTerm && diffAttendance != null && (
-                          <div className="gpa-delta-row">
-                            {isZeroAttendanceDiff ? (
-                              <Typography
-                                className="gpa-delta-text"
-                                style={{ fontWeight: 500 }}
-                              >
-                                <span
-                                  style={{ color: "#6B7280", fontWeight: 700 }}
-                                >
-                                  Same as Last Term
-                                </span>
-                              </Typography>
-                            ) : (
-                              <>
-                                <DoubleChevronIcon
-                                  orientation={
-                                    isPositiveAttendanceDiff ? "up" : "down"
-                                  }
-                                  size={20}
-                                  backgroundColor={attendanceDiffColor}
-                                  style={{ transform: "translateY(4px)" }}
-                                />
-                                <Typography
-                                  className="gpa-delta-text"
-                                  style={{
-                                    fontWeight: 500,
-                                    top: "2px",
-                                    position: "relative",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      color: attendanceDiffColor,
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    {Math.abs(attendanceDiff)}%
-                                  </span>
-                                  <span
-                                    style={{ marginLeft: 3, color: "#6B7280" }}
-                                  >
-                                    {" "}
-                                    From Last Term
-                                  </span>
-                                </Typography>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <div
-                        className="gpa-circle"
-                        style={{
-                          borderColor: attendanceCircleColor,
-                          color: attendanceCircleColor,
-                        }}
-                      >
-                        {loadingTermInformation
-                          ? "..."
-                          : avgAttendance != null
-                            ? `${avgAttendance}%`
-                            : "N/A"}
-                      </div>
-                    </Card>
-                  </div>
-
-                  <div className="legends-container">
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <div className="legend-item">
-                        <div
-                          className="legend-dot"
-                          style={{ backgroundColor: COLOR_CONFIG.ON_TRACK }}
-                        />
-                        <Typography variant="body2" style={{ fontWeight: 500 }}>
-                          On Track
-                        </Typography>
-                      </div>
-                      <div className="legend-item">
-                        <div
-                          className="legend-dot"
-                          style={{
-                            backgroundColor: COLOR_CONFIG.NEEDS_ATTENTION,
-                          }}
-                        />
-                        <Typography variant="body2" style={{ fontWeight: 500 }}>
-                          Needs Attention
-                        </Typography>
-                      </div>
-                      <div className="legend-item">
-                        <div
-                          className="legend-dot"
-                          style={{ backgroundColor: COLOR_CONFIG.CRITICAL }}
-                        />
-                        <Typography variant="body2" style={{ fontWeight: 500 }}>
-                          Critical
-                        </Typography>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <Typography
-                        variant="body2"
-                        style={{ fontWeight: 500, color: "#1F2937" }}
-                      >
-                        A, B, C, D = Letter Grades
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        style={{ fontWeight: 500, color: "#1F2937" }}
-                      >
-                        F = Fail
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        style={{ fontWeight: 500, color: "#03060c" }}
-                      >
-                        N/A = Not Applicable
-                      </Typography>
-                    </div>
-                  </div>
-                </div>
+                <GpaMetrics
+                  loadingTermInformation={loadingTermInformation}
+                  isFirstTerm={isFirstTerm}
+                  isFirstTermFlag={isFirstTermFlag}
+                  isZeroDelta={isZeroDelta}
+                  isPositive={isPositive}
+                  deltaColor={deltaColor}
+                  gpaDelta={gpaDelta}
+                  gpaCircleColor={gpaCircleColor}
+                  currentGpa={currentGpa}
+                  termGpaCircleColor={termGpaCircleColor}
+                  termGpa={termGpa}
+                  isLatestTerm={isLatestTerm}
+                  diffAttendance={diffAttendance}
+                  isZeroAttendanceDiff={isZeroAttendanceDiff}
+                  isPositiveAttendanceDiff={isPositiveAttendanceDiff}
+                  attendanceDiffColor={attendanceDiffColor}
+                  attendanceCircleColor={attendanceCircleColor}
+                  avgAttendance={avgAttendance}
+                  colors={COLOR_CONFIG}
+                />
 
                 {/* TERM GPA BAR CHART */}
                 <Card className="term-gpa-bar-card">
@@ -633,215 +342,15 @@ const MySuccessTrackerTable = () => {
                 </Card>
               </div>
             </div>
+
+            <CourseDataView
+              loadingCourseData={loadingCourseData}
+              courseData={courseData}
+              getStatusColor={getStatusColor}
+              tableConfig={TABLE_CONFIG}
+              colors={COLOR_CONFIG}
+            />
           </>
-        )}
-
-        {/* DESKTOP TABLE VIEW */}
-        {!isLoading && (
-          <div className="table-container">
-            <Table className="table">
-              <TableHead>
-                <TableRow>
-                  <TableCell className="header-cell">Course</TableCell>
-                  <TableCell className="header-cell">Grade</TableCell>
-                  <TableCell className="header-cell">Credits Earned</TableCell>
-                  <TableCell className="header-cell last-cell">
-                    Attendance
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {loadingCourseData ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="body-cell">
-                      <Typography
-                        style={{ color: "#6B7280", fontStyle: "italic" }}
-                      >
-                        {loadingCourseData
-                          ? "Loading course data..."
-                          : "No course data available for this term"}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  courseData.map((row, index) => {
-                    const attendanceColor = getStatusColor(
-                      row.attendancePercentage,
-                    );
-                    const isLowGrade = TABLE_CONFIG.lowGrades.includes(
-                      row.grade,
-                    );
-                    const attendanceDisplay =
-                      row.attendancePercentage !== null
-                        ? `${row.attendancePercentage}%`
-                        : "N/A";
-
-                    return (
-                      <TableRow key={row.crn || index} className="table-row">
-                        <TableCell className="body-cell">
-                          <div style={{ display: "flex", gap: "10px" }}>
-                            <Typography variant="body2">
-                              {row.subjectCode}-{row.courseNumber}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              style={{ color: "#6B7280" }}
-                            >
-                              {row.courseTitle}
-                            </Typography>
-                          </div>
-                        </TableCell>
-                        <TableCell
-                          className={`body-cell ${isLowGrade ? "low-grade" : ""}`}
-                        >
-                          {row?.grade}
-                        </TableCell>
-                        <TableCell className="body-cell">
-                          <Typography variant="body2">{row?.credit}</Typography>
-                        </TableCell>
-                        <TableCell className="body-cell last-cell">
-                          <div className="progress-wrapper">
-                            {row.attendancePercentage !== null ? (
-                              <>
-                                <div className="progress-bar">
-                                  <div
-                                    className="progress-fill"
-                                    style={{
-                                      width: `${row.attendancePercentage}%`,
-                                      backgroundColor: attendanceColor,
-                                    }}
-                                  />
-                                </div>
-                                <span
-                                  style={{
-                                    color: attendanceColor,
-                                    fontWeight: 400,
-                                    fontSize: "0.95rem",
-                                    minWidth: "60px",
-                                  }}
-                                >
-                                  {attendanceDisplay}
-                                </span>
-                              </>
-                            ) : (
-                              <span
-                                style={{ color: "#999", fontStyle: "italic" }}
-                              >
-                                {attendanceDisplay}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        {/* MOBILE CARD VIEW */}
-        {!isLoading && (
-          <div className="mobile-card-list">
-            {courseData.length === 0 ? (
-              <Typography
-                style={{
-                  textAlign: "center",
-                  color: "#6B7280",
-                  fontStyle: "italic",
-                  padding: "30px",
-                }}
-              >
-                {loadingCourseData
-                  ? "Loading course data..."
-                  : "No course data available for this term"}
-              </Typography>
-            ) : (
-              courseData.map((row, index) => {
-                const attendanceColor = getStatusColor(
-                  row.attendancePercentage,
-                );
-                const isLowGrade = TABLE_CONFIG.lowGrades.includes(row?.grade);
-                const attendanceDisplay =
-                  row.attendancePercentage !== null
-                    ? `${row.attendancePercentage}%`
-                    : "N/A";
-
-                return (
-                  <div key={row.crn || index} className="mobile-card">
-                    <div className="mobile-card-header">
-                      <div className="mobile-card-title">
-                        <Typography
-                          variant="body1"
-                          style={{ fontWeight: 700, marginBottom: "4px" }}
-                        >
-                          {row.crn}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          style={{ color: "#6B7280" }}
-                        >
-                          {row.courseTitle}
-                        </Typography>
-                      </div>
-                      <div
-                        className="mobile-card-grade"
-                        style={{
-                          color: isLowGrade ? COLOR_CONFIG.CRITICAL : "#1F2937",
-                        }}
-                      >
-                        {row.grade}
-                      </div>
-                    </div>
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Credits</span>
-                      <span className="mobile-card-value">{row.credit}</span>
-                    </div>
-                    <div className="mobile-card-row">
-                      <span className="mobile-card-label">Attendance</span>
-                      <div className="mobile-progress-wrapper">
-                        {row.attendancePercentage !== null ? (
-                          <>
-                            <div className="mobile-progress-bar">
-                              <div
-                                className="progress-fill"
-                                style={{
-                                  width: `${row.attendancePercentage}%`,
-                                  backgroundColor: attendanceColor,
-                                }}
-                              />
-                            </div>
-                            <span
-                              style={{
-                                color: attendanceColor,
-                                fontWeight: 600,
-                                fontSize: "0.875rem",
-                                minWidth: "55px",
-                                textAlign: "right",
-                              }}
-                            >
-                              {attendanceDisplay}
-                            </span>
-                          </>
-                        ) : (
-                          <span
-                            style={{
-                              color: "#999",
-                              fontStyle: "italic",
-                              fontSize: "0.875rem",
-                            }}
-                          >
-                            {attendanceDisplay}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
         )}
       </Card>
     </div>
