@@ -1,0 +1,71 @@
+{
+  "name": "Get-Student-Term-codes",
+  "parameters": [
+    {
+      "name": "ethosApiKey",
+      "type": "string",
+      "sensitive": true
+    }
+  ],
+  "apiDefinition": {
+    "authType": "userToken",
+    "httpVerb": "GET"
+  },
+  "pipeline": [
+    "Get Person Id",
+    "Get Person Details",
+    "Get Person Banner Id",
+    "Student Termcodes"
+  ],
+  "segments": {
+    "Get Person Id": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const contextUser = context.get(\"__user\");\r\n\r\n  const personId = contextUser?.id;\r\n  \r\n  return {\r\n    payload: {\r\n      personId,\r\n    },\r\n  };\r\n}\r\n"
+      }
+    },
+    "Get Person Details": {
+      "class": "ethosProxyGet",
+      "config": {
+        "resource": "persons",
+        "acceptVersions": [
+          "12"
+        ],
+        "idFromPayload": "$.personId",
+        "target": "personDetails",
+        "cache": false,
+        "ignoreErrors": false,
+        "errorPath": "errPersons",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Get Person Banner Id": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const personDetails = message.payload?.personDetails || {};\r\n\r\n  const matchedId = personDetails?.credentials?.find((cred) => cred.type === \"bannerId\");\r\n  // const bannerId = matchedId?.value;\r\n  const bannerId = \"210009506\";\r\n  \r\n  context.set(\"bannerId\", bannerId);\r\n\r\n  delete message.payload?.personId;\r\n  delete message.payload?.personDetails;\r\n\r\n  return message;\r\n}\r\n"
+      }
+    },
+    "Student Termcodes": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "x-termcodes",
+        "filter": "?criteria={\"bannerId\": \"{{context.bannerId}}\"}",
+        "payloadTargetPath": "termCodeDetails",
+        "acceptVersions": [
+          "1"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errTermCodeDetails",
+        "apiKey": "ethosApiKey"
+      }
+    }
+  }
+}

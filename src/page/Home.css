@@ -1,0 +1,505 @@
+/* ================= ROOT & LAYOUT ================= */
+.root {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 15px 0 15px;
+}
+
+/* ================= TOP BAR ================= */
+.top-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.card-header .top-bar {
+  margin-left: auto;
+  padding-left: 40px;
+}
+
+.term-section {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  width: auto;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.term-section button {
+  background-color: #ffffff;
+  border: 1px solid #026bc8;
+  color: #026bc8;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 4px;
+}
+
+.term-section button svg {
+  fill: #026bc8;
+}
+
+.term-section button:hover {
+  background-color: #f0f9ff;
+}
+
+@media (min-width: 768px) {
+  .term-section {
+    width: auto;
+  }
+}
+
+.term-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .term-label {
+    font-size: 1.1rem;
+  }
+}
+
+/* ================= GPA CARDS WRAPPER ================= */
+.gpa-cards-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 0px;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .gpa-cards-wrapper {
+    flex-direction: row;
+    gap: 20px; /* reduced from 50px */
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 1200px) {
+  .gpa-cards-wrapper {
+    gap: 20px; /* reduced from 30px */
+  }
+}
+
+.gpa-cards-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 3;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .gpa-cards-column {
+    width: auto;
+    min-width: 0;
+    flex: 3;
+  }
+}
+
+/* ================= TERM GPA BAR CARD ================= */
+.term-gpa-bar-card {
+  padding: 0;
+  /* width: 100%; */
+  max-width: 450px;
+  /* min-width: 0; */
+  /* min-height: 100px; */
+  /* max-height: 100px; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  flex: 2;
+}
+
+@media (min-width: 768px) {
+  .term-gpa-bar-card {
+    flex: 2;
+  }
+}
+
+/* ================= GPA CARDS ================= */
+.gpa-top-card {
+  padding: 16px 20px; /* reduced from 20px */
+  width: 100%;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .gpa-top-card {
+    padding: 20px 24px; /* reduced from 30px */
+    flex: 1;
+  }
+}
+
+.term-gpa-card {
+  padding: 16px 20px;
+  width: 100%;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .term-gpa-card {
+    padding: 20px 24px;
+    flex: 1;
+  }
+}
+
+.term-attendance-card {
+  padding: 16px 20px;
+  width: 100%;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  .term-attendance-card {
+    padding: 20px 24px;
+    flex: 1;
+  }
+}
+
+/* ================= GPA LEFT CONTENT ================= */
+.gpa-left {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-right: 12px; /* reduced from 20px */
+}
+
+@media (min-width: 768px) {
+  .gpa-left {
+    padding-right: 80px;
+    transform: translateY(-5px);
+  }
+}
+
+/* ================= GPA CIRCLE ================= */
+.gpa-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 4px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem; /* reduced from 1.2rem to fit % values */
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .gpa-circle {
+    width: 75px; /* slightly reduced from 80px */
+    height: 75px;
+    font-size: 1.15rem;
+    position: absolute;
+    right: 20px; /* reduced from 30px */
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+/* ================= GPA DELTA ================= */
+.gpa-delta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* reduced from 10px */
+  margin-top: 8px; /* reduced from 10px */
+  flex-wrap: nowrap;
+}
+
+.gpa-delta-text {
+  font-size: 0.8rem; /* reduced from 0.875rem */
+}
+
+@media (min-width: 768px) {
+  .gpa-delta-text {
+    font-size: 0.875rem; /* reduced from 1rem */
+  }
+}
+
+/* ================= CARD ================= */
+.card {
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 30px;
+  }
+}
+
+.card-header {
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 20px;
+}
+
+.card-title {
+  font-size: 1.25rem;
+}
+
+.back-button-wrapper {
+  justify-self: start;
+}
+
+.back-button-wrapper button {
+  background-color: #ffffff;
+  border: 1px solid #026bc8;
+  color: #026bc8;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: 4px;
+}
+
+.back-button-wrapper button:hover {
+  background-color: #f0f9ff;
+}
+
+@media (min-width: 768px) {
+  .card-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* ================= TABLE ================= */
+.table-container {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .table-container {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border: 1px solid #d1d5db;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.header-cell {
+  background-color: #026bc8;
+  color: #ffffff !important;
+  font-weight: 600;
+  text-align: center;
+  height: 52px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 1rem;
+}
+
+.header-cell:nth-child(1) {
+  width: 30%;
+}
+.header-cell:nth-child(2) {
+  width: 20%;
+}
+.header-cell:nth-child(3) {
+  width: 20%;
+}
+.header-cell:nth-child(4) {
+  width: 30%;
+}
+
+.body-cell {
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  padding: 20px;
+}
+
+.table-row:hover {
+  background-color: #f9fafb;
+}
+
+.last-cell {
+  border-right: none;
+}
+
+.low-grade {
+  color: #ed1012;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* ================= PROGRESS BAR ================= */
+.progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.progress-bar {
+  flex-grow: 1;
+  height: 8px;
+  border-radius: 6px;
+  background-color: #e5e7eb;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* ================= MOBILE CARDS ================= */
+.mobile-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .mobile-card-list {
+    display: none;
+  }
+}
+
+.mobile-card {
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.mobile-card-title {
+  flex: 1;
+  padding-right: 10px;
+}
+
+.mobile-card-grade {
+  font-size: 1.5rem;
+  font-weight: 700;
+  min-width: 50px;
+  text-align: right;
+}
+
+.mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.mobile-card-row:last-child {
+  border-bottom: none;
+}
+
+.mobile-card-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.mobile-card-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.mobile-progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.mobile-progress-bar {
+  flex-grow: 1;
+  max-width: 120px;
+  height: 8px;
+  border-radius: 6px;
+  background-color: #e5e7eb;
+  overflow: hidden;
+}
+
+/* ================= LEGENDS ================= */
+.legends-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

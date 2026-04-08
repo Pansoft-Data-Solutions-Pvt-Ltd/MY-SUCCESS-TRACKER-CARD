@@ -1,0 +1,63 @@
+{
+  "name": "Get-StudentGPA",
+  "parameters": [
+    {
+      "name": "ethosApiKey",
+      "type": "string",
+      "sensitive": true
+    },
+    {
+      "name": "term",
+      "type": "string"
+    },
+    {
+      "name": "bannerId",
+      "type": "string"
+    }
+  ],
+  "apiDefinition": {
+    "authType": "userToken",
+    "httpVerb": "GET"
+  },
+  "pipeline": [
+    "Set-Pipeline-Configuration",
+    "Get-Student-Term-Data",
+    "Transform"
+  ],
+  "segments": {
+    "Set-Pipeline-Configuration": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform (message, context) {\n  // Put your code here.\n  const bannerId = context.get(\"bannerId\");\n  const termCode = context.get(\"term\");\n  \n  message.payload.bannerId = bannerId;\n  message.payload.termCode = termCode;\n  \n  return message;\n}\n"
+      }
+    },
+    "Get-Student-Term-Data": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "x-student-gpa",
+        "filter": "?criteria={\"bannerId\": \"{{message.payload.bannerId}}\"}",
+        "payloadTargetPath": "resTermData",
+        "acceptVersions": [
+          "1"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errTermData",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "Transform": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const currentTerm = message.payload.termCode;\r\n  const termData =\r\n    message.payload?.resTermData?.filter(\r\n      term => term.termCode <= currentTerm\r\n    ) ?? [];\r\n  // Sort terms by termCode (important for previous term logic)\r\n  const sortedTerms = [...termData].sort(\r\n    (a, b) => a.termCode - b.termCode\r\n  );\r\n  const currentTermObj = sortedTerms.find(\r\n    term => term.termCode === currentTerm\r\n  );\r\n  const termGpa = Number(currentTermObj?.gpa) || 0;\r\n  // ---- GPA INCREASE LOGIC ----\r\n  const currentIndex = sortedTerms.findIndex(\r\n    term => term.termCode === currentTerm\r\n  );\r\n  const previousTermGpa =\r\n    currentIndex > 0\r\n      ? Number(sortedTerms[currentIndex - 1]?.gpa) || 0\r\n      : 0;\r\n  const gpaIncrease = Number(\r\n    (currentIndex > 0 ? termGpa - previousTermGpa : 0).toFixed(2)\r\n  );\r\n  // ---- CUMULATIVE GPA LOGIC ----\r\n  const gpaSumObject = sortedTerms.reduce(\r\n    (acc, term) => {\r\n      const qualityPoints = Number(term.qualityPoints) || 0;\r\n      const gpaHours = Number(term.gpaHours) || 0;\r\n      return {\r\n        count: acc.count + 1,\r\n        qualityPointSum: acc.qualityPointSum + qualityPoints,\r\n        gpaHourSum: acc.gpaHourSum + gpaHours\r\n      };\r\n    },\r\n    { count: 0, qualityPointSum: 0, gpaHourSum: 0 }\r\n  );\r\n  const cumulativeGpa = Number(\r\n    (gpaSumObject.gpaHourSum > 0\r\n      ? gpaSumObject.qualityPointSum / gpaSumObject.gpaHourSum\r\n      : 0\r\n    ).toFixed(2)\r\n  );\r\n  // ---- FINAL PAYLOAD ----\r\n  message.payload.termGpa = termGpa;\r\n  message.payload.cumulativeGpa = cumulativeGpa;\r\n  message.payload.gpaIncrease = gpaIncrease;\r\n  message.payload.resTermData = undefined;\r\n  return message.payload;\r\n}"
+      }
+    }
+  }
+}
