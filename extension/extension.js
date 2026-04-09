@@ -1,6 +1,6 @@
 module.exports = {
     name: "Student Success Tracker",
-    publisher: "Sample",
+    publisher: "Pansoft",
     cards: [
         {
             type: "Academic",

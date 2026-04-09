@@ -137,66 +137,70 @@ const styles = (theme) => ({
   },
 });
 
-/* ================= HELPERS ================= */
-const getStatusColor = (value) => {
-  if (value === null || value === undefined) return "#999";
-  if (value >= TABLE_CONFIG.attendanceGood) return COLOR_CONFIG.ON_TRACK;
-  if (value >= TABLE_CONFIG.attendanceWarning) return COLOR_CONFIG.NEEDS_ATTENTION;
-  return COLOR_CONFIG.CRITICAL;
-};
-
-const get_performance_color = (performance_metric, minimum_threshold_for_excellent_performance, minimum_threshold_for_satisfactory_performance, excellent_performance_color_code, satisfactory_performance_color_code, poor_performance_color_code) => {
-  if (performance >= minimum_threshold_for_excellent_performance){
-    return excellent_performance_color_code;
-  } else if(performance <= minimum_threshold_for_satisfactory_performance){
-    return satisfactory_performance_color_code;
-  } else {
-    return poor_performance_color_code;
-  }
-};
-
 /* ================= COMPONENT ================= */
 const StudentSuccessTracker = ({ classes }) => {
   const { authenticatedEthosFetch } = useData();
 
-  const { cardId, cardConfiguration } = useCardInfo();
-  const { excellent_performance_color_code, satisfactory_performance_color_code, poor_performance_color_code, minimum_threshold_for_excellent_performance, minimum_threshold_for_satisfactory_performance, minimum_threshold_for_excellent_attendance, minimum_threshold_for_satisfactory_attendance, latest_term_information_pipeline } = cardConfiguration;
+  const { cardId, configuration } = useCardInfo();
+  console.log("Printing card configuration:", JSON.stringify(configuration));
 
-  if (minimum_threshold_for_excellent_performance <= minimum_threshold_for_satisfactory_performance){
-    throw new Error("Invalid performance configuration")
+  const {
+    excellent_performance_color_code,
+    satisfactory_performance_color_code,
+    poor_performance_color_code,
+    minimum_threshold_for_excellent_performance,
+    minimum_threshold_for_satisfactory_performance,
+    minimum_threshold_for_excellent_attendance,
+    minimum_threshold_for_satisfactory_attendance,
+    latest_term_information_pipeline,
+  } = configuration;
+
+  // Parse config thresholds once — they arrive as strings from cardConfiguration
+  const parsed_minimum_threshold_for_excellent_performance   = parseFloat(minimum_threshold_for_excellent_performance);
+  const parsed_minimum_threshold_for_satisfactory_performance = parseFloat(minimum_threshold_for_satisfactory_performance);
+  const parsed_minimum_threshold_for_excellent_attendance    = parseFloat(minimum_threshold_for_excellent_attendance);
+  const parsed_minimum_threshold_for_satisfactory_attendance = parseFloat(minimum_threshold_for_satisfactory_attendance);
+
+  if (parsed_minimum_threshold_for_excellent_performance <= parsed_minimum_threshold_for_satisfactory_performance) {
+    throw new Error("Invalid performance configuration: excellent threshold must be greater than satisfactory threshold");
   }
 
-  if (minimum_threshold_for_excellent_attendance <= minimum_threshold_for_satisfactory_attendance){
-    throw new Error("Invalid attendance performance configuration")
+  if (parsed_minimum_threshold_for_excellent_attendance <= parsed_minimum_threshold_for_satisfactory_attendance) {
+    throw new Error("Invalid attendance configuration: excellent threshold must be greater than satisfactory threshold");
   }
 
-  // Helper functions
-    const get_gpa_color = (gpa) => {
-    if (gpa >= minimum_threshold_for_excellent_performance){
-      return excellent_performance_color_code;
-    } else if(gpa <= minimum_threshold_for_satisfactory_performance){
-      return satisfactory_performance_color_code;
-    } else {
-      return poor_performance_color_code;
-    }
+  /* ── Helper functions ─────────────────────────────────────────────────── */
+
+  const get_gpa_color = (gpa_value) => {
+    const parsed_gpa_value = parseFloat(gpa_value);
+    if (isNaN(parsed_gpa_value)) return poor_performance_color_code;
+    if (parsed_gpa_value >= parsed_minimum_threshold_for_excellent_performance)   return excellent_performance_color_code;
+    if (parsed_gpa_value >= parsed_minimum_threshold_for_satisfactory_performance) return satisfactory_performance_color_code;
+    return poor_performance_color_code;
   };
 
-  const get_attendance_color = (attendance) => {
-    if (attendance >= minimum_threshold_for_excellent_attendance){
-      return excellent_performance_color_code;
-    } else if (attendance >= minimum_threshold_for_satisfactory_attendance){
-      return satisfactory_performance_color_code;
-    } else {
-      return poor_performance_color_code;
-    }
-  }
+  const get_attendance_color = (attendance_percentage_value) => {
+    const parsed_attendance_percentage_value = parseFloat(attendance_percentage_value);
+    if (isNaN(parsed_attendance_percentage_value)) return poor_performance_color_code;
+    if (parsed_attendance_percentage_value >= parsed_minimum_threshold_for_excellent_attendance)   return excellent_performance_color_code;
+    if (parsed_attendance_percentage_value >= parsed_minimum_threshold_for_satisfactory_attendance) return satisfactory_performance_color_code;
+    return poor_performance_color_code;
+  };
 
-  const [currentGpa, setCurrentGpa]       = useState(0);
-  const [termName, setTermName]           = useState("");
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [avgAttendance, setAvgAttendance] = useState(null);
+  const get_attendance_status_color = (attendance_percentage_value) => {
+    if (attendance_percentage_value === null || attendance_percentage_value === undefined) return poor_performance_color_code;
+    return get_attendance_color(attendance_percentage_value);
+  };
 
-  // ── Fetch latest term info ───────────────────────────────────────────────
+  /* ── State ────────────────────────────────────────────────────────────── */
+
+  const [current_gpa, set_current_gpa]         = useState(0);
+  const [term_name, set_term_name]             = useState("");
+  const [attendance_data, set_attendance_data] = useState([]);
+  const [avg_attendance, set_avg_attendance]   = useState(null);
+
+  /* ── Fetch latest term info ───────────────────────────────────────────── */
+
   const { data, loading } = useFetch(
     authenticatedEthosFetch,
     cardId,
@@ -205,18 +209,30 @@ const StudentSuccessTracker = ({ classes }) => {
     {},
   );
 
-  // ── React to data ────────────────────────────────────────────────────────
+  /* ── React to data ────────────────────────────────────────────────────── */
+
   useEffect(() => {
     if (!data) return;
 
-    setCurrentGpa(parseFloat(data.cumulativeGpa) || 0);
-    setTermName(data.termName || "");
-    setAttendanceData(Array.isArray(data.termInformation) ? data.termInformation : []);
-    setAvgAttendance(data.averageAttendancePercentage ?? null);
+    set_current_gpa(parseFloat(data.cumulativeGpa) || 0);
+    set_term_name(data.termName || "");
+    set_attendance_data(Array.isArray(data.termInformation) ? data.termInformation : []);
+
+    // averageAttendancePercentage arrives as a ratio (e.g. 0.18 = 18%); convert to percentage
+    const raw_average_attendance_percentage = parseFloat(data.averageAttendancePercentage);
+    set_avg_attendance(
+      !isNaN(raw_average_attendance_percentage)
+        ? parseFloat((raw_average_attendance_percentage).toFixed(2))
+        : null
+    );
   }, [data]);
 
-  const gpa_circle_color = get_gpa_color(gpa);
-  const attendance_circle_color = get_attendance_color(avgAttendance);
+  const gpa_circle_color        = get_gpa_color(current_gpa);
+  const attendance_circle_color = avg_attendance !== null
+    ? get_attendance_color(avg_attendance)
+    : poor_performance_color_code;
+
+  /* ── Render ───────────────────────────────────────────────────────────── */
 
   return (
     <div className={classes.card}>
@@ -230,10 +246,10 @@ const StudentSuccessTracker = ({ classes }) => {
             <div className={classes.circleContainer}>
               <div
                 className={classes.circleInner}
-                style={{ border: `4px solid ${gpaCircleColor}` }}
+                style={{ border: `4px solid ${gpa_circle_color}` }}
               >
-                <strong className={classes.circleValue} style={{ color: gpaCircleColor }}>
-                  {loading ? "..." : currentGpa.toFixed(2)}
+                <strong className={classes.circleValue} style={{ color: gpa_circle_color }}>
+                  {loading ? "..." : current_gpa.toFixed(2)}
                 </strong>
               </div>
             </div>
@@ -246,10 +262,10 @@ const StudentSuccessTracker = ({ classes }) => {
             <div className={classes.circleContainer}>
               <div
                 className={classes.circleInner}
-                style={{ border: `4px solid ${attendanceCircleColor}` }}
+                style={{ border: `4px solid ${attendance_circle_color}` }}
               >
-                <strong className={classes.circleValue} style={{ color: attendanceCircleColor }}>
-                  {loading ? "..." : avgAttendance != null ? `${avgAttendance}%` : "N/A"}
+                <strong className={classes.circleValue} style={{ color: attendance_circle_color }}>
+                  {loading ? "..." : avg_attendance !== null ? `${avg_attendance}%` : "N/A"}
                 </strong>
               </div>
             </div>
@@ -264,7 +280,7 @@ const StudentSuccessTracker = ({ classes }) => {
               Attendance Overview
             </Typography>
             <Typography variant="body2" style={{ textAlign: "center" }}>
-              {termName || "Current Term"}
+              {term_name || "Current Term"}
             </Typography>
           </header>
 
@@ -272,23 +288,27 @@ const StudentSuccessTracker = ({ classes }) => {
             <Typography style={{ textAlign: "center", padding: "1rem" }}>
               Loading attendance data...
             </Typography>
-          ) : attendanceData.length === 0 ? (
+          ) : attendance_data.length === 0 ? (
             <Typography style={{ textAlign: "center", padding: "1rem" }}>
               No attendance data available
             </Typography>
           ) : (
             <div className={classes.attendanceList}>
-              {attendanceData.map((at, index) => {
-                const percentage        = at.attendancePercentage ?? 0;
-                const displayPercentage = at.attendancePercentage !== null ? `${percentage}%` : "N/A";
+              {attendance_data.map((attendance_entry, index) => {
+                // attendancePercentage arrives as a string; parse for comparison and display
+                const parsed_course_attendance_percentage = parseFloat(attendance_entry.attendancePercentage);
+                const display_attendance_percentage = !isNaN(parsed_course_attendance_percentage)
+                  ? `${parsed_course_attendance_percentage}%`
+                  : "N/A";
+
                 return (
                   <div key={index} className={classes.attendanceRow}>
-                    <div className={classes.courseName} title={at.courseTitle}>
-                      {at.courseTitle}
+                    <div className={classes.courseName} title={attendance_entry.courseTitle}>
+                      {attendance_entry.courseTitle}
                     </div>
                     <div className={classes.attendancePercentage}>
-                      <span>{displayPercentage}</span>
-                      <SvgHollowCircle color={getStatusColor(at.attendancePercentage)} />
+                      <span>{display_attendance_percentage}</span>
+                      <SvgHollowCircle color={get_attendance_status_color(parsed_course_attendance_percentage)} />
                     </div>
                   </div>
                 );
