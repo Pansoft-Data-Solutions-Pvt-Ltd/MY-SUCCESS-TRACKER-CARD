@@ -15,23 +15,6 @@ import { useData, useCardInfo } from "@ellucian/experience-extension-utils";
 import { Typography, Card } from "@ellucian/react-design-system/core";
 
 /* ================= CONFIG ================= */
-const TABLE_CONFIG = {
-  attendanceGood: 75,
-  attendanceWarning: 60,
-  lowGrades: ["F"],
-};
-
-const COLOR_CONFIG = {
-  ON_TRACK: "#34930E",
-  NEEDS_ATTENTION: "#F3C60F",
-  CRITICAL: "#ED1012",
-};
-
-const GPA_CONFIG = {
-  GOOD: 3.5,
-  MEDIUM: 3.0,
-};
-
 /* ================= COMPONENT ================= */
 const MySuccessTrackerTable = () => {
   const [currentTerm, setCurrentTerm] = useState(null);
@@ -52,7 +35,66 @@ const MySuccessTrackerTable = () => {
   const [isFirstTermFlag, setIsFirstTermFlag] = useState(false);
 
   const { authenticatedEthosFetch } = useData();
-  const { cardId } = useCardInfo();
+  const { cardId, cardConfiguration } = useCardInfo();
+  console.log(
+    "Printing card configuration:",
+    JSON.stringify(cardConfiguration),
+  );
+
+  const {
+    excellent_performance_color_code,
+    satisfactory_performance_color_code,
+    poor_performance_color_code,
+    minimum_threshold_for_excellent_performance,
+    minimum_threshold_for_satisfactory_performance,
+    minimum_threshold_for_excellent_attendance,
+    minimum_threshold_for_satisfactory_attendance,
+  } = cardConfiguration;
+
+  // Parse config thresholds once — they arrive as strings from cardConfiguration
+  const parsed_minimum_threshold_for_excellent_performance = parseFloat(
+    minimum_threshold_for_excellent_performance,
+  );
+  const parsed_minimum_threshold_for_satisfactory_performance = parseFloat(
+    minimum_threshold_for_satisfactory_performance,
+  );
+  const parsed_minimum_threshold_for_excellent_attendance = parseFloat(
+    minimum_threshold_for_excellent_attendance,
+  );
+  const parsed_minimum_threshold_for_satisfactory_attendance = parseFloat(
+    minimum_threshold_for_satisfactory_attendance,
+  );
+
+  if (
+    parsed_minimum_threshold_for_excellent_performance <=
+    parsed_minimum_threshold_for_satisfactory_performance
+  ) {
+    throw new Error(
+      "Invalid performance configuration: excellent threshold must be greater than satisfactory threshold",
+    );
+  }
+
+  if (
+    parsed_minimum_threshold_for_excellent_attendance <=
+    parsed_minimum_threshold_for_satisfactory_attendance
+  ) {
+    throw new Error(
+      "Invalid attendance configuration: excellent threshold must be greater than satisfactory threshold",
+    );
+  }
+
+  const COLOR_CONFIG = {
+    ON_TRACK: excellent_performance_color_code,
+    NEEDS_ATTENTION: satisfactory_performance_color_code,
+    CRITICAL: poor_performance_color_code,
+  };
+
+const TABLE_CONFIG = {
+  attendanceGood: minimum_threshold_for_excellent_attendance,
+  attendanceWarning: minimum_threshold_for_satisfactory_attendance,
+  lowGrades: ["F"],
+};
+
 
   // Defined as a constant outside render cycle to avoid stale closure issues
   const blockedTermCodes = useMemo(() => ["199610", "199510", "199520"], []);
@@ -235,17 +277,23 @@ const MySuccessTrackerTable = () => {
   ]);
 
   const getStatusColor = (value) => {
-    if (value === null || value === undefined) return "#999";
-    if (value >= TABLE_CONFIG.attendanceGood) return COLOR_CONFIG.ON_TRACK;
-    if (value >= TABLE_CONFIG.attendanceWarning)
-      return COLOR_CONFIG.NEEDS_ATTENTION;
-    return COLOR_CONFIG.CRITICAL;
+    const parsed_value = parseFloat(value);
+    if (isNaN(parsed_value)) return poor_performance_color_code;
+    if (parsed_value >= parsed_minimum_threshold_for_excellent_attendance)
+      return excellent_performance_color_code;
+    if (parsed_value >= parsed_minimum_threshold_for_satisfactory_attendance)
+      return satisfactory_performance_color_code;
+    return poor_performance_color_code;
   };
 
   const getGpaCircleColor = (gpa) => {
-    if (gpa >= GPA_CONFIG.GOOD) return COLOR_CONFIG.ON_TRACK;
-    if (gpa >= GPA_CONFIG.MEDIUM) return COLOR_CONFIG.NEEDS_ATTENTION;
-    return COLOR_CONFIG.CRITICAL;
+    const parsed_gpa = parseFloat(gpa);
+    if (isNaN(parsed_gpa)) return poor_performance_color_code;
+    if (parsed_gpa >= parsed_minimum_threshold_for_excellent_performance)
+      return excellent_performance_color_code;
+    if (parsed_gpa >= parsed_minimum_threshold_for_satisfactory_performance)
+      return satisfactory_performance_color_code;
+    return poor_performance_color_code;
   };
 
   const handleTermChange = (term) => {
