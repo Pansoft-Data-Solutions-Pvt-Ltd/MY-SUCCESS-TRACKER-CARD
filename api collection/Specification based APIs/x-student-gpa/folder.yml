@@ -1,0 +1,7 @@
+info:
+  name: x-student-gpa
+  type: folder
+  seq: 4
+
+request:
+  auth: inherit
