@@ -58,24 +58,28 @@ module.exports = {
             label: "Serverless API name for academic performance pipeline",
             type: "text",
             required: true,
+            default: "x-pansoft-get-student-academic-performance"
           },
           {
             key: "latest_term_information_pipeline",
             label: "Serverless API name for latest term information pipeline",
             type: "text",
             required: true,
+            default: "x-pansoft-get-student-latest-term-information"
           },
           {
             key: "term_information_pipeline",
             label: "Serverless API name for term information pipeline",
             type: "text",
             required: true,
+            default: "x-pansoft-get-student-term-information"
           },
           {
             key: "term_codes_pipeline",
             label: "Serverless API name for term codes pipeline",
             type: "text",
             required: true,
+            default: "x-pansoft-get-student-term-codes"
           },
         ],
         server: [
