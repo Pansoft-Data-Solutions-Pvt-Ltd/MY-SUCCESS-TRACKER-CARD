@@ -1,0 +1,202 @@
+info:
+  name: logic-specification
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{tenantUrl}}/api/api-specifications/:id"
+  headers:
+    - name: Accept
+      value: application/vnd.hedtech.integration.logic-specifications.v1+json
+    - name: Content-Type
+      value: application/vnd.hedtech.integration.logic-specifications.v1+json
+  params:
+    - name: id
+      value: ""
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "contextInitialize": {
+          "pipeline": [
+            "setRequestValuesInContext"
+          ]
+        },
+        "pipelines": [
+          {
+            "name": "getAPI",
+            "segments": [
+              "compileEthosFilter",
+              "getTotalCount",
+              "getResource"
+            ]
+          }
+        ],
+        "resource": "x-student-gpa",
+        "supports": {
+          "accepts": [
+            "application/vnd.hedtech.integration.v1+json",
+            "application/vnd.hedtech.integration.v1.0.0+json",
+            "application/json"
+          ],
+          "returnedMediaType": "application/vnd.hedtech.integration.v1.0.0+json",
+          "contentTypes": [
+            "application/vnd.hedtech.integration.v1.0.0+json"
+          ]
+        },
+        "dependencies": {
+          "security": {
+            "bannerSecurityObject": "API_API_SPECIFICATIONS"
+          }
+        },
+        "segments": [
+          {
+            "name": "setRequestValuesInContext",
+            "class": "context:initialize",
+            "config": {
+              "variables": [
+                {
+                  "setName": "resourceId",
+                  "name": "id",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "accept",
+                  "name": "accept",
+                  "type": "request:header"
+                },
+                {
+                  "setName": "contentType",
+                  "name": "content-type",
+                  "type": "request:header"
+                },
+                {
+                  "setName": "limit",
+                  "name": "limit",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "offset",
+                  "name": "offset",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "criteria",
+                  "name": "criteria",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "debug",
+                  "name": "debug",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "resourceName",
+                  "name": "pluralizedResourceName",
+                  "type": "request:path"
+                }
+              ]
+            }
+          },
+          {
+            "name": "compileEthosFilter",
+            "class": "sql:query:ethosFilterCompiler",
+            "config": {
+              "contextTarget": "getQuerySQL",
+              "statement": "SELECT SPRIDEN_ID, SPRIDEN_FIRST_NAME || ' ' || SPRIDEN_LAST_NAME AS STUDENT_NAME, SPBPERS_SEX, SHRTGPA_TERM_CODE, SHRTGPA_LEVL_CODE, SHRTGPA_GPA, SHRTGPA_QUALITY_POINTS, SHRTGPA_GPA_HOURS FROM SPRIDEN, SGBSTDN, SPBPERS, SHRTGPA WHERE SPBPERS_PIDM = SPRIDEN_PIDM AND SPRIDEN_PIDM = SGBSTDN_PIDM AND SPRIDEN_CHANGE_IND IS NULL AND SGBSTDN_STST_CODE = 'AS' AND SGBSTDN_TERM_CODE_EFF = (SELECT MAX(SGBSTDN_TERM_CODE_EFF) FROM SGBSTDN WHERE SGBSTDN_PIDM = SPRIDEN_PIDM) AND SHRTGPA_PIDM = SPRIDEN_PIDM %%AND_FILTER%%",
+              "propertyMaps": [
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SPRIDEN_ID",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "bannerId"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SHRTGPA_TERM_CODE",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "termCode"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SHRTGPA_LEVL_CODE",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "levlCode"
+                }
+              ]
+            }
+          },
+          {
+            "name": "getTotalCount",
+            "class": "sql:query:ethosTotalCount",
+            "config": {
+              "statement": "select count(*) from (::getQuerySQL::)"
+            }
+          },
+          {
+            "name": "getResource",
+            "class": "sql:query:resultSetJsonTransformer",
+            "config": {
+              "sqlPagingWrapper": "SELECT T.* FROM (SELECT T.*, rowNum as rowIndex FROM (%%STATEMENT%%)T)T WHERE rowIndex > %%START_INDEX%% and rowIndex <= %%END_INDEX%%",
+              "statement": "::getQuerySQL::",
+              "contextResourceName": "x-student-gpa",
+              "propertyMaps": [
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SPRIDEN_ID",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "bannerId"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SHRTGPA_TERM_CODE",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "termCode"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SHRTGPA_LEVL_CODE",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "levlCode"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SHRTGPA_GPA",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "gpa"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SHRTGPA_QUALITY_POINTS",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "qualityPoints"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "SHRTGPA_GPA_HOURS",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "gpaHours"
+                }
+              ]
+            }
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,0 +1,174 @@
+info:
+  name: logic-specification
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{tenantUrl}}/api/api-specifications/:id"
+  headers:
+    - name: Accept
+      value: application/vnd.hedtech.integration.logic-specifications.v1+json
+    - name: Content-Type
+      value: application/vnd.hedtech.integration.logic-specifications.v1+json
+  params:
+    - name: id
+      value: ""
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "contextInitialize": {
+          "pipeline": [
+            "setRequestValuesInContext"
+          ]
+        },
+        "pipelines": [
+          {
+            "name": "getAPI",
+            "segments": [
+              "compileEthosFilter",
+              "getTotalCount",
+              "getResource"
+            ]
+          }
+        ],
+        "resource": "x-student-latest-term-code",
+        "supports": {
+          "accepts": [
+            "application/vnd.hedtech.integration.v1+json",
+            "application/vnd.hedtech.integration.v1.0.0+json",
+            "application/json"
+          ],
+          "returnedMediaType": "application/vnd.hedtech.integration.v1.0.0+json",
+          "contentTypes": [
+            "application/vnd.hedtech.integration.v1.0.0+json"
+          ]
+        },
+        "dependencies": {
+          "security": {
+            "bannerSecurityObject": "API_API_SPECIFICATIONS"
+          }
+        },
+        "segments": [
+          {
+            "name": "setRequestValuesInContext",
+            "class": "context:initialize",
+            "config": {
+              "variables": [
+                {
+                  "setName": "resourceId",
+                  "name": "id",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "accept",
+                  "name": "accept",
+                  "type": "request:header"
+                },
+                {
+                  "setName": "contentType",
+                  "name": "content-type",
+                  "type": "request:header"
+                },
+                {
+                  "setName": "limit",
+                  "name": "limit",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "offset",
+                  "name": "offset",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "criteria",
+                  "name": "criteria",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "debug",
+                  "name": "debug",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "resourceName",
+                  "name": "pluralizedResourceName",
+                  "type": "request:path"
+                }
+              ]
+            }
+          },
+          {
+            "name": "compileEthosFilter",
+            "class": "sql:query:ethosFilterCompiler",
+            "config": {
+              "contextTarget": "getQuerySQL",
+              "statement": "SELECT spriden_id, termCode, termDesc FROM (SELECT spriden_id, stvterm_code AS termCode, stvterm_desc AS termDesc, ROW_NUMBER() OVER (PARTITION BY spriden_id ORDER BY stvterm_code DESC) AS rn FROM sfrstcr JOIN spriden ON sfrstcr_pidm = spriden_pidm JOIN stvterm ON stvterm_code = sfrstcr_term_code WHERE spriden_change_ind IS NULL %%AND_FILTER%%) WHERE rn = 1",
+              "propertyMaps": [
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "spriden_id",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "bannerId"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "stvterm_code",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "termCode"
+                }
+              ]
+            }
+          },
+          {
+            "name": "getTotalCount",
+            "class": "sql:query:ethosTotalCount",
+            "config": {
+              "statement": "select count(*) from (::getQuerySQL::)"
+            }
+          },
+          {
+            "name": "getResource",
+            "class": "sql:query:resultSetJsonTransformer",
+            "config": {
+              "sqlPagingWrapper": "SELECT T.* FROM (SELECT T.*, rowNum as rowIndex FROM (%%STATEMENT%%)T)T WHERE rowIndex > %%START_INDEX%% and rowIndex <= %%END_INDEX%%",
+              "statement": "::getQuerySQL::",
+              "contextResourceName": "x-student-latest-term-code",
+              "propertyMaps": [
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "spriden_id",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "bannerId"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "termCode",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "termCode"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "termDesc",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "term"
+                }
+              ]
+            }
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

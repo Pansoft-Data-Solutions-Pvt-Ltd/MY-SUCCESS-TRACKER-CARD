@@ -1,0 +1,7 @@
+info:
+  name: Specification based APIs
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit

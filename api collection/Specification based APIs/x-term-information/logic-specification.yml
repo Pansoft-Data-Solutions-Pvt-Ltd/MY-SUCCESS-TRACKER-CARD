@@ -1,0 +1,230 @@
+info:
+  name: logic-specification
+  type: http
+  seq: 4
+
+http:
+  method: PUT
+  url: "{{tenantUrl}}/api/api-specifications/:id"
+  headers:
+    - name: Accept
+      value: application/vnd.hedtech.integration.logic-specifications.v1+json
+    - name: Content-Type
+      value: application/vnd.hedtech.integration.logic-specifications.v1+json
+  params:
+    - name: id
+      value: ""
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "contextInitialize": {
+          "pipeline": [
+            "setRequestValuesInContext"
+          ]
+        },
+        "pipelines": [
+          {
+            "name": "getAPI",
+            "segments": [
+              "compileEthosFilter",
+              "getTotalCount",
+              "getResource"
+            ]
+          }
+        ],
+        "resource": "x-term-information",
+        "supports": {
+          "accepts": [
+            "application/vnd.hedtech.integration.v1+json",
+            "application/vnd.hedtech.integration.v1.0.0+json",
+            "application/json"
+          ],
+          "returnedMediaType": "application/vnd.hedtech.integration.v1.0.0+json",
+          "contentTypes": [
+            "application/vnd.hedtech.integration.v1.0.0+json"
+          ]
+        },
+        "dependencies": {
+          "security": {
+            "bannerSecurityObject": "API_API_SPECIFICATIONS"
+          }
+        },
+        "segments": [
+          {
+            "name": "setRequestValuesInContext",
+            "class": "context:initialize",
+            "config": {
+              "variables": [
+                {
+                  "setName": "resourceId",
+                  "name": "id",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "accept",
+                  "name": "accept",
+                  "type": "request:header"
+                },
+                {
+                  "setName": "contentType",
+                  "name": "content-type",
+                  "type": "request:header"
+                },
+                {
+                  "setName": "limit",
+                  "name": "limit",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "offset",
+                  "name": "offset",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "criteria",
+                  "name": "criteria",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "debug",
+                  "name": "debug",
+                  "type": "request:path"
+                },
+                {
+                  "setName": "resourceName",
+                  "name": "pluralizedResourceName",
+                  "type": "request:path"
+                }
+              ]
+            }
+          },
+          {
+            "name": "compileEthosFilter",
+            "class": "sql:query:ethosFilterCompiler",
+            "config": {
+              "contextTarget": "getQuerySQL",
+              "statement": "SELECT spr.spriden_id, s.sfrstcr_crn, s.sfrstcr_term_code, s.sfrstcr_credit_hr, sec.ssbsect_subj_code, sec.ssbsect_crse_numb, c.scbcrse_title AS course_name, c.scbcrse_crse_numb, c.scbcrse_subj_code, NVL(s.sfrstcr_attend_hr,0) AS sfrstcr_attend_hr, meet.total_meet_days, CASE WHEN meet.total_meet_days > 0 THEN LEAST(100, ROUND((NVL(s.sfrstcr_attend_hr,0) * 100) / meet.total_meet_days, 2)) ELSE 0 END AS attendance_percentage FROM spriden spr JOIN sfrstcr s ON spr.spriden_pidm = s.sfrstcr_pidm JOIN ssbsect sec ON sec.ssbsect_crn = s.sfrstcr_crn AND sec.ssbsect_term_code = s.sfrstcr_term_code JOIN (SELECT ssbsect_term_code, ssbsect_crn, F_CALC_MEET_DAYS(ssbsect_term_code, ssbsect_crn, ssbsect_ptrm_code) AS total_meet_days FROM ssbsect) meet ON meet.ssbsect_term_code = sec.ssbsect_term_code AND meet.ssbsect_crn = sec.ssbsect_crn JOIN scbcrse c ON c.scbcrse_subj_code = sec.ssbsect_subj_code AND c.scbcrse_crse_numb = sec.ssbsect_crse_numb AND c.scbcrse_eff_term = (SELECT MAX(c2.scbcrse_eff_term) FROM scbcrse c2 WHERE c2.scbcrse_subj_code = sec.ssbsect_subj_code AND c2.scbcrse_crse_numb = sec.ssbsect_crse_numb AND c2.scbcrse_eff_term <= s.sfrstcr_term_code) WHERE spr.spriden_change_ind IS NULL %%AND_FILTER%%",
+              "propertyMaps": [
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "spr.spriden_id",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "bannerId"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "s.sfrstcr_term_code",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "termCode"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "s.sfrstcr_crn",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "crn"
+                }
+              ]
+            }
+          },
+          {
+            "name": "getTotalCount",
+            "class": "sql:query:ethosTotalCount",
+            "config": {
+              "statement": "select count(*) from (::getQuerySQL::)"
+            }
+          },
+          {
+            "name": "getResource",
+            "class": "sql:query:resultSetJsonTransformer",
+            "config": {
+              "sqlPagingWrapper": "SELECT T.* FROM (SELECT T.*, rowNum as rowIndex FROM (%%STATEMENT%%)T)T WHERE rowIndex > %%START_INDEX%% and rowIndex <= %%END_INDEX%%",
+              "statement": "::getQuerySQL::",
+              "contextResourceName": "x-term-information",
+              "propertyMaps": [
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "spriden_id",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "bannerId"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "sfrstcr_crn",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "crn"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "sfrstcr_term_code",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "termCode"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "sfrstcr_credit_hr",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "creditHours"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "course_name",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "courseTitle"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "scbcrse_crse_numb",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "courseNumber"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "scbcrse_subj_code",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "subjectCode"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "sfrstcr_attend_hr",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "attendHr"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "total_meet_days",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "meetingDays"
+                },
+                {
+                  "sourcePropertyType": "varchar",
+                  "sourceProperty": "attendance_percentage",
+                  "jsonPath": "/",
+                  "jsonType": "S",
+                  "jsonLabel": "attendancePercentage"
+                }
+              ]
+            }
+          }
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

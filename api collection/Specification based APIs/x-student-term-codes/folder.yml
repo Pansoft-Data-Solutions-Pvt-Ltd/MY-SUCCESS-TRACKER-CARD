@@ -1,0 +1,7 @@
+info:
+  name: x-student-term-codes
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit

@@ -1,0 +1,51 @@
+opencollection: 1.0.0
+
+info:
+  name: Student Success Tracker
+config:
+  proxy:
+    inherit: true
+    config:
+      protocol: http
+      hostname: ""
+      port: ""
+      auth:
+        username: ""
+        password: ""
+      bypassProxy: ""
+
+request:
+  auth:
+    type: bearer
+    token: "{{token}}"
+  scripts:
+    - type: before-request
+      code: |-
+        let apiKey = bru.getEnvVar("apiKey");
+        let tenantUrl = bru.getEnvVar("tenantUrl");
+
+        await bru.sendRequest({
+            url: tenantUrl + "/auth",
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + apiKey,
+                "Accept": "application/json"
+            }
+        }, async function(err, res) {
+            if (err) {
+                console.log("Error fetching token:", err);
+                throw err;
+            }
+
+            // API returns plain text token, not JSON
+            let token = res.data.trim();
+
+            bru.setEnvVar("token", token);
+            console.log("Token saved:", token);
+        });
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

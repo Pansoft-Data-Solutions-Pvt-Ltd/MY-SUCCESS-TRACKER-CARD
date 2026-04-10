@@ -1,0 +1,122 @@
+info:
+  name: endpoint-specification
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: "{{tenantUrl}}/api/api-specifications/:id"
+  headers:
+    - name: Accept
+      value: application/vnd.hedtech.integration.endpoint-specifications.v1+json
+    - name: Content-Type
+      value: application/vnd.hedtech.integration.endpoint-specifications.v1+json
+  params:
+    - name: id
+      value: ""
+      type: path
+  body:
+    type: json
+    data: |-
+      {
+        "openapi": "3.0.1",
+        "paths": {
+          "/x-term-information": {
+            "get": {
+              "summary": "Returns resources from RRRAREQ",
+              "description": "Returns a paged listing of all the financial aid applicant requirements from RRRAREQ table\n",
+              "responses": {
+                "200": {
+                  "headers": {
+                    "X-Total-Count": {
+                      "schema": {
+                        "type": "integer"
+                      },
+                      "description": "Specifies the total number of resources that satisfy the query."
+                    },
+                    "X-Media-Type": {
+                      "schema": {
+                        "type": "string"
+                      },
+                      "description": "The Ethos Media Type"
+                    }
+                  },
+                  "description": "Return all resources"
+                }
+              },
+              "parameters": [
+                {
+                  "schema": {
+                    "type": "integer"
+                  },
+                  "in": "query",
+                  "name": "limit",
+                  "description": "The maximum number of resources requesting for this result set. Default page limit is 500 and upper limit is 1000.",
+                  "required": false
+                },
+                {
+                  "schema": {
+                    "type": "integer"
+                  },
+                  "in": "query",
+                  "name": "offset",
+                  "description": "The 0 based index for a collection of resources for the page requested.",
+                  "required": false
+                },
+                {
+                  "schema": {
+                    "type": "object"
+                  },
+                  "in": "query",
+                  "name": "criteria",
+                  "description": "###Person  \nReturns the financial aid requirements for the person sent in the request\n```\n/x-spriden-first-name-last-name?criteria={\"person:\": {\"id\": $id}}\n```\n",
+                  "required": false
+                }
+              ]
+            }
+          },
+          "/x-term-information/{id}": {
+            "get": {
+              "responses": {
+                "200": {
+                  "headers": {
+                    "X-Media-Type": {
+                      "schema": {
+                        "type": "string"
+                      },
+                      "description": "The Ethos Media Type"
+                    }
+                  },
+                  "description": "Return one resource"
+                }
+              },
+              "parameters": [
+                {
+                  "schema": {
+                    "format": "GUID",
+                    "type": "string",
+                    "minimum": 1
+                  },
+                  "in": "path",
+                  "name": "id",
+                  "description": "The GUID",
+                  "required": true
+                }
+              ]
+            }
+          }
+        },
+        "info": {
+          "x-hedtech-integration-resource": "x-term-information",
+          "description": "A specification driven version of x-crn-list\n",
+          "title": "x-term-information",
+          "version": "1.0.0"
+        }
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
