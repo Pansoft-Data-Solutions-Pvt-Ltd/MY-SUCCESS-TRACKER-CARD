@@ -17,7 +17,7 @@ import { Typography, Card } from "@ellucian/react-design-system/core";
 const MySuccessTrackerTable = () => {
   const [currentTerm, setCurrentTerm] = useState(null);
   const [termData, setTermData] = useState([]);
-  const [currentBannerId, setCurrentBannerId] = useState(null);
+  // const [currentBannerId, setCurrentBannerId] = useState(null);
   const [currentTermCode, setCurrentTermCode] = useState(null);
   const [latestTermCode, setLatestTermCode] = useState(null);
   const [currentGpa, setCurrentGpa] = useState(0);
@@ -47,8 +47,6 @@ const MySuccessTrackerTable = () => {
     minimum_threshold_for_satisfactory_attendance,
     student_term_courses_pipeline
   } = cardConfiguration;
-  
-  console.log("temp console log for student_term_courses_pipeline: ", student_term_courses_pipeline);
 
   // Parse config thresholds once — they arrive as strings from cardConfiguration
   const parsed_minimum_threshold_for_excellent_performance = parseFloat(
@@ -111,7 +109,7 @@ const TABLE_CONFIG = {
 
       const newTermCodesResult = filteredTerms.map((tc) => ({
         termCode: tc,
-        term: tc, // using tc as term name since not provided
+        term: pipelineData.termData[tc]?.termName || tc, // prefer termName, fallback to termCode
         bannerId: pipelineData.bannerId,
       }));
       
@@ -119,11 +117,12 @@ const TABLE_CONFIG = {
 
       if (filteredTerms.length > 0 && !currentTermCode) {
         const latestTc = filteredTerms[filteredTerms.length - 1];
+        const latestTermName = pipelineData.termData[latestTc]?.termName || latestTc;
         setLatestTermCode(latestTc);
         setCurrentTermCode(latestTc);
-        setCurrentTerm(latestTc);
-        setCurrentBannerId(pipelineData.bannerId);
-        setTermData(filteredTerms);
+        setCurrentTerm(latestTermName);
+        // setCurrentBannerId(pipelineData.bannerId);
+        setTermData(newTermCodesResult.map((t) => t.term)); // use termName as labels
       }
     }
   }, [pipelineData, currentTermCode]);
@@ -138,6 +137,17 @@ const TABLE_CONFIG = {
 
     // Calculate avg attendance
     const courses = termInfo.courses || [];
+
+    // Edge case: term exists but student has no courses enrolled
+    if (courses.length === 0) {
+      setCourseData([]);
+      setAvgAttendance(null);
+      setDiffAttendance(null);
+      setGpaDelta(0);
+      setIsFirstTermFlag(false);
+      return;
+    }
+
     let validAttendances = courses.map((c) => parseFloat(c.attendancePercentage)).filter((a) => !isNaN(a));
     const avgAtt =
       validAttendances.length > 0
@@ -242,7 +252,7 @@ const TABLE_CONFIG = {
     setCourseData([]);
     setCurrentTerm(term.term);
     setCurrentTermCode(term.termCode);
-    setCurrentBannerId(term.bannerId);
+    // setCurrentBannerId(term.bannerId);
   };
 
   const isFirstTerm = useMemo(() => {
@@ -268,6 +278,11 @@ const TABLE_CONFIG = {
     : COLOR_CONFIG.CRITICAL;
 
   const isLoading = dataLoading;
+  const hasNoTerms =
+    !dataLoading &&
+    !dataError &&
+    pipelineData &&
+    (!pipelineData.termData || Object.keys(pipelineData.termData).length === 0);
 
   return (
     <div className="root">
@@ -287,7 +302,25 @@ const TABLE_CONFIG = {
           </Typography>
         )}
 
-        {!isLoading && (
+        {/* Edge case: API returned an error */}
+        {!isLoading && dataError && (
+          <Typography
+            style={{ padding: "20px", textAlign: "center", color: "#B91C1C", fontStyle: "italic" }}
+          >
+            Failed to load student data. Please try again later.
+          </Typography>
+        )}
+
+        {/* Edge case: Student not registered for any term */}
+        {!isLoading && hasNoTerms && (
+          <Typography
+            style={{ padding: "20px", textAlign: "center", color: "#6B7280", fontStyle: "italic" }}
+          >
+            No term registrations found for this student.
+          </Typography>
+        )}
+
+        {!isLoading && !dataError && !hasNoTerms && termCodesResult && (
           <>
             <div className="gpa-cards-wrapper">
               <div
