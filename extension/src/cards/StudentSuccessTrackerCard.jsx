@@ -142,7 +142,7 @@ const StudentSuccessTracker = ({ classes }) => {
   const { authenticatedEthosFetch } = useData();
 
   const { cardId, configuration } = useCardInfo();
-  console.log("Printing card configuration:", JSON.stringify(configuration));
+  // console.log("Printing card configuration:", JSON.stringify(configuration));
 
   const {
     excellent_performance_color_code,

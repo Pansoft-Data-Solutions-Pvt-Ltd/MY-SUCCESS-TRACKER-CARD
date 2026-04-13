@@ -36,10 +36,10 @@ const MySuccessTrackerTable = () => {
 
   const { authenticatedEthosFetch } = useData();
   const { cardId, cardConfiguration } = useCardInfo();
-  console.log(
-    "Printing card configuration:",
-    JSON.stringify(cardConfiguration),
-  );
+  // console.log(
+  //   "Printing card configuration:",
+  //   JSON.stringify(cardConfiguration),
+  // );
 
   const {
     excellent_performance_color_code,
@@ -49,6 +49,7 @@ const MySuccessTrackerTable = () => {
     minimum_threshold_for_satisfactory_performance,
     minimum_threshold_for_excellent_attendance,
     minimum_threshold_for_satisfactory_attendance,
+    student_term_courses_pipeline
   } = cardConfiguration;
 
   // Parse config thresholds once — they arrive as strings from cardConfiguration
