@@ -1,18 +1,18 @@
 info:
-  name: x-term-information
+  name: api-details
   type: http
-  seq: 5
+  seq: 2
 
 http:
   method: GET
-  url: '{{tenantUrl}}/api/x-student-term-courses?criteria={"bannerId": "BANNERADM"}'
+  url: "{{tenantUrl}}/api/api-specifications/:id"
   headers:
     - name: Accept
       value: application/json
   params:
-    - name: criteria
-      value: '{"bannerId": "BANNERADM"}'
-      type: query
+    - name: id
+      value: 62fb6887-5c19-45c3-b1c0-e059e9b0bcd5
+      type: path
   auth: inherit
 
 settings:

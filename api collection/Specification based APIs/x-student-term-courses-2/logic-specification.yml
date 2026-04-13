@@ -13,7 +13,7 @@ http:
       value: application/vnd.hedtech.integration.logic-specifications.v1+json
   params:
     - name: id
-      value: d2d1eba4-0584-42ea-8483-6a9efe044345
+      value: 62fb6887-5c19-45c3-b1c0-e059e9b0bcd5
       type: path
   body:
     type: json
@@ -34,7 +34,7 @@ http:
             ]
           }
         ],
-        "resource": "x-student-term-courses",
+        "resource": "x-student-term-courses-2",
         "supports": {
           "accepts": [
             "application/vnd.hedtech.integration.v1+json",
@@ -130,7 +130,7 @@ http:
             "config": {
               "sqlPagingWrapper": "SELECT T.* FROM (SELECT T.*, rowNum as rowIndex FROM (%%STATEMENT%%)T)T WHERE rowIndex > %%START_INDEX%% and rowIndex <= %%END_INDEX%%",
               "statement": "::getQuerySQL::",
-              "contextResourceName": "x-student-term-courses",
+              "contextResourceName": "x-student-term-courses-2",
               "propertyMaps": [
                 {
                   "sourcePropertyType": "varchar",

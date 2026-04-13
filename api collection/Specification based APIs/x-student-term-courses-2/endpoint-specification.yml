@@ -13,7 +13,7 @@ http:
       value: application/vnd.hedtech.integration.endpoint-specifications.v1+json
   params:
     - name: id
-      value: d2d1eba4-0584-42ea-8483-6a9efe044345
+      value: 62fb6887-5c19-45c3-b1c0-e059e9b0bcd5
       type: path
   body:
     type: json
@@ -27,7 +27,7 @@ http:
         ],
         "openapi": "3.0.1",
         "paths": {
-          "/x-student-term-courses/{id}": {
+          "/x-student-term-courses-2/{id}": {
             "get": {
               "responses": {
                 "200": {
@@ -57,7 +57,7 @@ http:
               ]
             }
           },
-          "/x-student-term-courses": {
+          "/x-student-term-courses-2": {
             "get": {
               "summary": "Returns resources from academic history and registartion",
               "description": "Returns a paged listing of all the courses from academic history and registartion\n",
@@ -113,9 +113,9 @@ http:
           }
         },
         "info": {
-          "x-hedtech-integration-resource": "x-student-term-courses",
-          "description": "A specification driven version of x-student-term-courses\n",
-          "title": "x-student-term-courses",
+          "x-hedtech-integration-resource": "x-student-term-courses-2",
+          "description": "A specification driven version of x-student-term-courses-2\n",
+          "title": "x-student-term-courses-2",
           "version": "1.0.0"
         }
       }

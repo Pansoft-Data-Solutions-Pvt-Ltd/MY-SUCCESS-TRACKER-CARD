@@ -1,11 +1,11 @@
 info:
-  name: x-term-information
+  name: x-student-term-courses-2
   type: http
   seq: 5
 
 http:
   method: GET
-  url: '{{tenantUrl}}/api/x-student-term-courses?criteria={"bannerId": "BANNERADM"}'
+  url: '{{tenantUrl}}/api/x-student-term-courses-2?criteria={"bannerId": "BANNERADM"}'
   headers:
     - name: Accept
       value: application/json
