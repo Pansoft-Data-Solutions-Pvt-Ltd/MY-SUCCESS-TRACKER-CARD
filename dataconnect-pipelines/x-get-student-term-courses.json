@@ -1,0 +1,98 @@
+{
+  "name": "pansoft-x-get-student-term-courses",
+  "parameters": [
+    {
+      "name": "ethosApiKey",
+      "type": "string",
+      "sensitive": true
+    }
+  ],
+  "apiDefinition": {
+    "authType": "userToken",
+    "httpVerb": "GET"
+  },
+  "pipeline": [
+    "init",
+    "get-person",
+    "extract-banner-id",
+    "get-x-student-term-courses",
+    "get-x-student-gpa",
+    "transform"
+  ],
+  "segments": {
+    "init": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform (message, context) {\n  const personId = context.get('__user').id;\n  message.payload.personId = personId;\n  return message;\n}\n"
+      }
+    },
+    "get-person": {
+      "class": "ethosProxyGet",
+      "config": {
+        "resource": "persons",
+        "acceptVersions": [
+          "12"
+        ],
+        "idFromPayload": "personId",
+        "target": "resPersons",
+        "cache": false,
+        "ignoreErrors": false,
+        "errorPath": "errPersons",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "extract-banner-id": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform (message, context) {\n  const person = message.payload.resPersons;\n  const bannerId = person.credentials.find(c => c.type === \"bannerId\").value;\n  message.payload.bannerId = bannerId;\n  message.payload.resPersons = undefined;\n  return message;\n}\n"
+      }
+    },
+    "get-x-student-term-courses": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "x-student-term-courses",
+        "filter": "?criteria={\"bannerId\": \"{{message.payload.bannerId}}\"}",
+        "payloadTargetPath": "resStudentTermCourses",
+        "acceptVersions": [
+          "1"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errStudentTermCourses",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "get-x-student-gpa": {
+      "class": "ethosProxyGetFilter",
+      "config": {
+        "resource": "x-student-gpa",
+        "filter": "?criteria={\"bannerId\": \"{{message.payload.bannerId}}\"}",
+        "payloadTargetPath": "resStudentGpa",
+        "acceptVersions": [
+          "1"
+        ],
+        "cache": false,
+        "queryByPost": false,
+        "ignoreErrors": false,
+        "errorPath": "errStudentGpa",
+        "apiKey": "ethosApiKey"
+      }
+    },
+    "transform": {
+      "class": "JavaScriptTransform",
+      "config": {
+        "pushUndefined": true,
+        "stopOnError": false,
+        "draft": false,
+        "code": "function transform(message, context) {\r\n  const termCourses = message.payload.resStudentTermCourses;\r\n  const gpaRecords  = message.payload.resStudentGpa;\r\n\r\n  // ── Step 1: Build termData keyed by termCode, seeded from courses ──────────\r\n  const termData = {};\r\n\r\n  for (const course of termCourses) {\r\n    const { termCode } = course;\r\n\r\n    if (!termData[termCode]) {\r\n      termData[termCode] = {\r\n        courses:        [],\r\n        term_gpa:       null,\r\n        cumulative_gpa: null,\r\n        gpa_available:  false,\r\n      };\r\n    }\r\n\r\n    termData[termCode].courses.push(course);\r\n  }\r\n\r\n  // ── Step 2: Sort GPA records chronologically so cumulative runs correctly ──\r\n  const sortedGpaRecords = [...gpaRecords].sort(\r\n    (a, b) => Number(a.termCode) - Number(b.termCode)\r\n  );\r\n\r\n  // ── Step 3: Merge GPA data into termData ───────────────────────────────────\r\n  let running_quality_points = 0;\r\n  let running_gpa_hours      = 0;\r\n\r\n  for (const record of sortedGpaRecords) {\r\n    const { termCode, gpa, qualityPoints, gpaHours, levlCode } = record;\r\n\r\n    running_quality_points += Number(qualityPoints || 0);\r\n    running_gpa_hours      += Number(gpaHours      || 0);\r\n\r\n    const cumulative_gpa =\r\n      running_gpa_hours === 0 ? 0 : running_quality_points / running_gpa_hours;\r\n\r\n    // Term may have a GPA record but no courses (edge case — be defensive)\r\n    if (!termData[termCode]) {\r\n      termData[termCode] = { courses: [] };\r\n    }\r\n\r\n    termData[termCode].term_gpa       = Number(gpa);\r\n    termData[termCode].cumulative_gpa = cumulative_gpa;\r\n    termData[termCode].gpa_available  = true;\r\n  }\r\n\r\n  // ── Step 4: For terms with no GPA record, carry forward last known CGPA ───\r\n  // Sort all term keys chronologically for the carry-forward pass\r\n  const allTermsSorted = Object.keys(termData).sort(\r\n    (a, b) => Number(a) - Number(b)\r\n  );\r\n\r\n  let last_known_cumulative = null;\r\n\r\n  for (const termCode of allTermsSorted) {\r\n    if (termData[termCode].gpa_available) {\r\n      last_known_cumulative = termData[termCode].cumulative_gpa;\r\n    } else {\r\n      // No GPA record for this term — carry forward but keep gpa_available: false\r\n      // so the UI knows this is inherited, not real\r\n      termData[termCode].cumulative_gpa = last_known_cumulative;\r\n    }\r\n  }\r\n\r\n  // ── Step 5: Clean up and return ───────────────────────────────────────────\r\n  message.payload.termData = termData;\r\n  delete message.payload.resStudentTermCourses;\r\n  delete message.payload.resStudentGpa;\r\n\r\n  return message;\r\n}"
+      }
+    }
+  }
+}

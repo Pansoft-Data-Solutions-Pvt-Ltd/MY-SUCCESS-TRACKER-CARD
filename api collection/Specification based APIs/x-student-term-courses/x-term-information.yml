@@ -5,13 +5,13 @@ info:
 
 http:
   method: GET
-  url: '{{tenantUrl}}/api/x-term-information?criteria={"bannerId": "BANNERADM"}'
+  url: '{{tenantUrl}}/api/x-student-term-courses?criteria={"bannerId": ""}'
   headers:
     - name: Accept
       value: application/json
   params:
     - name: criteria
-      value: '{"bannerId": "BANNERADM"}'
+      value: '{"bannerId": ""}'
       type: query
   auth: inherit
 
