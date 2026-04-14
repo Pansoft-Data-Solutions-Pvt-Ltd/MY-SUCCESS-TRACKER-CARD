@@ -88,8 +88,15 @@ module.exports = {
             label: "Ethos API Key",
             type: "password",
             require: true,
-            default: "",
+            default: ""
           },
+          {
+            key: "openAiApiKey",
+            label: "Open AI API Key",
+            type: "password",
+            require: true,
+            default: ""
+          }
         ],
       },
       pageRoute: {
