@@ -1,14 +1,23 @@
-import React, { useState } from "react";
+import React from // useState
+"react";
 import PropTypes from "prop-types";
-import { Card, Typography, TextField, Button } from "@ellucian/react-design-system/core";
+import {
+  Card,
+  Typography,
+  // TextField,
+  // Button,
+  // ExpansionPanel,
+  // ExpansionPanelSummary,
+  // ExpansionPanelDetails
+} from "@ellucian/react-design-system/core";
 import DoubleChevronIcon from "./DoubleChevron";
-import Markdown from 'react-markdown'
+// import Markdown from 'react-markdown'
 
 const GpaMetrics = ({
-  fetchGpaRecommendation,
-  loadingRecommendation,
-  recommendationResult,
-  recommendationError,
+  // fetchGpaRecommendation,
+  // loadingRecommendation,
+  // recommendationResult,
+  // recommendationError,
   loadingTermInformation,
   isFirstTerm,
   isFirstTermFlag,
@@ -29,7 +38,7 @@ const GpaMetrics = ({
   avgAttendance,
   colors,
 }) => {
-  const [targetGpa, setTargetGpa] = useState("");
+  // const [targetGpa, setTargetGpa] = useState("");
 
   return (
     <div className="gpa-cards-column">
@@ -80,7 +89,9 @@ const GpaMetrics = ({
                           fontWeight: 700,
                         }}
                       >
-                        {gpaDelta != null ? Number(gpaDelta).toFixed(2) : gpaDelta}
+                        {gpaDelta != null
+                          ? Number(gpaDelta).toFixed(2)
+                          : gpaDelta}
                       </span>
                       <span style={{ marginLeft: 3, color: "#6B7280" }}>
                         {" "}
@@ -135,7 +146,11 @@ const GpaMetrics = ({
               color: termGpaCircleColor,
             }}
           >
-            {loadingTermInformation ? "..." : (termGpa != null && !isNaN(termGpa) ? Number(termGpa).toFixed(2) : termGpa)}
+            {loadingTermInformation
+              ? "..."
+              : termGpa != null && !isNaN(termGpa)
+                ? Number(termGpa).toFixed(2)
+                : termGpa}
           </div>
         </Card>
 
@@ -280,7 +295,7 @@ const GpaMetrics = ({
           </Typography>
         </div>
       </div>
-      <div style={{ marginTop: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
+      {/* <div style={{ marginTop: "20px", display: "flex", gap: "10px", alignItems: "center" }}>
         <TextField
           label="Target GPA"
           value={targetGpa}
@@ -293,27 +308,36 @@ const GpaMetrics = ({
       </div>
 
       {/* Recommendation Results */}
-      {(loadingRecommendation || recommendationResult || recommendationError) && (
-        <div style={{ marginTop: "15px", padding: "15px", backgroundColor: "#f9fafb", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-          {loadingRecommendation && (
-            <Typography variant="body2" style={{ color: "#4b5563" }}>
-              Loading recommendation...
-            </Typography>
-          )}
-          {recommendationError && (
-            <Typography variant="body2" style={{ color: "#dc2626", fontWeight: 600 }}>
-              Error: {recommendationError}
-            </Typography>
-          )}
-          {recommendationResult && !loadingRecommendation && (
-            <Typography variant="body2" style={{ color: "#1f2937", whiteSpace: "pre-wrap", fontWeight: 500, lineHeight: 1.5 }}>
-              <Markdown>
-                {recommendationResult}
-              </Markdown>
-            </Typography>
-          )}
+      {/* {(loadingRecommendation || recommendationResult || recommendationError) && (
+        <div style={{ marginTop: "15px" }}>
+          <ExpansionPanel>
+            <ExpansionPanelSummary>
+              <Typography variant="h4">GPA Recommendation</Typography>
+            </ExpansionPanelSummary>
+            <ExpansionPanelDetails>
+              <div style={{ padding: "5px", width: "100%" }}>
+                {loadingRecommendation && (
+                  <Typography variant="body2" style={{ color: "#4b5563" }}>
+                    Loading recommendation...
+                  </Typography>
+                )}
+                {recommendationError && (
+                  <Typography variant="body2" style={{ color: "#dc2626", fontWeight: 600 }}>
+                    Error: {recommendationError}
+                  </Typography>
+                )}
+                {recommendationResult && !loadingRecommendation && (
+                  <Typography component="div" variant="body2" style={{ color: "#1f2937", whiteSpace: "pre-wrap", fontWeight: 500, lineHeight: 1.5 }}>
+                    <Markdown>
+                      {recommendationResult}
+                    </Markdown>
+                  </Typography>
+                )}
+              </div>
+            </ExpansionPanelDetails>
+          </ExpansionPanel>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

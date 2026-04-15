@@ -6,11 +6,20 @@ import HomeHeader from "../components/HomeHeader";
 import GpaMetrics from "../components/GpaMetrics";
 import CourseDataView from "../components/CourseDataView";
 import "./Home.css";
+import Markdown from "react-markdown";
 
 // Ellucian provided hooks
 import { useData, useCardInfo } from "@ellucian/experience-extension-utils";
 
-import { Typography, Card } from "@ellucian/react-design-system/core";
+import {
+  Typography,
+  Card,
+  TextField,
+  Button,
+  ExpansionPanel,
+  ExpansionPanelSummary,
+  ExpansionPanelDetails,
+} from "@ellucian/react-design-system/core";
 
 /* ================= CONFIG ================= */
 /* ================= COMPONENT ================= */
@@ -29,6 +38,7 @@ const MySuccessTrackerTable = () => {
   const [diffAttendance, setDiffAttendance] = useState(null);
   const [isFirstTermFlag, setIsFirstTermFlag] = useState(false);
   const [termCodesResult, setTermCodesResult] = useState(null);
+  const [targetGpa, setTargetGpa] = useState("");
 
   const { authenticatedEthosFetch } = useData();
   const { cardId, cardConfiguration } = useCardInfo();
@@ -46,7 +56,7 @@ const MySuccessTrackerTable = () => {
     minimum_threshold_for_excellent_attendance,
     minimum_threshold_for_satisfactory_attendance,
     student_term_courses_pipeline,
-    student_gpa_recommendation_pipeline
+    student_gpa_recommendation_pipeline,
   } = cardConfiguration;
 
   const [loadingRecommendation, setLoadingRecommendation] = useState(false);
@@ -55,7 +65,10 @@ const MySuccessTrackerTable = () => {
 
   const fetchGpaRecommendation = async (targetGpa) => {
     console.log("targetGpa", targetGpa);
-    console.log("student_gpa_recommendation_pipeline", student_gpa_recommendation_pipeline);
+    console.log(
+      "student_gpa_recommendation_pipeline",
+      student_gpa_recommendation_pipeline,
+    );
     console.log("student term courses pipeline", student_term_courses_pipeline);
 
     if (!targetGpa || !student_gpa_recommendation_pipeline) return;
@@ -70,7 +83,10 @@ const MySuccessTrackerTable = () => {
       // const resourcePath = `pansoft-x-get-student-gpa-recommendation?${queryString}`;
       const options = {
         method: "GET",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       };
 
       const response = await authenticatedEthosFetch(resourcePath, options);
@@ -78,7 +94,7 @@ const MySuccessTrackerTable = () => {
 
       let data = await response.text();
       try {
-        console.log("response: ", data)
+        console.log("response: ", data);
         const jsonData = JSON.parse(data);
         if (jsonData.text) data = jsonData.text;
         else if (jsonData.message) data = jsonData.message;
@@ -86,7 +102,7 @@ const MySuccessTrackerTable = () => {
         else if (typeof jsonData === "string") data = jsonData;
         else data = JSON.stringify(jsonData, null, 2);
       } catch (e) {
-        console.error(e)
+        console.error(e);
       }
       setRecommendationResult(data);
     } catch (err) {
@@ -134,38 +150,41 @@ const MySuccessTrackerTable = () => {
     CRITICAL: poor_performance_color_code,
   };
 
-const TABLE_CONFIG = {
-  attendanceGood: minimum_threshold_for_excellent_attendance,
-  attendanceWarning: minimum_threshold_for_satisfactory_attendance,
-  lowGrades: ["F"],
-};
+  const TABLE_CONFIG = {
+    attendanceGood: minimum_threshold_for_excellent_attendance,
+    attendanceWarning: minimum_threshold_for_satisfactory_attendance,
+    lowGrades: ["F"],
+  };
 
-
-  const { loading: dataLoading, data: pipelineData, error: dataError } = useFetch(
+  const {
+    loading: dataLoading,
+    data: pipelineData,
+    error: dataError,
+  } = useFetch(
     authenticatedEthosFetch,
     cardId,
     undefined,
     student_term_courses_pipeline,
-    {}
+    {},
   );
   // Fetch and filter term codes
   useEffect(() => {
     if (pipelineData && pipelineData.termData) {
       const allTermCodes = Object.keys(pipelineData.termData);
-      const filteredTerms = allTermCodes
-        .sort((a, b) => a.localeCompare(b));
+      const filteredTerms = allTermCodes.sort((a, b) => a.localeCompare(b));
 
       const newTermCodesResult = filteredTerms.map((tc) => ({
         termCode: tc,
         term: pipelineData.termData[tc]?.termName || tc, // prefer termName, fallback to termCode
         bannerId: pipelineData.bannerId,
       }));
-      
+
       setTermCodesResult(newTermCodesResult);
 
       if (filteredTerms.length > 0 && !currentTermCode) {
         const latestTc = filteredTerms[filteredTerms.length - 1];
-        const latestTermName = pipelineData.termData[latestTc]?.termName || latestTc;
+        const latestTermName =
+          pipelineData.termData[latestTc]?.termName || latestTc;
         setLatestTermCode(latestTc);
         setCurrentTermCode(latestTc);
         setCurrentTerm(latestTermName);
@@ -181,7 +200,7 @@ const TABLE_CONFIG = {
     if (!termInfo) return;
 
     setCurrentGpa(termInfo.cumulative_gpa || 0);
-    setTermGpa(termInfo.gpa_available ? (termInfo.term_gpa || 0) : "N/A");
+    setTermGpa(termInfo.gpa_available ? termInfo.term_gpa || 0 : "N/A");
 
     // Calculate avg attendance
     const courses = termInfo.courses || [];
@@ -196,7 +215,9 @@ const TABLE_CONFIG = {
       return;
     }
 
-    let validAttendances = courses.map((c) => parseFloat(c.attendancePercentage)).filter((a) => !isNaN(a));
+    let validAttendances = courses
+      .map((c) => parseFloat(c.attendancePercentage))
+      .filter((a) => !isNaN(a));
     const avgAtt =
       validAttendances.length > 0
         ? validAttendances.reduce((a, b) => a + b, 0) / validAttendances.length
@@ -224,7 +245,9 @@ const TABLE_CONFIG = {
     let isFirst = false;
 
     if (termCodesResult) {
-      const currentIndex = termCodesResult.findIndex((t) => t.termCode === currentTermCode);
+      const currentIndex = termCodesResult.findIndex(
+        (t) => t.termCode === currentTermCode,
+      );
       if (currentIndex === 0) {
         isFirst = true;
       } else if (currentIndex > 0) {
@@ -260,8 +283,8 @@ const TABLE_CONFIG = {
   // For term Gpas Bar
   useEffect(() => {
     if (!pipelineData || !termCodesResult) {
-        setTermGpaData([]);
-        return;
+      setTermGpaData([]);
+      return;
     }
 
     const allTermGpas = termCodesResult.map((termObj) => {
@@ -305,8 +328,9 @@ const TABLE_CONFIG = {
 
   const isFirstTerm = useMemo(() => {
     if (!termCodesResult || termCodesResult.length === 0) return false;
-    const sorted = termCodesResult
-      .sort((a, b) => a.termCode.localeCompare(b.termCode));
+    const sorted = termCodesResult.sort((a, b) =>
+      a.termCode.localeCompare(b.termCode),
+    );
     return sorted[0]?.termCode === currentTermCode;
   }, [termCodesResult, currentTermCode]);
 
@@ -353,7 +377,12 @@ const TABLE_CONFIG = {
         {/* Edge case: API returned an error */}
         {!isLoading && dataError && (
           <Typography
-            style={{ padding: "20px", textAlign: "center", color: "#B91C1C", fontStyle: "italic" }}
+            style={{
+              padding: "20px",
+              textAlign: "center",
+              color: "#B91C1C",
+              fontStyle: "italic",
+            }}
           >
             Failed to load student data. Please try again later.
           </Typography>
@@ -362,7 +391,12 @@ const TABLE_CONFIG = {
         {/* Edge case: Student not registered for any term */}
         {!isLoading && hasNoTerms && (
           <Typography
-            style={{ padding: "20px", textAlign: "center", color: "#6B7280", fontStyle: "italic" }}
+            style={{
+              padding: "20px",
+              textAlign: "center",
+              color: "#6B7280",
+              fontStyle: "italic",
+            }}
           >
             No term registrations found for this student.
           </Typography>
@@ -374,45 +408,128 @@ const TABLE_CONFIG = {
               <div
                 style={{
                   display: "flex",
+                  flexDirection: "column",
                   gap: "20px",
                   justifyContent: "space-between",
                   width: "100%",
                 }}
               >
-                <GpaMetrics
-                  fetchGpaRecommendation={fetchGpaRecommendation}
-                  loadingRecommendation={loadingRecommendation}
-                  recommendationResult={recommendationResult}
-                  recommendationError={recommendationError}
-                  loadingTermInformation={dataLoading}
-                  isFirstTerm={isFirstTerm}
-                  isFirstTermFlag={isFirstTermFlag}
-                  isZeroDelta={isZeroDelta}
-                  isPositive={isPositive}
-                  deltaColor={deltaColor}
-                  gpaDelta={gpaDelta}
-                  gpaCircleColor={gpaCircleColor}
-                  currentGpa={currentGpa}
-                  termGpaCircleColor={termGpaCircleColor}
-                  termGpa={termGpa}
-                  isLatestTerm={isLatestTerm}
-                  diffAttendance={diffAttendance}
-                  isZeroAttendanceDiff={isZeroAttendanceDiff}
-                  isPositiveAttendanceDiff={isPositiveAttendanceDiff}
-                  attendanceDiffColor={attendanceDiffColor}
-                  attendanceCircleColor={attendanceCircleColor}
-                  avgAttendance={avgAttendance}
-                  colors={COLOR_CONFIG}
-                />
-
-                {/* TERM GPA BAR CHART */}
-                <Card className="term-gpa-bar-card">
-                  <TermGpaBar
-                    termData={termData}
-                    termGpaData={termGpaData}
-                    loading={dataLoading}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: "20px",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
+                >
+                  <GpaMetrics
+                    fetchGpaRecommendation={fetchGpaRecommendation}
+                    loadingRecommendation={loadingRecommendation}
+                    recommendationResult={recommendationResult}
+                    recommendationError={recommendationError}
+                    loadingTermInformation={dataLoading}
+                    isFirstTerm={isFirstTerm}
+                    isFirstTermFlag={isFirstTermFlag}
+                    isZeroDelta={isZeroDelta}
+                    isPositive={isPositive}
+                    deltaColor={deltaColor}
+                    gpaDelta={gpaDelta}
+                    gpaCircleColor={gpaCircleColor}
+                    currentGpa={currentGpa}
+                    termGpaCircleColor={termGpaCircleColor}
+                    termGpa={termGpa}
+                    isLatestTerm={isLatestTerm}
+                    diffAttendance={diffAttendance}
+                    isZeroAttendanceDiff={isZeroAttendanceDiff}
+                    isPositiveAttendanceDiff={isPositiveAttendanceDiff}
+                    attendanceDiffColor={attendanceDiffColor}
+                    attendanceCircleColor={attendanceCircleColor}
+                    avgAttendance={avgAttendance}
+                    colors={COLOR_CONFIG}
                   />
-                </Card>
+
+                  {/* TERM GPA BAR CHART */}
+                  <Card className="term-gpa-bar-card">
+                    <TermGpaBar
+                      termData={termData}
+                      termGpaData={termGpaData}
+                      loading={dataLoading}
+                    />
+                  </Card>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "20px",
+                    display: "flex",
+                    gap: "10px",
+                    alignItems: "center",
+                  }}
+                >
+                  <TextField
+                    label="Target GPA"
+                    value={targetGpa}
+                    onChange={(event) => setTargetGpa(event.target.value)}
+                    placeholder="e.g. 3.5"
+                  />
+                  <Button
+                    onClick={() => fetchGpaRecommendation(targetGpa)}
+                    disabled={loadingRecommendation || !targetGpa}
+                  >
+                    {loadingRecommendation ? "Submitting..." : "Submit"}
+                  </Button>
+                </div>
+
+                {/* Recommendation Results */}
+                {(loadingRecommendation ||
+                  recommendationResult ||
+                  recommendationError) && (
+                  <div>
+                    <ExpansionPanel>
+                      <ExpansionPanelSummary>
+                        <Typography variant="h4">
+                          {loadingRecommendation
+                            ? "Loading..."
+                            : "GPA Recommendation"}
+                        </Typography>
+                      </ExpansionPanelSummary>
+                      <ExpansionPanelDetails>
+                        <div style={{ padding: "5px", width: "100%" }}>
+                          {loadingRecommendation && (
+                            <Typography
+                              variant="body2"
+                              style={{ color: "#4b5563" }}
+                            >
+                              Loading recommendation...
+                            </Typography>
+                          )}
+                          {recommendationError && (
+                            <Typography
+                              variant="body2"
+                              style={{ color: "#dc2626", fontWeight: 600 }}
+                            >
+                              Error: {recommendationError}
+                            </Typography>
+                          )}
+                          {recommendationResult && !loadingRecommendation && (
+                            <Typography
+                              component="div"
+                              variant="body2"
+                              style={{
+                                color: "#1f2937",
+                                fontWeight: 500,
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              <Markdown>{recommendationResult}</Markdown>
+                            </Typography>
+                          )}
+                        </div>
+                      </ExpansionPanelDetails>
+                    </ExpansionPanel>
+                  </div>
+                )}
               </div>
             </div>
 
