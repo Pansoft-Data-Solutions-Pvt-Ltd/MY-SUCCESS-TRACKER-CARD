@@ -49,6 +49,53 @@ const MySuccessTrackerTable = () => {
     student_gpa_recommendation_pipeline
   } = cardConfiguration;
 
+  const [loadingRecommendation, setLoadingRecommendation] = useState(false);
+  const [recommendationResult, setRecommendationResult] = useState(null);
+  const [recommendationError, setRecommendationError] = useState(null);
+
+  const fetchGpaRecommendation = async (targetGpa) => {
+    console.log("targetGpa", targetGpa);
+    console.log("student_gpa_recommendation_pipeline", student_gpa_recommendation_pipeline);
+    console.log("student term courses pipeline", student_term_courses_pipeline);
+
+    if (!targetGpa || !student_gpa_recommendation_pipeline) return;
+    // if (!targetGpa) return;
+    setLoadingRecommendation(true);
+    setRecommendationResult(null);
+    setRecommendationError(null);
+
+    try {
+      const queryString = new URLSearchParams({ cardId, targetGpa }).toString();
+      const resourcePath = `${student_gpa_recommendation_pipeline}?${queryString}`;
+      // const resourcePath = `pansoft-x-get-student-gpa-recommendation?${queryString}`;
+      const options = {
+        method: "GET",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+      };
+
+      const response = await authenticatedEthosFetch(resourcePath, options);
+      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+      let data = await response.text();
+      try {
+        console.log("response: ", data)
+        const jsonData = JSON.parse(data);
+        if (jsonData.text) data = jsonData.text;
+        else if (jsonData.message) data = jsonData.message;
+        else if (jsonData.result) data = jsonData.result;
+        else if (typeof jsonData === "string") data = jsonData;
+        else data = JSON.stringify(jsonData, null, 2);
+      } catch (e) {
+        console.error(e)
+      }
+      setRecommendationResult(data);
+    } catch (err) {
+      setRecommendationError(err.message || "Something went wrong.");
+    } finally {
+      setLoadingRecommendation(false);
+    }
+  };
+
   // Parse config thresholds once — they arrive as strings from cardConfiguration
   const parsed_minimum_threshold_for_excellent_performance = parseFloat(
     minimum_threshold_for_excellent_performance,
@@ -333,6 +380,10 @@ const TABLE_CONFIG = {
                 }}
               >
                 <GpaMetrics
+                  fetchGpaRecommendation={fetchGpaRecommendation}
+                  loadingRecommendation={loadingRecommendation}
+                  recommendationResult={recommendationResult}
+                  recommendationError={recommendationError}
                   loadingTermInformation={dataLoading}
                   isFirstTerm={isFirstTerm}
                   isFirstTermFlag={isFirstTermFlag}

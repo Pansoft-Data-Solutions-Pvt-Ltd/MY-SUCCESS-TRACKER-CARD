@@ -2,8 +2,13 @@ import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Card, Typography, TextField, Button } from "@ellucian/react-design-system/core";
 import DoubleChevronIcon from "./DoubleChevron";
+import Markdown from 'react-markdown'
 
 const GpaMetrics = ({
+  fetchGpaRecommendation,
+  loadingRecommendation,
+  recommendationResult,
+  recommendationError,
   loadingTermInformation,
   isFirstTerm,
   isFirstTermFlag,
@@ -282,13 +287,42 @@ const GpaMetrics = ({
           onChange={(event) => setTargetGpa(event.target.value)}
           placeholder="e.g. 3.5"
         />
-        <Button onClick={() => console.log("Submit Target GPA:", targetGpa)}>Submit</Button>
+        <Button onClick={() => fetchGpaRecommendation(targetGpa)} disabled={loadingRecommendation || !targetGpa}>
+          {loadingRecommendation ? "Submitting..." : "Submit"}
+        </Button>
       </div>
+
+      {/* Recommendation Results */}
+      {(loadingRecommendation || recommendationResult || recommendationError) && (
+        <div style={{ marginTop: "15px", padding: "15px", backgroundColor: "#f9fafb", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+          {loadingRecommendation && (
+            <Typography variant="body2" style={{ color: "#4b5563" }}>
+              Loading recommendation...
+            </Typography>
+          )}
+          {recommendationError && (
+            <Typography variant="body2" style={{ color: "#dc2626", fontWeight: 600 }}>
+              Error: {recommendationError}
+            </Typography>
+          )}
+          {recommendationResult && !loadingRecommendation && (
+            <Typography variant="body2" style={{ color: "#1f2937", whiteSpace: "pre-wrap", fontWeight: 500, lineHeight: 1.5 }}>
+              <Markdown>
+                {recommendationResult}
+              </Markdown>
+            </Typography>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
 GpaMetrics.propTypes = {
+  fetchGpaRecommendation: PropTypes.func.isRequired,
+  loadingRecommendation: PropTypes.bool,
+  recommendationResult: PropTypes.string,
+  recommendationError: PropTypes.string,
   loadingTermInformation: PropTypes.bool.isRequired,
   isFirstTerm: PropTypes.bool.isRequired,
   isFirstTermFlag: PropTypes.bool.isRequired,
