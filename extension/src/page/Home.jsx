@@ -472,6 +472,7 @@ const MySuccessTrackerTable = () => {
                     value={targetGpa}
                     onChange={(event) => setTargetGpa(event.target.value)}
                     placeholder="e.g. 3.5"
+                    disabled={!isLatestTerm}
                   />
                   <Button
                     onClick={() => fetchGpaRecommendation(targetGpa)}
