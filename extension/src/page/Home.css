@@ -112,7 +112,7 @@
   /* max-height: 100px; */
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   position: relative;
   background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -120,6 +120,7 @@
   border: 1px solid #e5e7eb;
   overflow: hidden;
   flex: 2;
+  max-height: 260px;
 }
 
 @media (min-width: 768px) {

@@ -17,7 +17,6 @@ import { Typography, Card } from "@ellucian/react-design-system/core";
 const MySuccessTrackerTable = () => {
   const [currentTerm, setCurrentTerm] = useState(null);
   const [termData, setTermData] = useState([]);
-  // const [currentBannerId, setCurrentBannerId] = useState(null);
   const [currentTermCode, setCurrentTermCode] = useState(null);
   const [latestTermCode, setLatestTermCode] = useState(null);
   const [currentGpa, setCurrentGpa] = useState(0);
@@ -32,10 +31,6 @@ const MySuccessTrackerTable = () => {
 
   const { authenticatedEthosFetch } = useData();
   const { cardId, cardConfiguration } = useCardInfo();
-  // console.log(
-  //   "Printing card configuration:",
-  //   JSON.stringify(cardConfiguration),
-  // );
 
   const {
     excellent_performance_color_code,
@@ -46,7 +41,6 @@ const MySuccessTrackerTable = () => {
     minimum_threshold_for_excellent_attendance,
     minimum_threshold_for_satisfactory_attendance,
     student_term_courses_pipeline,
-    student_gpa_recommendation_pipeline
   } = cardConfiguration;
 
   // Parse config thresholds once — they arrive as strings from cardConfiguration
@@ -87,42 +81,44 @@ const MySuccessTrackerTable = () => {
     CRITICAL: poor_performance_color_code,
   };
 
-const TABLE_CONFIG = {
-  attendanceGood: minimum_threshold_for_excellent_attendance,
-  attendanceWarning: minimum_threshold_for_satisfactory_attendance,
-  lowGrades: ["F"],
-};
+  const TABLE_CONFIG = {
+    attendanceGood: minimum_threshold_for_excellent_attendance,
+    attendanceWarning: minimum_threshold_for_satisfactory_attendance,
+    lowGrades: ["F"],
+  };
 
-
-  const { loading: dataLoading, data: pipelineData, error: dataError } = useFetch(
+  const {
+    loading: dataLoading,
+    data: pipelineData,
+    error: dataError,
+  } = useFetch(
     authenticatedEthosFetch,
     cardId,
     undefined,
     student_term_courses_pipeline,
-    {}
+    {},
   );
   // Fetch and filter term codes
   useEffect(() => {
     if (pipelineData && pipelineData.termData) {
       const allTermCodes = Object.keys(pipelineData.termData);
-      const filteredTerms = allTermCodes
-        .sort((a, b) => a.localeCompare(b));
+      const filteredTerms = allTermCodes.sort((a, b) => a.localeCompare(b));
 
       const newTermCodesResult = filteredTerms.map((tc) => ({
         termCode: tc,
         term: pipelineData.termData[tc]?.termName || tc, // prefer termName, fallback to termCode
         bannerId: pipelineData.bannerId,
       }));
-      
+
       setTermCodesResult(newTermCodesResult);
 
       if (filteredTerms.length > 0 && !currentTermCode) {
         const latestTc = filteredTerms[filteredTerms.length - 1];
-        const latestTermName = pipelineData.termData[latestTc]?.termName || latestTc;
+        const latestTermName =
+          pipelineData.termData[latestTc]?.termName || latestTc;
         setLatestTermCode(latestTc);
         setCurrentTermCode(latestTc);
         setCurrentTerm(latestTermName);
-        // setCurrentBannerId(pipelineData.bannerId);
         setTermData(newTermCodesResult.map((t) => t.term)); // use termName as labels
       }
     }
@@ -134,7 +130,8 @@ const TABLE_CONFIG = {
     if (!termInfo) return;
 
     setCurrentGpa(termInfo.cumulative_gpa || 0);
-    setTermGpa(termInfo.gpa_available ? (termInfo.term_gpa || 0) : "N/A");
+    setTermGpa(termInfo.gpa_available ? termInfo.term_gpa || 0 : "N/A");
+    setAvgAttendance(termInfo.attendancePercentage);
 
     // Calculate avg attendance
     const courses = termInfo.courses || [];
@@ -148,13 +145,6 @@ const TABLE_CONFIG = {
       setIsFirstTermFlag(false);
       return;
     }
-
-    let validAttendances = courses.map((c) => parseFloat(c.attendancePercentage)).filter((a) => !isNaN(a));
-    const avgAtt =
-      validAttendances.length > 0
-        ? validAttendances.reduce((a, b) => a + b, 0) / validAttendances.length
-        : null;
-    setAvgAttendance(avgAtt);
 
     // Calculate mapped courses
     const mappedCourses = courses.map((course) => ({
@@ -177,27 +167,33 @@ const TABLE_CONFIG = {
     let isFirst = false;
 
     if (termCodesResult) {
-      const currentIndex = termCodesResult.findIndex((t) => t.termCode === currentTermCode);
+      const currentIndex = termCodesResult.findIndex(
+        (t) => t.termCode === currentTermCode,
+      );
       if (currentIndex === 0) {
         isFirst = true;
       } else if (currentIndex > 0) {
         const prevTermCode = termCodesResult[currentIndex - 1].termCode;
         const prevTermInfo = pipelineData.termData[prevTermCode];
         if (prevTermInfo) {
-          const prevCumGpa = prevTermInfo.cumulative_gpa || 0;
+          let prevCumGpa = prevTermInfo.cumulative_gpa;
+
+          if (
+            prevCumGpa === "N/A" ||
+            prevCumGpa === null ||
+            prevCumGpa === undefined
+          ) {
+            prevCumGpa = 0;
+          } else {
+            prevCumGpa = Number(prevCumGpa);
+          }
+
           gpaDiff = (termInfo.cumulative_gpa || 0) - prevCumGpa;
 
-          const prevCourses = prevTermInfo.courses || [];
-          let prevValidAtt = prevCourses
-            .map((c) => parseFloat(c.attendancePercentage))
-            .filter((a) => !isNaN(a));
-          const prevAvgAtt =
-            prevValidAtt.length > 0
-              ? prevValidAtt.reduce((a, b) => a + b, 0) / prevValidAtt.length
-              : null;
+          const prevAvgAtt = prevTermInfo.attendancePercentage;
 
-          if (avgAtt !== null && prevAvgAtt !== null) {
-            attDiff = avgAtt - prevAvgAtt;
+          if (avgAttendance !== null && prevAvgAtt !== null) {
+            attDiff = avgAttendance - prevAvgAtt;
           } else {
             attDiff = 0;
           }
@@ -208,13 +204,13 @@ const TABLE_CONFIG = {
     setGpaDelta(gpaDiff);
     setDiffAttendance(attDiff);
     setIsFirstTermFlag(isFirst);
-  }, [pipelineData, currentTermCode, termCodesResult]);
+  }, [pipelineData, currentTermCode, termCodesResult, avgAttendance]);
 
   // For term Gpas Bar
   useEffect(() => {
     if (!pipelineData || !termCodesResult) {
-        setTermGpaData([]);
-        return;
+      setTermGpaData([]);
+      return;
     }
 
     const allTermGpas = termCodesResult.map((termObj) => {
@@ -250,16 +246,16 @@ const TABLE_CONFIG = {
   };
 
   const handleTermChange = (term) => {
-    setCourseData([]);
+    // setCourseData([]); // This is causing an error when clicking on already selected term the course data becomes empty
     setCurrentTerm(term.term);
     setCurrentTermCode(term.termCode);
-    // setCurrentBannerId(term.bannerId);
   };
 
   const isFirstTerm = useMemo(() => {
     if (!termCodesResult || termCodesResult.length === 0) return false;
-    const sorted = termCodesResult
-      .sort((a, b) => a.termCode.localeCompare(b.termCode));
+    const sorted = termCodesResult.sort((a, b) =>
+      a.termCode.localeCompare(b.termCode),
+    );
     return sorted[0]?.termCode === currentTermCode;
   }, [termCodesResult, currentTermCode]);
 
@@ -306,7 +302,12 @@ const TABLE_CONFIG = {
         {/* Edge case: API returned an error */}
         {!isLoading && dataError && (
           <Typography
-            style={{ padding: "20px", textAlign: "center", color: "#B91C1C", fontStyle: "italic" }}
+            style={{
+              padding: "20px",
+              textAlign: "center",
+              color: "#B91C1C",
+              fontStyle: "italic",
+            }}
           >
             Failed to load student data. Please try again later.
           </Typography>
@@ -315,7 +316,12 @@ const TABLE_CONFIG = {
         {/* Edge case: Student not registered for any term */}
         {!isLoading && hasNoTerms && (
           <Typography
-            style={{ padding: "20px", textAlign: "center", color: "#6B7280", fontStyle: "italic" }}
+            style={{
+              padding: "20px",
+              textAlign: "center",
+              color: "#6B7280",
+              fontStyle: "italic",
+            }}
           >
             No term registrations found for this student.
           </Typography>
@@ -327,41 +333,52 @@ const TABLE_CONFIG = {
               <div
                 style={{
                   display: "flex",
+                  flexDirection: "column",
                   gap: "20px",
                   justifyContent: "space-between",
                   width: "100%",
                 }}
               >
-                <GpaMetrics
-                  loadingTermInformation={dataLoading}
-                  isFirstTerm={isFirstTerm}
-                  isFirstTermFlag={isFirstTermFlag}
-                  isZeroDelta={isZeroDelta}
-                  isPositive={isPositive}
-                  deltaColor={deltaColor}
-                  gpaDelta={gpaDelta}
-                  gpaCircleColor={gpaCircleColor}
-                  currentGpa={currentGpa}
-                  termGpaCircleColor={termGpaCircleColor}
-                  termGpa={termGpa}
-                  isLatestTerm={isLatestTerm}
-                  diffAttendance={diffAttendance}
-                  isZeroAttendanceDiff={isZeroAttendanceDiff}
-                  isPositiveAttendanceDiff={isPositiveAttendanceDiff}
-                  attendanceDiffColor={attendanceDiffColor}
-                  attendanceCircleColor={attendanceCircleColor}
-                  avgAttendance={avgAttendance}
-                  colors={COLOR_CONFIG}
-                />
-
-                {/* TERM GPA BAR CHART */}
-                <Card className="term-gpa-bar-card">
-                  <TermGpaBar
-                    termData={termData}
-                    termGpaData={termGpaData}
-                    loading={dataLoading}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: "20px",
+                    justifyContent: "space-between",
+                    width: "100%",
+                  }}
+                >
+                  <GpaMetrics
+                    loadingTermInformation={dataLoading}
+                    isFirstTerm={isFirstTerm}
+                    isFirstTermFlag={isFirstTermFlag}
+                    isZeroDelta={isZeroDelta}
+                    isPositive={isPositive}
+                    deltaColor={deltaColor}
+                    gpaDelta={gpaDelta}
+                    gpaCircleColor={gpaCircleColor}
+                    currentGpa={currentGpa}
+                    termGpaCircleColor={termGpaCircleColor}
+                    termGpa={termGpa}
+                    isLatestTerm={isLatestTerm}
+                    diffAttendance={diffAttendance}
+                    isZeroAttendanceDiff={isZeroAttendanceDiff}
+                    isPositiveAttendanceDiff={isPositiveAttendanceDiff}
+                    attendanceDiffColor={attendanceDiffColor}
+                    attendanceCircleColor={attendanceCircleColor}
+                    avgAttendance={avgAttendance}
+                    colors={COLOR_CONFIG}
                   />
-                </Card>
+
+                  {/* TERM GPA BAR CHART */}
+                  <Card className="term-gpa-bar-card">
+                    <TermGpaBar
+                      termData={termData}
+                      termGpaData={termGpaData}
+                      loading={dataLoading}
+                    />
+                  </Card>
+                </div>
               </div>
             </div>
 

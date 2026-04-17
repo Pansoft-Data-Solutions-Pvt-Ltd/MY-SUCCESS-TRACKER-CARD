@@ -1,7 +1,11 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Card, Typography } from "@ellucian/react-design-system/core";
+import {
+  Card,
+  Typography,
+} from "@ellucian/react-design-system/core";
 import DoubleChevronIcon from "./DoubleChevron";
+// import Markdown from 'react-markdown'
 
 const GpaMetrics = ({
   loadingTermInformation,
@@ -24,6 +28,7 @@ const GpaMetrics = ({
   avgAttendance,
   colors,
 }) => {
+
   return (
     <div className="gpa-cards-column">
       <div style={{ display: "flex", gap: "20px" }}>
@@ -73,7 +78,9 @@ const GpaMetrics = ({
                           fontWeight: 700,
                         }}
                       >
-                        {gpaDelta != null ? Number(gpaDelta).toFixed(2) : gpaDelta}
+                        {gpaDelta != null
+                          ? Number(gpaDelta).toFixed(2)
+                          : gpaDelta}
                       </span>
                       <span style={{ marginLeft: 3, color: "#6B7280" }}>
                         {" "}
@@ -92,7 +99,7 @@ const GpaMetrics = ({
               color: gpaCircleColor,
             }}
           >
-            {loadingTermInformation ? "..." : currentGpa.toFixed(2)}
+            {loadingTermInformation ? "..." : currentGpa}
           </div>
         </Card>
 
@@ -128,7 +135,11 @@ const GpaMetrics = ({
               color: termGpaCircleColor,
             }}
           >
-            {loadingTermInformation ? "..." : (termGpa != null && !isNaN(termGpa) ? Number(termGpa).toFixed(2) : termGpa)}
+            {loadingTermInformation
+              ? "..."
+              : termGpa != null && !isNaN(termGpa)
+                ? Number(termGpa).toFixed(2)
+                : termGpa}
           </div>
         </Card>
 
@@ -214,7 +225,7 @@ const GpaMetrics = ({
             {loadingTermInformation
               ? "..."
               : avgAttendance != null
-                ? `${avgAttendance.toFixed(2)}%`
+                ? `${avgAttendance}%`
                 : "N/A"}
           </div>
         </Card>
@@ -278,6 +289,10 @@ const GpaMetrics = ({
 };
 
 GpaMetrics.propTypes = {
+  fetchGpaRecommendation: PropTypes.func.isRequired,
+  loadingRecommendation: PropTypes.bool,
+  recommendationResult: PropTypes.string,
+  recommendationError: PropTypes.string,
   loadingTermInformation: PropTypes.bool.isRequired,
   isFirstTerm: PropTypes.bool.isRequired,
   isFirstTermFlag: PropTypes.bool.isRequired,
