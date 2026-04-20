@@ -6,20 +6,12 @@ import HomeHeader from "../components/HomeHeader";
 import GpaMetrics from "../components/GpaMetrics";
 import CourseDataView from "../components/CourseDataView";
 import "./Home.css";
-import Markdown from "react-markdown";
+import TargetGpaModal from "../components/TargetGpaModal";
 
 // Ellucian provided hooks
 import { useData, useCardInfo } from "@ellucian/experience-extension-utils";
 
-import {
-  Typography,
-  Card,
-  TextField,
-  Button,
-  ExpansionPanel,
-  ExpansionPanelDetails,
-  ExpansionPanelSummary,
-} from "@ellucian/react-design-system/core";
+import { Typography, Card } from "@ellucian/react-design-system/core";
 
 /* ================= CONFIG ================= */
 /* ================= COMPONENT ================= */
@@ -37,7 +29,7 @@ const MySuccessTrackerTable = () => {
   const [diffAttendance, setDiffAttendance] = useState(null);
   const [isFirstTermFlag, setIsFirstTermFlag] = useState(false);
   const [termCodesResult, setTermCodesResult] = useState(null);
-  const [targetGpa, setTargetGpa] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { authenticatedEthosFetch } = useData();
   const { cardId, cardConfiguration } = useCardInfo();
@@ -58,24 +50,18 @@ const MySuccessTrackerTable = () => {
   const [recommendationResult, setRecommendationResult] = useState(null);
   const [recommendationError, setRecommendationError] = useState(null);
 
-  const fetchGpaRecommendation = async (targetGpa) => {
-    console.log("targetGpa", targetGpa);
-    console.log(
-      "student_gpa_recommendation_pipeline",
-      student_gpa_recommendation_pipeline,
-    );
-    console.log("student term courses pipeline", student_term_courses_pipeline);
-
-    if (!targetGpa || !student_gpa_recommendation_pipeline) return;
-    // if (!targetGpa) return;
+  const fetchGpaRecommendation = async (gpa) => {
+    if (!gpa || !student_gpa_recommendation_pipeline) return;
     setLoadingRecommendation(true);
     setRecommendationResult(null);
     setRecommendationError(null);
 
     try {
-      const queryString = new URLSearchParams({ cardId, targetGpa }).toString();
+      const queryString = new URLSearchParams({
+        cardId,
+        targetGpa: gpa,
+      }).toString();
       const resourcePath = `${student_gpa_recommendation_pipeline}?${queryString}`;
-      // const resourcePath = `pansoft-x-get-student-gpa-recommendation?${queryString}`;
       const options = {
         method: "GET",
         headers: {
@@ -89,7 +75,6 @@ const MySuccessTrackerTable = () => {
 
       let data = await response.text();
       try {
-        console.log("response: ", data);
         const jsonData = JSON.parse(data);
         if (jsonData.text) data = jsonData.text;
         else if (jsonData.message) data = jsonData.message;
@@ -105,6 +90,16 @@ const MySuccessTrackerTable = () => {
     } finally {
       setLoadingRecommendation(false);
     }
+  };
+
+  const handleOpenModal = () => {
+    setRecommendationResult(null);
+    setRecommendationError(null);
+    setModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setModalOpen(false);
   };
 
   // Parse config thresholds once — they arrive as strings from cardConfiguration
@@ -432,6 +427,7 @@ const MySuccessTrackerTable = () => {
                     attendanceCircleColor={attendanceCircleColor}
                     avgAttendance={avgAttendance}
                     colors={COLOR_CONFIG}
+                    handleOpenModal={handleOpenModal}
                   />
 
                   {/* TERM GPA BAR CHART */}
@@ -444,79 +440,22 @@ const MySuccessTrackerTable = () => {
                   </Card>
                 </div>
 
-                <div
-                  style={{
-                    marginTop: "20px",
-                    display: "flex",
-                    gap: "10px",
-                    alignItems: "center",
-                  }}
-                >
-                  <TextField
-                    label="Target GPA"
-                    value={targetGpa}
-                    onChange={(event) => setTargetGpa(event.target.value)}
-                    placeholder="e.g. 3.5"
-                    disabled={!isLatestTerm}
-                  />
-                  <Button
-                    onClick={() => fetchGpaRecommendation(targetGpa)}
-                    disabled={loadingRecommendation || !targetGpa}
-                  >
-                    {loadingRecommendation ? "Submitting..." : "Submit"}
+                {/* Target GPA Button */}
+                {/* <div style={{ marginTop: "20px" }}>
+                  <Button onClick={handleOpenModal} disabled={!isLatestTerm}>
+                    Set Target GPA
                   </Button>
-                </div>
+                </div> */}
 
-                {/* Recommendation Results */}
-                {(loadingRecommendation ||
-                  recommendationResult ||
-                  recommendationError) && (
-                  <div>
-                    <ExpansionPanel>
-                      <ExpansionPanelSummary>
-                        <Typography variant="h4">
-                          {loadingRecommendation
-                            ? "Loading..."
-                            : "GPA Recommendation"}
-                        </Typography>
-                      </ExpansionPanelSummary>
-                      <ExpansionPanelDetails>
-                        <div style={{ padding: "5px", width: "100%" }}>
-                          {loadingRecommendation && (
-                            <Typography
-                              variant="body2"
-                              style={{ color: "#4b5563" }}
-                            >
-                              Loading recommendation...
-                            </Typography>
-                          )}
-                          {recommendationError && (
-                            <Typography
-                              variant="body2"
-                              style={{ color: "#dc2626", fontWeight: 600 }}
-                            >
-                              Error: {recommendationError}
-                            </Typography>
-                          )}
-                          {recommendationResult && !loadingRecommendation && (
-                            <Typography
-                              component="div"
-                              variant="body2"
-                              style={{
-                                color: "#1f2937",
-                                fontWeight: 500,
-                                lineHeight: 1.5,
-                              }}
-                            >
-                              <Markdown>{recommendationResult}</Markdown>
-                            </Typography>
-                          )}
-                        </div>
-                      </ExpansionPanelDetails>
-                    </ExpansionPanel>
-                  </div>
-                )}
-
+                {/* Target GPA Modal */}
+                <TargetGpaModal
+                  open={modalOpen}
+                  onClose={handleCloseModal}
+                  onSubmit={fetchGpaRecommendation}
+                  loading={loadingRecommendation}
+                  result={recommendationResult}
+                  error={recommendationError}
+                />
               </div>
             </div>
 
